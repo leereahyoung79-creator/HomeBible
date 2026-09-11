@@ -2831,6 +2831,29 @@
     return Array.isArray(window.CHRISTIAN_QUOTES) ? window.CHRISTIAN_QUOTES : [];
   }
 
+  var CHRISTIAN_QUOTE_ICON_MAP = {
+    "믿음": "faith",
+    "기도": "prayer",
+    "말씀": "word",
+    "순종": "obedience",
+    "감사": "gratitude",
+    "사랑": "love",
+    "용서": "forgiveness",
+    "가정": "family",
+    "고난": "hardship",
+    "소망": "hope",
+    "은혜": "grace",
+    "낙심": "despair",
+    "기다림": "waiting",
+    "회복": "recovery",
+    "관계": "relationship",
+    "결정과 선택": "decision"
+  };
+  function christianQuoteCategoryIconSrc(name) {
+    var key = CHRISTIAN_QUOTE_ICON_MAP[name];
+    return key ? ('icons/quotes/' + key + '.png') : '';
+  }
+
   function christianQuoteCategoryList() {
     var seen = {};
     var list = [];
@@ -2849,7 +2872,7 @@
     var all = document.createElement('button');
     all.type = 'button';
     all.className = 'christian-quote-category-card';
-    all.innerHTML = '<span class="christian-quote-cat-icon">✦</span><span class="christian-quote-cat-name">전체 명언</span><small>' + quotes.length + '개</small>';
+    all.innerHTML = '<img class="christian-quote-cat-icon" src="icons/quotes/all.png" alt=""><span class="christian-quote-cat-name">전체 명언</span><small>' + quotes.length + '개</small>';
     all.addEventListener('click', function(){ openChristianQuoteCategory(null); });
     els.christianQuoteCategories.appendChild(all);
     christianQuoteCategoryList().forEach(function(cat){
@@ -2857,9 +2880,13 @@
       card.type = 'button';
       card.className = 'christian-quote-category-card';
       var parts = String(cat).split(' ');
-      var icon = parts.shift();
+      parts.shift();
       var name = parts.join(' ');
-      card.innerHTML = '<span class="christian-quote-cat-icon">' + escapeHtml(icon) + '</span><span class="christian-quote-cat-name">' + escapeHtml(name) + '</span><small>' + counts[cat] + '개</small>';
+      var iconSrc = christianQuoteCategoryIconSrc(name);
+      var iconHtml = iconSrc
+        ? '<img class="christian-quote-cat-icon" src="' + iconSrc + '" alt="">'
+        : '<span class="christian-quote-cat-icon"></span>';
+      card.innerHTML = iconHtml + '<span class="christian-quote-cat-name">' + escapeHtml(name) + '</span><small>' + counts[cat] + '개</small>';
       card.addEventListener('click', function(){ openChristianQuoteCategory(cat); });
       els.christianQuoteCategories.appendChild(card);
     });
