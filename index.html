@@ -3,19 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>우리집 성경책</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#E98B7D">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="우리집 성경책">
+<title>성경필사 노트</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Gamja+Flower&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -37,27 +28,10 @@
     </button>
 
     <div class="cover-actions">
-      <div class="cover-grid">
-        <button id="readBtn" type="button" class="grid-card card-coral">
-          <img class="grid-icon" src="icons/buttons/read.png" alt="">
-          <span class="grid-label">성경책보기</span>
-        </button>
-        <button id="hymnBtn" type="button" class="grid-card card-mint">
-          <img class="grid-icon" src="icons/buttons/hymn.png" alt="">
-          <span class="grid-label">찬송가</span>
-        </button>
-        <button id="gratitudePrayerBtn" type="button" class="grid-card card-gold">
-          <img class="grid-icon" src="icons/buttons/gratitude.png" alt="">
-          <span class="grid-label">감사 &amp; 기도</span>
-        </button>
-        <button id="christianQuotesBtn" type="button" class="grid-card card-lavender">
-          <img class="grid-icon" src="icons/buttons/quote.png" alt="">
-          <span class="grid-label">기독교 명언</span>
-        </button>
-      </div>
-      <button id="startBtn" type="button" class="wide-cta">
-        <img class="grid-icon wide-icon" src="icons/buttons/write.png" alt=""> 성경필사
-      </button>
+      <button id="readBtn" class="primary-button read-cta">✝️ 성경책보기</button>
+      <button id="hymnBtn" class="ghost-button hymn-cta">🎵 찬송가</button>
+      <button id="startBtn" class="ghost-button">📖 성경필사</button>
+      <button id="gratitudePrayerBtn" class="ghost-button gratitude-prayer-cta">🙏 감사 &amp; 기도</button>
     </div>
   </div>
 </section>
@@ -363,43 +337,6 @@
   </div>
 </section>
 
-<!-- 기독교 명언 화면 -->
-<section id="christianQuotesScreen" class="stats-screen hidden">
-  <div class="stats-card christian-quotes-card">
-    <div class="modal-sticky-top">
-      <div class="stats-head">
-        <h2>💬 기독교 명언</h2>
-        <button id="closeChristianQuotesBtn" class="icon-btn" title="닫기">✕</button>
-      </div>
-      <p class="stats-sub">지금 나의 마음과 상황에 필요한 주제를 선택해보세요.</p>
-    </div>
-    <div class="modal-body christian-quotes-body">
-      <div id="christianQuoteCategories" class="christian-quote-categories"></div>
-      <div id="christianQuoteEmpty" class="christian-quote-empty hidden">이 주제의 명언을 준비하고 있어요.</div>
-      <article id="christianQuoteDetail" class="christian-quote-detail hidden">
-        <div class="christian-quote-category" id="christianQuoteCategory"></div>
-        <div class="christian-quote-number" id="christianQuoteNumber"></div>
-        <blockquote id="christianQuoteText" class="christian-quote-text"></blockquote>
-        <div class="christian-quote-section">
-          <div class="christian-quote-section-title">🌿 묵상</div>
-          <p id="christianQuoteReflection"></p>
-        </div>
-        <div class="christian-quote-section christian-quote-verse-section">
-          <div class="christian-quote-section-title">📖 관련 말씀</div>
-          <p id="christianQuoteVerse">
-<div id="christianQuoteVerseText" class="christian-quote-verse-text"></div></p>
-        </div>
-        <div class="christian-quote-actions">
-          <button id="copyChristianQuoteBtn" type="button" class="primary-button small">📋 전체 내용 복사</button>
-          <button id="nextChristianQuoteBtn" type="button" class="ghost-button small">다음 명언 →</button>
-        </div>
-        <div id="christianQuoteCopyStatus" class="christian-quote-copy-status" aria-live="polite"></div>
-        <button id="backChristianQuoteCategoriesBtn" type="button" class="text-link christian-quote-back">← 주제 다시 선택하기</button>
-      </article>
-    </div>
-  </div>
-</section>
-
 <!-- 이름 입력 화면 -->
 <section id="nameScreen" class="name-screen hidden">
   <div class="name-card">
@@ -589,7 +526,6 @@
 <script src="bible-data-easy.js"></script>
 <script src="bible-data-gae.js"></script>
 <script src="commentary-data.js"></script>
-<script src="christian-quotes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
