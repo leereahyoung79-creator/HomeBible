@@ -1,20 +1,21 @@
 /* ===================== 토큰 ===================== */
 :root{
-  --paper:#faf7f0;
-  --paper-line:#e7e1d3;
+  --paper:#FFF6EF;
+  --paper-line:#F3E1D2;
   --card:#ffffff;
-  --border:#e3ddcd;
+  --border:#F0DCCB;
 
-  --ink:#3a352c;
-  --ink-soft:#8b8474;
-  --ink-faint:#bdb6a3;
+  --ink:#4A3B32;
+  --ink-soft:#9C8874;
+  --ink-faint:#CDB8A5;
 
-  --accent:#c98a7a;
-  --accent-soft:#f2e1db;
-  --gold:#b48a4a;
+  --accent:#E98B7D;
+  --accent-soft:#FBE1DA;
+  --gold:#D9A44C;
 
-  --correct:#6fa583;
-  --incorrect:#e0897e;
+  --correct:#7FBE93;
+  --incorrect:#E9776A;
+  --line: var(--border);
 
   --sans: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --hand: 'Gaegu', var(--sans);
@@ -69,14 +70,14 @@ select{font-family:inherit;}
   border:1px solid var(--line);
   border-radius:20px;
   background:var(--paper);
-  box-shadow:0 10px 28px rgba(60,45,30,.08);
+  box-shadow:0 10px 28px rgba(74,59,50,.08);
   text-align:left;
   cursor:pointer;
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .today-verse-card:hover{
   transform:translateY(-2px);
-  box-shadow:0 9px 24px rgba(60,45,30,.10);
+  box-shadow:0 9px 24px rgba(74,59,50,.10);
   border-color:var(--accent);
 }
 .today-verse-card:active{transform:translateY(0);}
@@ -160,7 +161,7 @@ select{font-family:inherit;}
   padding:9px 18px;
   font-size:13px;
 }
-.ghost-button:hover{background:rgba(0,0,0,0.03);}
+.ghost-button:hover{background:rgba(74,59,50,0.03);}
 .ghost-button:disabled{opacity:0.35;cursor:default;}
 
 .text-link{
@@ -261,7 +262,7 @@ select{font-family:inherit;}
   position:sticky;
   top:0;
   z-index:50;
-  box-shadow:0 2px 8px rgba(60,50,30,0.04);
+  box-shadow:0 2px 8px rgba(74,59,50,0.04);
 }
 .read-toolbar{
   max-width:760px;
@@ -308,8 +309,8 @@ select{font-family:inherit;}
 .bookmark-slot.pending-save{
   border-color:var(--incorrect);
   color:var(--incorrect);
-  background:#fdf1ef;
-  box-shadow:0 0 0 2px rgba(161,58,43,0.15);
+  background:#FDEAE6;
+  box-shadow:0 0 0 2px rgba(233,119,106,0.15);
 }
 .pill-toggle{
   border:1px solid var(--border);
@@ -323,7 +324,7 @@ select{font-family:inherit;}
 }
 .pill-toggle.active{
   border-color:var(--incorrect);
-  background:#fdf1ef;
+  background:#FDEAE6;
   color:var(--incorrect);
   font-weight:700;
 }
@@ -334,7 +335,7 @@ select{font-family:inherit;}
 .hl-swatch{
   width:22px;height:22px;
   border-radius:6px;
-  border:1px solid rgba(0,0,0,0.12);
+  border:1px solid rgba(74,59,50,0.12);
   padding:0;
 }
 .hl-swatch.active{
@@ -424,7 +425,7 @@ select{font-family:inherit;}
   background:var(--card);
   border:1px solid var(--border);
   border-radius:18px;
-  box-shadow:0 18px 40px rgba(60,50,30,0.06);
+  box-shadow:0 18px 40px rgba(74,59,50,0.06);
   padding:36px 34px 30px;
   min-height:480px;
 }
@@ -596,7 +597,7 @@ select{font-family:inherit;}
 .read-verse.copy-selected{
   outline:2px solid var(--incorrect);
   outline-offset:2px;
-  background:#fdf1ef;
+  background:#FDEAE6;
 }
 .copy-mode .read-verse{cursor:pointer;}
 .copy-mode .read-verse:hover{background:#fdf7f4;}
@@ -717,7 +718,7 @@ select{font-family:inherit;}
 .stats-screen{
   position:fixed;
   inset:0;
-  background:rgba(58,53,44,0.35);
+  background:rgba(74,59,50,0.35);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -731,7 +732,7 @@ select{font-family:inherit;}
   max-height:80dvh;
   background:var(--card);
   border-radius:18px;
-  box-shadow:0 30px 60px rgba(0,0,0,0.25);
+  box-shadow:0 30px 60px rgba(74,59,50,0.25);
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -1003,7 +1004,7 @@ select{font-family:inherit;}
   background:var(--accent);
   color:#fff;
   font-weight:800;
-  box-shadow:0 2px 6px rgba(201,138,122,0.35);
+  box-shadow:0 2px 6px rgba(233,139,125,0.35);
 }
 
 /* ===================== 반응형 ===================== */
@@ -1279,7 +1280,7 @@ select{font-family:inherit;}
 .bible-book-search-card{max-width:620px;}
 .book-search-input-row{display:flex;gap:8px;align-items:center;margin-top:12px;}
 .book-search-input-row input{flex:1;min-width:0;border:1px solid var(--border);border-radius:12px;padding:11px 13px;background:var(--paper);color:var(--ink);font-size:14px;outline:none;}
-.book-search-input-row input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(180,100,80,.10);}
+.book-search-input-row input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(233,139,125,.10);}
 .bible-book-search-results{display:flex;flex-direction:column;gap:8px;}
 .bible-book-search-result{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;border:1px solid var(--border);border-radius:12px;background:var(--paper);padding:13px 15px;cursor:pointer;color:var(--ink);}
 .bible-book-search-result:hover{border-color:var(--accent);}
@@ -1312,44 +1313,51 @@ select{font-family:inherit;}
 
 /* 우리집 성경책 - 따뜻한 아이보리 크림 테마 */
 :root {
-  --app-bg: #F8F5EC;
+  --app-bg: #FFF6EF;
 }
 html, body {
-  background: #F8F5EC !important;
+  background: #FFF6EF !important;
 }
 body {
-  background-color: #F8F5EC !important;
+  background-color: #FFF6EF !important;
 }
 
-/* 홈 화면 두 버튼 크기/색상 통일 */
+/* 홈 화면 메뉴: 부드러운 크림/포인트 톤의 공통 버튼 스타일 */
 .cover-actions .primary-button,
 .cover-actions .ghost-button {
   width: 100%;
   max-width: 275px;
   min-height: 60px;
   box-sizing: border-box;
-  padding: 14px 34px;
-  border: 1px solid var(--ink);
+  padding: 14px 24px;
+  border: 1px solid var(--accent-soft);
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.03em;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 8px rgba(92, 70, 55, 0.06);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 .cover-actions .primary-button:hover,
 .cover-actions .ghost-button:hover {
-  opacity: 0.85;
-  background: var(--ink);
-  color: var(--paper);
+  opacity: 1;
+  background: #F8D2C6;
+  border-color: #F8D2C6;
+  color: #D97662;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(92, 70, 55, 0.08);
 }
 .cover-actions .primary-button:active,
 .cover-actions .ghost-button:active {
   transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(92, 70, 55, 0.06);
 }
 
 /* 성경 번역 비교: 이전 절 / 닫기 / 다음 절 */
@@ -1385,7 +1393,7 @@ body {
 .compare-title {
   font-size: 22px !important;
   font-weight: 800 !important;
-  color: #3D3932 !important;
+  color: #4A3B32 !important;
   letter-spacing: -0.02em;
   line-height: 1.35;
 }
@@ -1394,7 +1402,7 @@ body {
 .compare-ref {
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: #6E665A !important;
+  color: #8C7A68 !important;
   line-height: 1.5;
 }
 
@@ -1402,14 +1410,14 @@ body {
 [id*="compare"] h2 {
   font-size: 22px !important;
   font-weight: 800 !important;
-  color: #3D3932 !important;
+  color: #4A3B32 !important;
 }
 [id*="compare"] .muted,
 [id*="compare"] .subtle,
 [id*="compare"] .caption {
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: #6E665A !important;
+  color: #8C7A68 !important;
 }
 
 /* =========================================================
@@ -1435,7 +1443,7 @@ body {
 .message,
 .toast,
 .modal-message {
-  color: #5E584E !important;
+  color: #6B5B4A !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   line-height: 1.6 !important;
@@ -1446,7 +1454,7 @@ label,
 .field-label,
 .section-label,
 .form-label {
-  color: #4D483F !important;
+  color: #6B5B4A !important;
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.5 !important;
@@ -1466,14 +1474,14 @@ button .hint {
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
-  color: #777066 !important;
+  color: #8C7A68 !important;
   opacity: 1 !important;
   font-size: 14px !important;
 }
 
 /* 선택창의 안내 문구 */
 select {
-  color: #403B34 !important;
+  color: #4A3B32 !important;
 }
 
 /* 모달/팝업 안내 문구 */
@@ -1489,7 +1497,7 @@ select {
 .popup p,
 .popup .description,
 .popup .hint {
-  color: #5E584E !important;
+  color: #6B5B4A !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   line-height: 1.65 !important;
@@ -1499,7 +1507,7 @@ select {
 .empty-state,
 .empty-message {
   padding: 12px 4px !important;
-  color: #514B42 !important;
+  color: #6B5B4A !important;
   font-size: 15px !important;
   font-weight: 700 !important;
 }
@@ -1509,7 +1517,7 @@ select {
 .page-description,
 .screen-subtitle,
 .screen-description {
-  color: #625B50 !important;
+  color: #6B5B4A !important;
   font-size: 15px !important;
   font-weight: 600 !important;
   line-height: 1.55 !important;
@@ -1519,7 +1527,7 @@ select {
 .compare-header .compare-subtitle,
 .compare-subtitle,
 .compare-ref {
-  color: #5A5349 !important;
+  color: #6B5B4A !important;
   font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1.55 !important;
@@ -1529,15 +1537,15 @@ select {
 .disabled-text,
 .text-muted,
 .text-secondary {
-  color: #777066 !important;
+  color: #8C7A68 !important;
   opacity: 1 !important;
 }
 
 /* 툴팁 */
 .tooltip,
 [role="tooltip"] {
-  color: #F8F5EC !important;
-  background: #3D3932 !important;
+  color: #FFF6EF !important;
+  background: #4A3B32 !important;
   font-size: 13px !important;
   font-weight: 600 !important;
   line-height: 1.5 !important;
@@ -1546,8 +1554,8 @@ select {
 /* 토스트/상태 알림 */
 .toast,
 .status-message {
-  color: #F8F5EC !important;
-  background: #3D3932 !important;
+  color: #FFF6EF !important;
+  background: #4A3B32 !important;
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.5 !important;
@@ -1557,12 +1565,12 @@ select {
 .info-card,
 .notice-card,
 .guide-card {
-  color: #514B42 !important;
+  color: #6B5B4A !important;
 }
 .info-card p,
 .notice-card p,
 .guide-card p {
-  color: #5E584E !important;
+  color: #6B5B4A !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   line-height: 1.65 !important;
@@ -1571,7 +1579,7 @@ select {
 /* 성경 번역 비교 현재 구절 안내문구 - 아이보리 글씨 제거 */
 .compare-header .compare-ref,
 .compare-ref {
-  color: #3D3932 !important;
+  color: #4A3B32 !important;
   font-size: 17px !important;
   font-weight: 800 !important;
   line-height: 1.55 !important;
@@ -1583,7 +1591,7 @@ select {
 /* 비교창 안에서 현재 성경 위치를 표시하는 텍스트 */
 [id*="compare"] .compare-ref,
 [id*="compare"] .compare-subtitle {
-  color: #3D3932 !important;
+  color: #4A3B32 !important;
   font-size: 17px !important;
   font-weight: 800 !important;
   opacity: 1 !important;
@@ -1598,7 +1606,7 @@ select {
 /* 비교 제목과 현재 구절 설명 사이의 계층도 명확하게 */
 .compare-header h2,
 .compare-title {
-  color: #2F2B25 !important;
+  color: #3D2E26 !important;
   font-size: 22px !important;
   font-weight: 800 !important;
 }
@@ -1667,7 +1675,7 @@ select {
 #notesList .muted,
 #notesList .subtle,
 #notesList p {
-  color: #000000 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
   font-size: 15px !important;
   font-weight: 700 !important;
@@ -1679,7 +1687,7 @@ select {
 .notes-list [class*="description"],
 #notesList [class*="guide"],
 #notesList [class*="description"] {
-  color: #000000 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
   font-weight: 700 !important;
 }
@@ -1687,7 +1695,7 @@ select {
 /* '아직 남긴 묵상이 없어요.' 빈 상태 문구 */
 .notes-list [class*="empty"],
 #notesList [class*="empty"] {
-  color: #000000 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
   font-weight: 700 !important;
 }
@@ -1700,7 +1708,7 @@ select {
 .notes-screen .description,
 .notes-screen .subtitle,
 .notes-screen p {
-  color: #000000 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
 }
 
@@ -1734,7 +1742,7 @@ select {
 .form-label,
 .text-muted,
 .text-secondary {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   line-height: 1.6 !important;
@@ -1743,13 +1751,13 @@ select {
 
 /* 라벨 */
 label {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
 }
 
 /* 입력창 안내 */
 input::placeholder,
 textarea::placeholder {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
   font-size: 10px !important;
 }
@@ -1768,7 +1776,7 @@ textarea::placeholder {
 .popup p,
 .popup .description,
 .popup .hint {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   line-height: 1.6 !important;
@@ -1782,7 +1790,7 @@ textarea::placeholder {
 .notes-list .empty-message,
 #notesList .empty-state,
 #notesList .empty-message {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   opacity: 1 !important;
@@ -1793,7 +1801,7 @@ textarea::placeholder {
 .notes-list .notes-description,
 #notesList .notes-guide,
 #notesList .notes-description {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   opacity: 1 !important;
@@ -1802,7 +1810,7 @@ textarea::placeholder {
 /* 비교 화면의 구절 설명도 같은 기준 */
 .compare-header .compare-subtitle,
 .compare-subtitle {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   opacity: 1 !important;
@@ -1811,7 +1819,7 @@ textarea::placeholder {
 /* 단, 비교 화면의 현재 구절 표시는 조금 더 읽기 쉽게 유지 */
 .compare-header .compare-ref,
 .compare-ref {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 800 !important;
   opacity: 1 !important;
@@ -1820,8 +1828,8 @@ textarea::placeholder {
 /* 토스트/툴팁은 배경 대비를 위해 기존 반전 스타일 유지 */
 .toast,
 .status-message {
-  background: #3D3932 !important;
-  color: #F8F5EC !important;
+  background: #4A3B32 !important;
+  color: #FFF6EF !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   opacity: 1 !important;
@@ -1833,7 +1841,7 @@ textarea::placeholder {
    입력 항목의 필드 라벨이므로 10px 규칙에서 제외
    ========================================================= */
 .field-label {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 12px !important;
   font-weight: 700 !important;
   line-height: 1.5 !important;
@@ -1877,7 +1885,7 @@ textarea::placeholder {
 .search-description,
 .search-hint,
 .search-guide {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   line-height: 1.6 !important;
@@ -1888,7 +1896,7 @@ textarea::placeholder {
 .search-panel p,
 .search-modal p,
 #searchModal p {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   opacity: 1 !important;
 }
 
@@ -1905,7 +1913,7 @@ textarea::placeholder {
 .selector-label,
 .bible-selector label,
 .bible-select-area label {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1.5 !important;
@@ -1917,7 +1925,7 @@ textarea::placeholder {
 .bible-header .selector-label,
 .top-bible-selector .field-label,
 .top-bible-selector .selector-label {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 15px !important;
   font-weight: 700 !important;
   opacity: 1 !important;
@@ -1966,7 +1974,7 @@ textarea::placeholder {
 .bible-header .selector-label,
 .top-bible-selector .field-label,
 .top-bible-selector .selector-label {
-  color: #4A3025 !important;
+  color: #4A3B32 !important;
   font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1.5 !important;
@@ -2004,7 +2012,7 @@ textarea::placeholder {
 }
 #appScreen .field-label {
   font-size:15px !important;
-  color:#4A3025 !important;
+  color:#4A3B32 !important;
   font-weight:700 !important;
   opacity:1 !important;
 }
@@ -2199,7 +2207,7 @@ textarea::placeholder {
 .gratitude-history-head{text-align:center;margin-bottom:18px}
 .gratitude-history-label{font-size:15px;font-weight:800;color:var(--ink)}
 .gratitude-history-list{display:flex;flex-direction:column;gap:18px}
-.gratitude-history-record{padding:20px 22px;border:1px solid var(--border);border-radius:16px;background:var(--paper);box-shadow:0 5px 18px rgba(0,0,0,.04)}
+.gratitude-history-record{padding:20px 22px;border:1px solid var(--border);border-radius:16px;background:var(--paper);box-shadow:0 5px 18px rgba(74,59,50,.04)}
 .gratitude-history-record-date{font-size:18px;font-weight:800;color:var(--accent);padding-bottom:13px;border-bottom:1px dashed var(--border);margin-bottom:16px}
 .gratitude-history-section + .gratitude-history-section{margin-top:22px;padding-top:20px;border-top:1px dashed var(--border)}
 .gratitude-history-title{font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px}
@@ -2256,7 +2264,7 @@ textarea::placeholder {
   width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--ink);
   font-family:var(--sans);font-size:14px;line-height:1.75;padding:12px 14px;resize:vertical;outline:none;
 }
-.sermon-field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(120,90,60,.08);}
+.sermon-field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,164,76,.08);}
 .sermon-editor-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px;padding-top:12px;border-top:1px solid var(--border);}
 .sermon-editor-saved{font-size:12px;color:var(--ink-faint);}
 .sermon-history-section{margin-top:14px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);}
@@ -2279,9 +2287,9 @@ textarea::placeholder {
   gap:11px;
   margin:2px 0 16px;
   padding:10px 13px;
-  border:1px solid rgba(198,133,105,.28);
+  border:1px solid rgba(233,139,125,.28);
   border-radius:12px;
-  background:linear-gradient(90deg, rgba(198,133,105,.08), rgba(255,255,255,.42));
+  background:linear-gradient(90deg, rgba(233,139,125,.08), rgba(255,255,255,.42));
   color:var(--ink);
   text-align:left;
   cursor:pointer;
@@ -2289,8 +2297,8 @@ textarea::placeholder {
 }
 .read-sermon-saved:hover{
   transform:translateY(-1px);
-  border-color:rgba(198,133,105,.5);
-  box-shadow:0 5px 14px rgba(90,70,50,.08);
+  border-color:rgba(233,139,125,.5);
+  box-shadow:0 5px 14px rgba(74,59,50,.08);
 }
 .read-sermon-saved:active{transform:translateY(0);}
 .read-sermon-saved-icon{
@@ -2330,8 +2338,8 @@ textarea::placeholder {
   margin-right:auto;
 }
 .sermon-delete-button{
-  border-color:rgba(180,90,70,.35);
-  color:#a55f50;
+  border-color:rgba(233,139,125,.35);
+  color:#D97662;
 }
 .sermon-delete-button:disabled{
   opacity:.45;
@@ -2402,176 +2410,274 @@ textarea::placeholder {
   .gratitude-prayer-card.gratitude-history-open .gratitude-history-close-wrap{padding:10px 18px 14px;}
 }
 
-/* =========================================================
-   FINAL RESPONSIVE LAYOUT — PC / TABLET / MOBILE
-   기존 기능과 컴포넌트 스타일을 유지하면서 화면 크기만 최종 정리
-   ========================================================= */
-
-/* 공통: 박스 크기 계산과 가로 넘침 방지 */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
-img, iframe, video { max-width: 100%; }
-button, input, select, textarea { max-width: 100%; }
-
-/* 공통 선택 영역 */
-#appScreen .field-label,
-#writeScreen .field-label,
-#hymnScreen .hymn-range-row label {
-  font-size: 15px !important;
-  line-height: 1.35 !important;
-  font-weight: 700 !important;
-  color: #4A3025 !important;
-  opacity: 1 !important;
+/* ===================== 기독교 명언 ===================== */
+.christian-quotes-cta{
+  border-color:rgba(217,164,76,.28);
+  color:var(--gold);
+}
+.christian-quotes-card{max-width:820px;}
+.christian-quotes-body{padding:22px 24px 28px;}
+.christian-quote-categories{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.christian-quote-category-card{
+  min-height:112px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--paper);
+  color:var(--ink);
+  padding:16px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.christian-quote-category-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 18px rgba(74,59,50,.07);}
+.christian-quote-cat-icon{font-size:25px;line-height:1;}
+.christian-quote-cat-name{font-size:14px;font-weight:700;}
+.christian-quote-category-card small{font-size:10px;color:var(--ink-faint);}
+.christian-quote-detail{max-width:700px;margin:0 auto;padding:8px 8px 18px;}
+.christian-quote-category{display:inline-flex;padding:7px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;}
+.christian-quote-number{margin-top:10px;color:var(--ink-faint);font-size:11px;text-align:right;}
+.christian-quote-text{
+  margin:18px 0 26px;
+  padding:26px 24px;
+  border-left:3px solid var(--accent);
+  background:rgba(255,255,255,.55);
+  border-radius:0 18px 18px 0;
+  font-family:var(--serif);
+  font-size:23px;
+  line-height:1.8;
+  font-weight:700;
+  word-break:keep-all;
+}
+.christian-quote-section{padding:18px 0;border-top:1px solid var(--border);}
+.christian-quote-section-title{font-size:13px;color:var(--accent);font-weight:800;margin-bottom:8px;}
+.christian-quote-section p{margin:0;font-size:14px;line-height:1.8;word-break:keep-all;color:var(--ink);}
+.christian-quote-verse-section p{font-family:var(--serif);font-weight:700;color:var(--gold);}
+.christian-quote-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding-top:22px;}
+.christian-quote-copy-status{text-align:center;min-height:22px;margin-top:10px;color:var(--correct);font-size:12px;}
+.christian-quote-back{display:block;margin:10px auto 0;}
+.christian-quote-empty{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+@media (max-width:700px){
+  .christian-quote-categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+  .christian-quote-category-card{min-height:98px;padding:12px 8px;}
+  .christian-quote-cat-icon{font-size:22px;}
+  .christian-quote-cat-name{font-size:12px;}
+  .christian-quote-text{font-size:20px;line-height:1.7;padding:20px 18px;}
+}
+@media (max-width:460px){
+  .christian-quotes-body{padding:16px 14px 22px;}
+  .christian-quote-categories{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 
-#appScreen .field-group,
-#writeScreen .field-group {
-  min-width: 0;
+
+/* 기독교 명언 - 관련 말씀 본문 */
+.christian-quote-verse-text {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(74,59,50,.035);
+  line-height: 1.8;
+  font-size: 15px;
+  white-space: normal;
 }
 
-#appScreen select,
-#writeScreen select,
-#hymnScreen select,
-#appScreen input,
-#writeScreen input,
-#hymnScreen input {
-  min-width: 0;
+/* 메인 메뉴 2열 배치: 1열 성경책보기/찬송가, 2열 감사&기도/기독교 명언, 3열 성경필사 */
+.cover-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px 12px;
+  align-items:stretch;
+  justify-items:center;
+  width:min(100%, 560px);
+  margin:0 auto;
+}
+.cover-actions .primary-button,
+.cover-actions .ghost-button{
+  width:100%;
+  max-width:275px;
+}
+.cover-actions #startBtn{
+  grid-column:1 / -1;
+}
+@media (max-width:520px){
+  .cover-actions{
+    gap:10px;
+  }
+  .cover-actions .primary-button,
+  .cover-actions .ghost-button{
+    min-height:58px;
+    padding-left:12px;
+    padding-right:12px;
+    font-size:14px;
+  }
 }
 
-/* PC: 읽기 편한 최대 폭 */
-@media (min-width: 1001px) {
-  .app-shell, .screen-inner, .stats-screen { width: 100%; }
-  .read-card, .write-card, .stats-card { max-width: 960px; margin-left: auto; margin-right: auto; }
-  .read-verse { font-size: 17px; line-height: 1.9; }
-  .read-verse-num { font-size: 13px; }
-  .topbar-inner { max-width: 1120px; margin-left: auto; margin-right: auto; }
-  .hymn-card { max-width: 720px; }
+/* ===================== 버튼 스타일 통일 ===================== */
+/* 앱 전체의 주요 버튼을 따뜻한 크림/피치 계열로 통일합니다.
+   채우기 버튼 = 연한 피치, 보조 버튼 = 크림 바탕 + 얇은 피치 테두리 */
+.primary-button,
+.cover-actions .primary-button{
+  border:1px solid var(--accent-soft);
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+  letter-spacing:0.03em;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+  box-shadow:0 2px 8px rgba(233,139,125,.06);
+  transition:transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+.primary-button:hover,
+.cover-actions .primary-button:hover{
+  opacity:1;
+  background:#F8D2C6;
+  border-color:#F8D2C6;
+  color:#D97662;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(233,139,125,.08);
+}
+.primary-button:active,
+.cover-actions .primary-button:active{
+  transform:translateY(0);
+  box-shadow:0 2px 6px rgba(233,139,125,.06);
 }
 
-/* 태블릿: 601~1000px */
-@media (min-width: 601px) and (max-width: 1000px) {
-  .app-shell, .screen-inner, .stats-screen { width: 100%; }
-  .read-card, .write-card, .stats-card { width: min(94vw, 900px); margin-left: auto; margin-right: auto; }
-  .read-verse { font-size: 16px; line-height: 1.85; }
-  .field-row, .search-form-row, .hymn-search-row, .hymn-range-row { gap: 8px; }
-  .compare-bottom-nav { gap: 8px; }
-  .gratitude-prayer-card { width: min(94vw, 900px); }
+.ghost-button,
+.secondary-button,
+.cover-actions .ghost-button{
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--paper);
+  color:var(--ink-soft);
+  font-weight:500;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+  transition:transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.ghost-button:hover,
+.secondary-button:hover,
+.cover-actions .ghost-button:hover{
+  background:#FDEAE6;
+  border-color:#F6D9CE;
+  color:var(--accent);
+  transform:translateY(-1px);
+}
+.ghost-button:active,
+.secondary-button:active,
+.cover-actions .ghost-button:active{
+  transform:translateY(0);
 }
 
-/* 휴대폰: 최대 600px */
-@media (max-width: 600px) {
-  body { font-size: 14px; }
+/* 홈 메뉴: 모든 메뉴를 같은 피치 계열의 채움 버튼으로 통일 */
+.cover-actions .primary-button,
+.cover-actions .ghost-button{
+  width:100%;
+  max-width:275px;
+  min-height:60px;
+  box-sizing:border-box;
+  padding:14px 24px;
+  border:1px solid var(--accent-soft);
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.03em;
+  box-shadow:0 2px 8px rgba(233,139,125,.06);
+}
+.cover-actions .ghost-button:hover,
+.cover-actions .primary-button:hover{
+  background:#F8D2C6;
+  border-color:#F8D2C6;
+  color:#D97662;
+}
 
-  .app-shell { min-height: 100dvh; }
-  .topbar-inner { padding-left: 14px; padding-right: 14px; }
+/* 명언 화면의 복사/다음 버튼도 홈과 같은 계열로 통일 */
+.christian-quote-actions .primary-button,
+.christian-quote-actions .ghost-button{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
 
-  .screen-inner,
-  .stats-screen {
+@media (max-width:520px){
+  .cover-actions .primary-button,
+  .cover-actions .ghost-button{
+    min-height:58px;
+    padding-left:12px;
+    padding-right:12px;
+    font-size:14px;
+  }
+}
+
+
+/* 최종 홈 메뉴 스타일: 모든 메뉴를 하나의 따뜻한 연한 파스텔 계열로 통일 */
+.cover-actions .primary-button,
+.cover-actions .ghost-button {
+  width: 100%;
+  max-width: 275px;
+  min-height: 60px;
+  box-sizing: border-box;
+  padding: 14px 20px;
+  border: 1px solid #F0DCCB;
+  border-radius: 999px;
+  background: #F7E9DC;
+  color: #9C8874;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 3px 10px rgba(233,139,125,0.055);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.cover-actions .primary-button:hover,
+.cover-actions .ghost-button:hover {
+  opacity: 1;
+  background: #F5E6D8;
+  border-color: #ECD6C8;
+  color: #9C8874;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(233,139,125,0.075);
+}
+
+.cover-actions .primary-button:active,
+.cover-actions .ghost-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 7px rgba(233,139,125,0.055);
+}
+
+/* 마지막 성경필사 버튼도 같은 크기/색상/정렬 유지 */
+.cover-actions #startBtn {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+@media (max-width:520px){
+  .cover-actions .primary-button,
+  .cover-actions .ghost-button {
+    min-height: 58px;
     padding-left: 12px;
     padding-right: 12px;
-  }
-
-  .read-card,
-  .write-card,
-  .stats-card,
-  .gratitude-prayer-card {
-    width: 100%;
-    max-width: none;
-    border-radius: 16px;
-  }
-
-  /* 성경 선택 영역은 휴대폰에서 2열로 안정적으로 배치 */
-  #appScreen .field-row,
-  #writeScreen .field-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  #appScreen .field-group,
-  #writeScreen .field-group { min-width: 0; }
-
-  #appScreen .field-label,
-  #writeScreen .field-label,
-  #hymnScreen .hymn-range-row label {
-    font-size: 15px !important;
-    margin-bottom: 5px;
-  }
-
-  #appScreen select,
-  #writeScreen select,
-  #hymnScreen select,
-  #appScreen input,
-  #writeScreen input,
-  #hymnScreen input {
-    width: 100%;
-    min-height: 44px;
     font-size: 14px;
   }
-
-  .read-verse {
-    padding-left: 12px;
-    padding-right: 12px;
-    font-size: 16px;
-    line-height: 1.85;
-  }
-
-  .read-verse-num { font-size: 12px; }
-
-  .search-form-row,
-  .hymn-search-row,
-  .hymn-range-row {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-
-  .search-form-row input,
-  .hymn-search-row input,
-  .hymn-range-row select { flex: 1 1 100%; }
-
-  .search-form-row button,
-  .hymn-search-row button { width: 100%; min-height: 44px; }
-
-  .compare-bottom-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 7px;
-  }
-
-  .compare-bottom-nav button {
-    width: 100%;
-    min-width: 0;
-    min-height: 42px;
-    padding-left: 7px;
-    padding-right: 7px;
-    font-size: 13px;
-  }
-
-  .sermon-editor-actions {
-    width: 100%;
-    gap: 8px;
-  }
-
-  .sermon-editor-actions > * { min-width: 0; }
-  .sermon-editor-actions button { min-height: 42px; }
-
-  .hymn-viewer iframe {
-    width: 100%;
-    min-height: 70dvh;
-  }
-
-  .gratitude-history-record { overflow-wrap: anywhere; }
-}
-
-/* 아주 작은 휴대폰: 380px 이하 */
-@media (max-width: 380px) {
-  .screen-inner,
-  .stats-screen { padding-left: 9px; padding-right: 9px; }
-  #appScreen .field-row,
-  #writeScreen .field-row { gap: 7px; }
-  #appScreen .field-label,
-  #writeScreen .field-label { font-size: 14px !important; }
-  .read-verse { font-size: 15px; line-height: 1.8; }
-  .compare-bottom-nav button { font-size: 12px; padding-left: 4px; padding-right: 4px; }
 }
