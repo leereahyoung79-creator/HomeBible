@@ -124,57 +124,23 @@
 <!-- ✝️ 성경책보기 화면 (로그인 없이, 예배 중 찾아볼 때) -->
 <section id="readScreen" class="app-screen hidden">
   <header class="topbar">
-    <div class="topbar-inner">
-      <button id="readHomeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
-      <div class="field-group">
-        <label class="field field-testament">
-          <span class="field-label">구약/신약</span>
-          <select id="readTestamentSelect" aria-label="구약 또는 신약 선택">
-            <option value="OT">구약</option>
-            <option value="NT">신약</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field-label">성경</span>
-          <select id="readBookSelect" aria-label="성경책 선택"></select>
-        </label>
-        <button id="bibleBookSearchBtn" class="pill-toggle book-search-top-btn" type="button">🔎 성경검색</button>
-        <label class="field field-narrow">
-          <span class="field-label">장</span>
-          <select id="readChapterSelect" aria-label="장 선택"></select>
-        </label>
-        <label class="field field-narrow">
-          <span class="field-label">절</span>
-          <select id="readVerseSelect" aria-label="절 선택"></select>
-        </label>
-        <label class="field field-narrow">
-          <span class="field-label">번역</span>
-          <select id="readTranslationSelect" aria-label="번역본 선택">
-            <option value="std">표준새번역</option>
-            <option value="easy">쉬운성경</option>
-            <option value="gae">개역개정</option>
-          </select>
-        </label>
-      </div>
-      <button id="readUserChip" class="user-chip" title="필사자 바꾸기">
-        <span id="readUserChipName">이름</span>
-      </button>
+    <div class="read-hidden-selection" aria-hidden="true">
+      <select id="readTestamentSelect"><option value="OT">구약</option><option value="NT">신약</option></select>
+      <select id="readBookSelect"></select>
+      <select id="readChapterSelect"></select>
+      <select id="readVerseSelect"></select>
     </div>
-
     <div class="read-toolbar">
-      <div class="toolbar-row">
-        <span class="toolbar-label">🔖 책갈피</span>
-        <div id="bookmarkSlots" class="bookmark-slots"></div>
-      </div>
-      <div class="toolbar-row">
-        <span class="toolbar-label">🌈 형광펜</span>
-        <div id="highlightSwatches" class="highlight-swatches"></div>
-        <button id="sermonNoteBtn" class="pill-toggle" type="button">📝 예배노트</button><span id="sermonSelectionStatus" class="sermon-selection-status hidden"></span>
-        <button id="sermonHistoryBtn" class="pill-toggle" type="button">🗓 지난 노트</button>
-        <button id="copyVerseBtn" class="pill-toggle" type="button">📋 말씀 복사</button>
-        <button id="copySelectedVersesBtn" class="pill-toggle hidden" type="button">복사하기</button>
+      <div class="toolbar-row read-toolbar-first">
+        <button id="bibleBookSearchBtn" class="pill-toggle book-search-top-btn" type="button">🔎 성경찾기</button>
         <button id="bibleSearchBtn" class="pill-toggle" type="button">🔎 단어검색</button>
-        <button id="compareBtn" class="pill-toggle" type="button">📚 비교</button>
+        <label class="read-translation-inline" aria-label="번역본 선택"><span>번역</span><select id="readTranslationSelect" aria-label="번역본 선택"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select></label>
+        <button id="readUserChip" class="user-chip" title="필사자 바꾸기"><span id="readUserChipName">이름</span></button>
+        <button id="readHomeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
+      </div>
+      <div class="toolbar-row read-toolbar-second">
+        <div class="highlight-group"><span class="toolbar-label">🌈 형광펜</span><div id="highlightSwatches" class="highlight-swatches"></div></div>
+        <button id="compareBtn" class="pill-toggle compare-under-translation" type="button">📚 비교</button>
       </div>
     </div>
   </header>
@@ -185,6 +151,21 @@
         <span id="readBookName">창세기</span> <span id="readChapterLabel">1장</span>
       </div>
       <div id="readVerseList" class="read-verse-list"></div>
+
+      <div id="selectedVerseActions" class="selected-verse-actions hidden" aria-live="polite">
+        <div class="selected-verse-actions-title">선택한 말씀</div>
+        <div class="selected-verse-actions-buttons">
+          <button id="sermonNoteBtn" class="pill-toggle" type="button">📝 예배노트</button>
+          <button id="sermonHistoryBtn" class="pill-toggle" type="button">🗓 지난 노트</button>
+          <button id="copyVerseBtn" class="pill-toggle" type="button">📋 말씀 복사</button>
+          <button id="copySelectedVersesBtn" class="pill-toggle hidden" type="button">복사하기</button>
+        </div>
+        <div class="selected-bookmark-area">
+          <span class="toolbar-label">🔖 책갈피</span>
+          <div id="bookmarkSlots" class="bookmark-slots"></div>
+        </div>
+        <span id="sermonSelectionStatus" class="sermon-selection-status hidden"></span>
+      </div>
 
       <div class="read-nav">
         <button id="readPrevChBtn" class="ghost-button">← 이전 장</button>
@@ -453,6 +434,19 @@
 <section id="appScreen" class="app-screen hidden">
 
   <header class="topbar">
+    <div class="write-toolbar" aria-label="성경필사 메뉴">
+      <div class="write-toolbar-first">
+        <button id="writeBibleBookSearchBtn" class="pill-toggle" type="button">🔎 성경찾기</button>
+        <label class="read-translation-inline" aria-label="필사 번역본 선택"><span>번역</span><select id="writeTranslationQuickSelect" aria-label="필사 번역본 선택"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select></label>
+        <button id="writeUserQuickBtn" class="user-chip" type="button"><span id="writeUserQuickName">이름</span></button>
+        <button id="writeHomeQuickBtn" class="icon-btn close-top-btn" type="button" title="닫기" aria-label="닫기">✕</button>
+      </div>
+      <div class="write-toolbar-second">
+        <button id="writeContinueBtn" class="pill-toggle" type="button">🔖 이어쓰기</button>
+        <button id="writeStatsQuickBtn" class="pill-toggle" type="button">📊 필사현황</button>
+        <button id="writeNotesQuickBtn" class="pill-toggle" type="button">📝 묵상노트</button>
+      </div>
+    </div>
     <div class="topbar-inner">
       <button id="homeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
 

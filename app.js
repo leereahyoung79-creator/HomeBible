@@ -125,6 +125,7 @@
     readBookName: document.getElementById("readBookName"),
     readChapterLabel: document.getElementById("readChapterLabel"),
     readVerseList: document.getElementById("readVerseList"),
+    selectedVerseActions: document.getElementById("selectedVerseActions"),
     readPrevChBtn: document.getElementById("readPrevChBtn"),
     readNextChBtn: document.getElementById("readNextChBtn"),
     readVerseSelect: document.getElementById("readVerseSelect"),
@@ -229,6 +230,14 @@
     closeStatsBtn: document.getElementById("closeStatsBtn"),
 
     notesListBtn: document.getElementById("notesListBtn"),
+    writeBibleBookSearchBtn: document.getElementById("writeBibleBookSearchBtn"),
+    writeTranslationQuickSelect: document.getElementById("writeTranslationQuickSelect"),
+    writeUserQuickBtn: document.getElementById("writeUserQuickBtn"),
+    writeUserQuickName: document.getElementById("writeUserQuickName"),
+    writeHomeQuickBtn: document.getElementById("writeHomeQuickBtn"),
+    writeContinueBtn: document.getElementById("writeContinueBtn"),
+    writeStatsQuickBtn: document.getElementById("writeStatsQuickBtn"),
+    writeNotesQuickBtn: document.getElementById("writeNotesQuickBtn"),
     notesListScreen: document.getElementById("notesListScreen"),
     notesList: document.getElementById("notesList"),
     closeNotesListBtn: document.getElementById("closeNotesListBtn"),
@@ -545,6 +554,7 @@
     var p = getProfile(birth);
     var displayName = p ? p.name : birth;
     els.userChipName.textContent = displayName;
+    if (els.writeUserQuickName) els.writeUserQuickName.textContent = displayName;
     if (els.readUserChipName) els.readUserChipName.textContent = displayName;
   }
   function isLoggedIn() {
@@ -1611,6 +1621,7 @@
       });
     });
     updateCopyToolbar();
+    updateSelectedVerseActions();
     if (sermonSelectionMode) {
       Object.keys(selectedSermonVerses).forEach(function(key){
         var selected = els.readVerseList.querySelector('.read-verse[data-vkey="' + key + '"]');
@@ -1621,10 +1632,29 @@
 
   }
 
+  function updateSelectedVerseActions() {
+    if (!els.selectedVerseActions) return;
+    var selected = els.readVerseList ? els.readVerseList.querySelector(".read-verse.verse-selected") : null;
+    els.selectedVerseActions.classList.toggle("hidden", !selected);
+    if (selected) {
+      els.readScreen.classList.add("focus-reading");
+    } else {
+      els.readScreen.classList.remove("focus-reading");
+    }
+  }
+
   function selectVerseForNote(el) {
+    var wasSelected = el.classList.contains("verse-selected");
     els.readVerseList.querySelectorAll(".read-verse.verse-selected").forEach(function (v) {
       v.classList.remove("verse-selected");
     });
+
+    if (wasSelected) {
+      pendingBookmarkVerse = null;
+      updateSelectedVerseActions();
+      return;
+    }
+
     el.classList.add("verse-selected");
     var vs = el.querySelector(".read-verse-num").textContent;
     els.readVerseSelect.value = vs;
@@ -1635,6 +1665,7 @@
       label: META.books[readState.bookNo].name + " " + readState.chapter + ":" + vs
     };
     renderBookmarkSlots();
+    updateSelectedVerseActions();
   }
 
 
@@ -1894,9 +1925,13 @@
   /* ---------------- 형광펜 ---------------- */
   var HL_COLORS = [
     { key: "yellow", hex: "#fdf0b8" },
+    { key: "orange", hex: "#f8d7b0" },
     { key: "pink", hex: "#fbdfe6" },
+    { key: "purple", hex: "#e6d9f5" },
     { key: "green", hex: "#dcefd8" },
-    { key: "blue", hex: "#d9e8f5" }
+    { key: "mint", hex: "#cfeee5" },
+    { key: "blue", hex: "#d9e8f5" },
+    { key: "sky", hex: "#cfe8f8" }
   ];
   var highlightColor = null;
 
@@ -2089,6 +2124,32 @@
       .toLowerCase();
   }
 
+  function koreanInitials(value) {
+    var text = String(value || "").normalize("NFC");
+    var result = "";
+    for (var i = 0; i < text.length; i++) {
+      var code = text.charCodeAt(i);
+      if (code >= 0xAC00 && code <= 0xD7A3) {
+        result += ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"][Math.floor((code - 0xAC00) / 588)];
+      } else {
+        result += text[i].toLowerCase();
+      }
+    }
+    return result;
+  }
+
+  var bibleBookSearchTarget = "read";
+
+  function applyBibleSearchSelection(bno, ch, vs) {
+    if (bibleBookSearchTarget === "write") {
+      var keys = verseKeysSorted(DATA[bno].chapters[String(ch)]);
+      var idx = Math.max(0, keys.indexOf(String(vs)));
+      goTo(bno, ch, idx);
+    } else {
+      readGoTo(bno, ch, Number(vs));
+    }
+  }
+
   function openBibleBookSearch() {
     els.bibleBookSearchScreen.classList.remove("hidden");
     els.bibleBookSearchInput.value = "";
@@ -2118,7 +2179,11 @@
       var abbr = String(book.abbr || "");
       var nameN = normalizeBookSearchText(name);
       var abbrN = normalizeBookSearchText(abbr);
-      if (nameN.indexOf(needle) !== -1 || abbrN.indexOf(needle) !== -1) {
+      var nameInitials = koreanInitials(name);
+      var abbrInitials = koreanInitials(abbr);
+      var queryInitials = koreanInitials(query);
+      if (nameN.indexOf(needle) !== -1 || abbrN.indexOf(needle) !== -1 ||
+          nameInitials.indexOf(queryInitials) !== -1 || abbrInitials.indexOf(queryInitials) !== -1) {
         results.push({
           bno: bno,
           name: name,
@@ -2140,11 +2205,82 @@
         '<span class="bible-book-search-name">' + escapeHtml2(item.name) + '</span>' +
         '<span class="bible-book-search-meta">' + escapeHtml2(item.abbr || "") + ' · ' + item.testament + '</span>';
       row.addEventListener("click", function () {
-        closeBibleBookSearch();
-        readGoTo(item.bno, chapterNumsSorted(item.bno)[0], 1);
+        showBibleChapterPicker(item);
       });
       els.bibleBookSearchResults.appendChild(row);
     });
+  }
+
+  function showBibleChapterPicker(item) {
+    els.bibleBookSearchStatus.textContent = item.name + " — 장을 선택하세요.";
+    els.bibleBookSearchInput.value = item.name;
+    els.bibleBookSearchResults.innerHTML = "";
+    var back = document.createElement("button");
+    back.type = "button";
+    back.className = "secondary-button bible-picker-back";
+    back.textContent = "← 성경책 검색 결과로 돌아가기";
+    back.addEventListener("click", function () { searchBibleBook(); });
+    els.bibleBookSearchResults.appendChild(back);
+    var title = document.createElement("h3");
+    title.className = "bible-picker-title";
+    title.textContent = item.name + " 장 선택";
+    els.bibleBookSearchResults.appendChild(title);
+    var grid = document.createElement("div");
+    grid.className = "bible-chapter-picker";
+    chapterNumsSorted(item.bno).forEach(function (ch) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bible-chapter-button";
+      btn.textContent = ch + "장";
+      btn.addEventListener("click", function () {
+        showBibleVersePicker(item, ch);
+      });
+      grid.appendChild(btn);
+    });
+    els.bibleBookSearchResults.appendChild(grid);
+  }
+
+  function showBibleVersePicker(item, ch) {
+    els.bibleBookSearchStatus.textContent = item.name + " " + ch + "장 — 절을 선택하세요.";
+    els.bibleBookSearchInput.value = item.name + " " + ch + "장";
+    els.bibleBookSearchResults.innerHTML = "";
+
+    var back = document.createElement("button");
+    back.type = "button";
+    back.className = "secondary-button bible-picker-back";
+    back.textContent = "← 장 선택으로 돌아가기";
+    back.addEventListener("click", function () { showBibleChapterPicker(item); });
+    els.bibleBookSearchResults.appendChild(back);
+
+    var title = document.createElement("h3");
+    title.className = "bible-picker-title";
+    title.textContent = item.name + " " + ch + "장 · 절 선택";
+    els.bibleBookSearchResults.appendChild(title);
+
+    var allBtn = document.createElement("button");
+    allBtn.type = "button";
+    allBtn.className = "bible-verse-all-button";
+    allBtn.textContent = "전체 장 보기";
+    allBtn.addEventListener("click", function () {
+      closeBibleBookSearch();
+      applyBibleSearchSelection(item.bno, ch, 1);
+    });
+    els.bibleBookSearchResults.appendChild(allBtn);
+
+    var grid = document.createElement("div");
+    grid.className = "bible-verse-picker";
+    verseKeysSorted(DATA[item.bno].chapters[String(ch)]).forEach(function (vs) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bible-verse-button";
+      btn.textContent = vs + "절";
+      btn.addEventListener("click", function () {
+        closeBibleBookSearch();
+        applyBibleSearchSelection(item.bno, ch, Number(vs));
+      });
+      grid.appendChild(btn);
+    });
+    els.bibleBookSearchResults.appendChild(grid);
   }
 
   /* ---------------- 말씀 검색 ---------------- */
@@ -2434,7 +2570,15 @@
     }
     if (idx >= 0) notes[today][idx] = obj; else notes[today].push(obj);
     saveSermonNotes(notes);
-    if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
+    // 저장 직후 현재 화면의 예배노트 표시를 즉시 갱신합니다.
+    // 저장 함수와 본문 렌더링 사이의 타이밍 차이로 목록이 늦게 보이는 문제를 방지합니다.
+    if (els.sermonHistory && !els.sermonHistory.classList.contains("hidden")) renderSermonHistoryList();
+    if (els.readVerseList && readState.bookNo && readState.chapter) {
+      renderReadChapter();
+      setTimeout(function () {
+        if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
+      }, 0);
+    }
 
     var p = getProfile(state.currentBirth);
     syncPost("sermonNote", {
@@ -2512,16 +2656,21 @@
     els.sermonNoteScreen.classList.add("hidden");
     if (els.sermonEditor) els.sermonEditor.classList.add("hidden");
     if (els.sermonHistory) els.sermonHistory.classList.add("hidden");
+    // 예배노트 창을 닫는 순간 저장된 노트 표시를 다시 그립니다.
+    // 저장 직후 선택 상태나 화면 전환 때문에 목록이 늦게 보이는 문제를 방지합니다.
+    if (els.readVerseList && readState.bookNo && readState.chapter) {
+      renderReadChapter();
+    }
   }
 
   function renderSermonHistoryList() {
     var notes = loadSermonNotes();
     var today = todayString();
-    var dates = Object.keys(notes).filter(function (d) { return d !== today && notes[d] && notes[d].length; }).sort().reverse();
+    var dates = Object.keys(notes).filter(function (d) { return notes[d] && notes[d].length; }).sort().reverse();
     els.sermonNoteDate.textContent = "지난 예배노트";
     els.sermonHistory.innerHTML = "";
     if (dates.length === 0) {
-      els.sermonHistory.innerHTML = '<p class="stats-empty">오늘 이전 기록이 아직 없어요.</p>';
+      els.sermonHistory.innerHTML = '<p class="stats-empty">저장된 예배노트가 아직 없어요.</p>';
       return;
     }
     dates.forEach(function (d) {
@@ -3117,7 +3266,7 @@
 
   function openHymn(h) {
     els.hymnViewerTitle.textContent = h.number + "장 · " + h.title;
-    els.hymnFrame.src = h.file + "#page=1";
+    els.hymnFrame.src = h.file + "#page=1&zoom=page-width&toolbar=0&navpanes=0";
     if (els.hymnOpenPdfBtn) {
       els.hymnOpenPdfBtn.onclick = function () {
         if (!els.hymnFullPdfScreen || !els.hymnFullPdfFrame) return;
@@ -3260,7 +3409,22 @@
     updateCopyToolbar();
   });
   if (els.copySelectedVersesBtn) els.copySelectedVersesBtn.addEventListener("click", copySelectedVerses);
-  els.bibleBookSearchBtn.addEventListener("click", openBibleBookSearch);
+  els.bibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "read"; openBibleBookSearch(); });
+  if (els.writeBibleBookSearchBtn) els.writeBibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "write"; openBibleBookSearch(); });
+  if (els.writeTranslationQuickSelect) els.writeTranslationQuickSelect.addEventListener("change", function () {
+    var key = this.value;
+    setTranslation(key);
+    if (els.translationSelect) els.translationSelect.value = key;
+    if (state.bookNo && state.chapter) {
+      var idx = currentVerseIndex();
+      goTo(state.bookNo, state.chapter, idx >= 0 ? idx : 0);
+    }
+  });
+  if (els.writeUserQuickBtn) els.writeUserQuickBtn.addEventListener("click", function () { showNameScreen("write"); });
+  if (els.writeHomeQuickBtn) els.writeHomeQuickBtn.addEventListener("click", function () { if (els.homeBtn) els.homeBtn.click(); });
+  if (els.writeContinueBtn) els.writeContinueBtn.addEventListener("click", openBookmarks);
+  if (els.writeStatsQuickBtn) els.writeStatsQuickBtn.addEventListener("click", openStats);
+  if (els.writeNotesQuickBtn) els.writeNotesQuickBtn.addEventListener("click", openNotesList);
   els.closeBibleBookSearchBtn.addEventListener("click", closeBibleBookSearch);
   els.bibleBookSearchBottomCloseBtn.addEventListener("click", closeBibleBookSearch);
   els.bibleBookSearchScreen.addEventListener("click", function (e) {
