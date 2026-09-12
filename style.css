@@ -3229,3 +3229,82 @@ textarea {
     font-size: 16px;
   }
 }
+
+
+/* ===== 사용자 글씨 설정 최종 적용 보정 ===== */
+:root {
+  --user-font-scale: 1;
+  --user-font-family: "NanumSquareRoundB", "Gowun Dodum", "Malgun Gothic", sans-serif;
+}
+
+/* 글씨체는 주요 화면의 실제 텍스트 요소에 직접 적용 */
+body,
+body * {
+  font-family: var(--user-font-family) !important;
+}
+
+/* 글씨 크기는 기존 고정 px 규칙을 덮어쓰도록 주요 요소에 직접 적용 */
+#appScreen .verse-text,
+#appScreen .verse-number,
+#appScreen .page-title,
+#appScreen .page-subtitle,
+#readScreen .verse-text,
+#readScreen .verse-number,
+#readScreen .page-title,
+#readScreen .page-subtitle,
+#settingsScreen .settings-preview p,
+#christianQuotesScreen .quote-text,
+#quotesScreen .quote-text,
+#gratitudePrayerScreen textarea,
+#gratitudePrayerScreen input,
+#gratitudePrayerScreen .history-item,
+#notesListScreen,
+#notesListScreen p,
+#notesListScreen .stats-sub {
+  font-size: calc(1em * var(--user-font-scale, 1)) !important;
+}
+
+/* 성경 본문처럼 고정 px로 지정된 영역도 비율 적용 */
+.bible-text,
+.bible-verse,
+.verse-content,
+.verse,
+.write-text,
+.transcription-text,
+.quote-content,
+.quote-text,
+.sermon-note-content,
+.note-content {
+  font-size: calc(1em * var(--user-font-scale, 1)) !important;
+  font-family: var(--user-font-family) !important;
+}
+
+/* 설정 선택 버튼은 설정 화면에서 항상 읽기 쉽게 유지 */
+#settingsScreen .settings-options button,
+#settingsScreen .settings-actions button {
+  font-family: var(--user-font-family) !important;
+  font-size: 14px !important;
+}
+
+/* 글씨가 커져도 가로로 넘치지 않도록 */
+body, main, section, .screen, .card, .panel, .content,
+button, input, textarea, select, p, h1, h2, h3, h4 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  #appScreen .verse-text,
+  #readScreen .verse-text,
+  .bible-text,
+  .bible-verse,
+  .verse-content,
+  .verse,
+  .write-text,
+  .transcription-text,
+  .quote-content,
+  .quote-text {
+    line-height: 1.8 !important;
+  }
+}

@@ -3498,6 +3498,7 @@
       var settings = loadDisplaySettings();
       settings.fontSize = btn.getAttribute("data-font-size");
       applyDisplaySettings(settings);
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     });
   });
   document.querySelectorAll("#fontFamilyOptions button").forEach(function(btn) {
@@ -3505,6 +3506,7 @@
       var settings = loadDisplaySettings();
       settings.fontFamily = btn.getAttribute("data-font-family");
       applyDisplaySettings(settings);
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     });
   });
 
@@ -3539,3 +3541,15 @@
 
   init();
 })();
+
+
+/* 설정·PDF 화면이 늦게 준비되는 경우를 위한 안전 초기화 */
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      if (typeof applyDisplaySettings === "function") {
+        applyDisplaySettings(loadDisplaySettings());
+      }
+    } catch (e) {}
+  });
+}
