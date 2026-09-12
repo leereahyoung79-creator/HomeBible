@@ -362,7 +362,7 @@
         <div class="hymn-viewer-head">
           <strong id="hymnViewerTitle"></strong>
           <div class="hymn-viewer-actions">
-            <a id="hymnOpenPdfBtn" class="secondary-button" href="#" target="_blank" rel="noopener">전체 PDF로 보기</a>
+            <button id="hymnOpenPdfBtn" type="button" class="secondary-button">전체 PDF로 보기</button>
             <button id="hymnViewerClose" type="button" class="secondary-button">목록으로</button>
           </div>
         </div>
@@ -642,6 +642,19 @@
       <button id="resetSettingsBtn" type="button">기본값으로 복원</button>
       <button id="saveSettingsBtn" type="button">저장하고 홈으로</button>
     </div>
+  </div>
+</section>
+
+
+
+<!-- 전체 PDF 보기 화면 -->
+<section id="hymnFullPdfScreen" class="hymn-full-pdf-screen hidden" aria-label="전체 PDF 보기">
+  <div class="hymn-full-pdf-head">
+    <strong id="hymnFullPdfTitle">찬송가 악보</strong>
+    <button id="hymnFullPdfCloseBtn" type="button" class="icon-btn" title="닫기" aria-label="전체 PDF 닫기">✕</button>
+  </div>
+  <div class="hymn-full-pdf-body">
+    <iframe id="hymnFullPdfFrame" title="전체 찬송가 PDF"></iframe>
   </div>
 </section>
 

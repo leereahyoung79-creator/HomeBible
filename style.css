@@ -3179,3 +3179,53 @@ textarea {
     border-radius: 12px;
   }
 }
+
+
+/* ================= 전체 PDF 보기: 앱 내부 화면 + 닫기 버튼 ================= */
+.hymn-full-pdf-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: #FFF8F2;
+}
+.hymn-full-pdf-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #FFF8F2;
+  border-bottom: 1px solid #EBCFBE;
+}
+.hymn-full-pdf-head strong {
+  min-width: 0;
+  font-size: 18px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.hymn-full-pdf-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+}
+.hymn-full-pdf-body iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: 0;
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .hymn-full-pdf-head {
+    padding: 12px 14px;
+  }
+  .hymn-full-pdf-head strong {
+    font-size: 16px;
+  }
+}

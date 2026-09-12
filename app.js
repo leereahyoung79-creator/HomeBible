@@ -101,6 +101,10 @@
     hymnViewerTitle: document.getElementById("hymnViewerTitle"),
     hymnViewerClose: document.getElementById("hymnViewerClose"),
     hymnOpenPdfBtn: document.getElementById("hymnOpenPdfBtn"),
+    hymnFullPdfScreen: document.getElementById("hymnFullPdfScreen"),
+    hymnFullPdfTitle: document.getElementById("hymnFullPdfTitle"),
+    hymnFullPdfCloseBtn: document.getElementById("hymnFullPdfCloseBtn"),
+    hymnFullPdfFrame: document.getElementById("hymnFullPdfFrame"),
     hymnFrame: document.getElementById("hymnFrame"),
 
     readScreen: document.getElementById("readScreen"),
@@ -3115,8 +3119,12 @@
     els.hymnViewerTitle.textContent = h.number + "장 · " + h.title;
     els.hymnFrame.src = h.file + "#page=1";
     if (els.hymnOpenPdfBtn) {
-      els.hymnOpenPdfBtn.href = h.file;
-      els.hymnOpenPdfBtn.setAttribute("download", "");
+      els.hymnOpenPdfBtn.onclick = function () {
+        if (!els.hymnFullPdfScreen || !els.hymnFullPdfFrame) return;
+        els.hymnFullPdfTitle.textContent = h.number + "장 · " + h.title;
+        els.hymnFullPdfFrame.src = h.file;
+        els.hymnFullPdfScreen.classList.remove("hidden");
+      };
     }
     els.hymnViewer.classList.remove("hidden");
     els.hymnResults.classList.add("hidden");
@@ -3498,6 +3506,11 @@
       settings.fontFamily = btn.getAttribute("data-font-family");
       applyDisplaySettings(settings);
     });
+  });
+
+  if (els.hymnFullPdfCloseBtn) els.hymnFullPdfCloseBtn.addEventListener("click", function () {
+    if (els.hymnFullPdfFrame) els.hymnFullPdfFrame.src = "about:blank";
+    if (els.hymnFullPdfScreen) els.hymnFullPdfScreen.classList.add("hidden");
   });
 
   /* ---------------- 초기화 ---------------- */
