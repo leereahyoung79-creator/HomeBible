@@ -51,6 +51,11 @@
     hymnBtn: document.getElementById("hymnBtn"),
     gratitudePrayerBtn: document.getElementById("gratitudePrayerBtn"),
     christianQuotesBtn: document.getElementById("christianQuotesBtn"),
+    settingsBtn: document.getElementById("settingsBtn"),
+    settingsScreen: document.getElementById("settingsScreen"),
+    closeSettingsBtn: document.getElementById("closeSettingsBtn"),
+    resetSettingsBtn: document.getElementById("resetSettingsBtn"),
+    saveSettingsBtn: document.getElementById("saveSettingsBtn"),
     christianQuotesScreen: document.getElementById("christianQuotesScreen"),
     closeChristianQuotesBtn: document.getElementById("closeChristianQuotesBtn"),
     christianQuoteCategories: document.getElementById("christianQuoteCategories"),
@@ -95,6 +100,7 @@
     hymnViewer: document.getElementById("hymnViewer"),
     hymnViewerTitle: document.getElementById("hymnViewerTitle"),
     hymnViewerClose: document.getElementById("hymnViewerClose"),
+    hymnOpenPdfBtn: document.getElementById("hymnOpenPdfBtn"),
     hymnFrame: document.getElementById("hymnFrame"),
 
     readScreen: document.getElementById("readScreen"),
@@ -3108,6 +3114,10 @@
   function openHymn(h) {
     els.hymnViewerTitle.textContent = h.number + "장 · " + h.title;
     els.hymnFrame.src = h.file + "#page=1";
+    if (els.hymnOpenPdfBtn) {
+      els.hymnOpenPdfBtn.href = h.file;
+      els.hymnOpenPdfBtn.setAttribute("download", "");
+    }
     els.hymnViewer.classList.remove("hidden");
     els.hymnResults.classList.add("hidden");
     els.hymnViewer.scrollIntoView({behavior:"smooth", block:"start"});
@@ -3174,13 +3184,13 @@
     els.hymnScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
   });
-  els.hymnViewerClose.addEventListener("click", closeHymnViewer);
+  if (els.hymnViewerClose) els.hymnViewerClose.addEventListener("click", closeHymnViewer);
   if (els.hymnRange) els.hymnRange.addEventListener("change", function () { renderHymnResults(els.hymnSearchInput.value); });
 
-  els.hymnSearchSubmit.addEventListener("click", function () {
+  if (els.hymnSearchSubmit) els.hymnSearchSubmit.addEventListener("click", function () {
     renderHymnResults(els.hymnSearchInput.value);
   });
-  els.hymnSearchInput.addEventListener("keydown", function(e) {
+  if (els.hymnSearchInput) els.hymnSearchInput.addEventListener("keydown", function(e) {
     if (e.key === "Enter") renderHymnResults(els.hymnSearchInput.value);
   });
   els.nameHomeBtn.addEventListener("click", function () {
@@ -3404,8 +3414,95 @@
     els.birthInput.value = els.birthInput.value.replace(/[^0-9]/g, "").slice(0, 6);
   });
 
+
+  /* ---------------- 설정: 글씨 크기·글씨체 ---------------- */
+  var SETTINGS_KEY = "ourBibleDisplaySettings";
+  var DEFAULT_DISPLAY_SETTINGS = { fontSize: "normal", fontFamily: "default" };
+
+  function loadDisplaySettings() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+      return Object.assign({}, DEFAULT_DISPLAY_SETTINGS, saved || {});
+    } catch (e) {
+      return Object.assign({}, DEFAULT_DISPLAY_SETTINGS);
+    }
+  }
+
+  function applyDisplaySettings(settings) {
+    var sizeMap = { small: 0.90, normal: 1, large: 1.16, xlarge: 1.34 };
+    var familyMap = {
+      default: '"NanumSquareRoundB", "Gowun Dodum", sans-serif',
+      gothic: '"Noto Sans KR", "Malgun Gothic", sans-serif',
+      myeongjo: '"Nanum Myeongjo", serif',
+      soft: '"Gowun Dodum", "NanumSquareRoundB", sans-serif'
+    };
+    var root = document.documentElement;
+    root.style.setProperty("--user-font-scale", sizeMap[settings.fontSize] || 1);
+    root.style.setProperty("--user-font-family", familyMap[settings.fontFamily] || familyMap.default);
+    root.setAttribute("data-font-size", settings.fontSize || "normal");
+    root.setAttribute("data-font-family", settings.fontFamily || "default");
+
+    document.querySelectorAll("[data-font-size]").forEach(function(btn) {
+      if (btn.closest("#fontSizeOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-size") === settings.fontSize);
+    });
+    document.querySelectorAll("[data-font-family]").forEach(function(btn) {
+      if (btn.closest("#fontFamilyOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-family") === settings.fontFamily);
+    });
+  }
+
+  function openSettingsScreen() {
+    if (!els.settingsScreen) return;
+    document.querySelectorAll("section").forEach(function(section) {
+      if (section.id !== "settingsScreen") section.classList.add("hidden");
+    });
+    els.settingsScreen.classList.remove("hidden");
+    applyDisplaySettings(loadDisplaySettings());
+  }
+
+  function closeSettingsScreen() {
+    if (els.settingsScreen) els.settingsScreen.classList.add("hidden");
+    if (els.cover) els.cover.classList.remove("hidden");
+  }
+
+  function saveDisplaySettings() {
+    var settings = loadDisplaySettings();
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    applyDisplaySettings(settings);
+  }
+
+  if (els.settingsBtn) {
+    els.settingsBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      openSettingsScreen();
+    });
+  }
+  if (els.closeSettingsBtn) els.closeSettingsBtn.addEventListener("click", closeSettingsScreen);
+  if (els.saveSettingsBtn) els.saveSettingsBtn.addEventListener("click", function() {
+    saveDisplaySettings();
+    closeSettingsScreen();
+  });
+  if (els.resetSettingsBtn) els.resetSettingsBtn.addEventListener("click", function() {
+    applyDisplaySettings(DEFAULT_DISPLAY_SETTINGS);
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_DISPLAY_SETTINGS)); } catch (e) {}
+  });
+  document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var settings = loadDisplaySettings();
+      settings.fontSize = btn.getAttribute("data-font-size");
+      applyDisplaySettings(settings);
+    });
+  });
+  document.querySelectorAll("#fontFamilyOptions button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var settings = loadDisplaySettings();
+      settings.fontFamily = btn.getAttribute("data-font-family");
+      applyDisplaySettings(settings);
+    });
+  });
+
   /* ---------------- 초기화 ---------------- */
   function init() {
+    applyDisplaySettings(loadDisplaySettings());
     setTranslation(loadTranslationPref());
     if (els.writeTestamentSelect) {
       els.writeTestamentSelect.value = "OT";

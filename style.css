@@ -2797,3 +2797,385 @@ body{font-size:16px;color:var(--ink);}
   font-weight: 700 !important;
   line-height: 1.45;
 }
+
+
+/* ===================== 모바일 화면 최종 정렬 보정 ===================== */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.cover-icon {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 0 auto 10px;
+}
+@media (max-width: 600px) {
+  .topbar-inner {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 10px 10px;
+  }
+  .topbar-inner > .field-group {
+    order: 10;
+    flex: 0 0 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    min-width: 0;
+  }
+  .topbar-inner > .field-group .field,
+  .topbar-inner > .field-group .field-narrow {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .topbar-inner > .field-group .field select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 14px !important;
+  }
+  .topbar-inner > .field-group .field-label {
+    font-size: 13px !important;
+    white-space: nowrap;
+  }
+  .topbar-inner > .user-chip {
+    max-width: 90px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .topbar-inner > .icon-btn {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+
+  .page-wrap {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 10px 10px;
+  }
+  .book-page {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 24px 18px 24px;
+  }
+  .page-heading {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .progress-tag {
+    margin-left: auto;
+  }
+
+  .gratitude-prayer-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .gratitude-prayer-body {
+    grid-template-columns: 1fr !important;
+    padding: 0 14px;
+  }
+  .gratitude-panel,
+  .prayer-panel {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .gratitude-prayer-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px 16px;
+  }
+  .gratitude-prayer-footer .reflection-saved {
+    width: 100%;
+    text-align: center;
+  }
+  .gratitude-prayer-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .gratitude-prayer-actions button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  .gratitude-prayer-actions button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .cover-icon {
+    width: 82px;
+    height: 82px;
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 380px) {
+  .topbar-inner {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .topbar-inner > .field-group {
+    gap: 8px;
+  }
+  .topbar-inner > .field-group .field-label {
+    font-size: 12px !important;
+  }
+  .topbar-inner > .field-group .field select {
+    font-size: 13px !important;
+  }
+  .book-page {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .gratitude-prayer-actions button {
+    font-size: 12px;
+  }
+}
+
+/* 성경책보기·성경필사 화면: 오른쪽 상단 닫기 버튼 */
+#appScreen > .topbar .topbar-inner,
+#readScreen > .topbar .topbar-inner {
+  position: relative;
+}
+#appScreen > .topbar .close-top-btn,
+#readScreen > .topbar .close-top-btn {
+  order: 99;
+  margin-left: auto;
+  margin-right: 0;
+  flex: 0 0 34px;
+}
+@media (max-width: 600px) {
+  #appScreen > .topbar .close-top-btn,
+  #readScreen > .topbar .close-top-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+  }
+  #appScreen > .topbar .topbar-inner,
+  #readScreen > .topbar .topbar-inner {
+    padding-right: 52px;
+  }
+}
+
+
+/* ===================== 홈 메뉴 2열 + 설정 화면 ===================== */
+.cover-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+.cover-grid .grid-card {
+  min-width: 0;
+  width: 100%;
+}
+.cover-grid .grid-card .grid-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.card-neutral {
+  background: #E8E5F0 !important;
+}
+.settings-home-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+.settings-card {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 24px;
+}
+.settings-section,
+.settings-preview {
+  margin-top: 22px;
+}
+.settings-section h3,
+.settings-preview h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: var(--ink);
+}
+.settings-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.settings-options button,
+.settings-actions button {
+  min-width: 0;
+  padding: 12px 8px;
+  border: 1px solid #EBCFBE;
+  border-radius: 14px;
+  background: #FFF8F2;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.settings-options button.selected {
+  background: #F8DCD4;
+  border-color: #E98B7D;
+  box-shadow: 0 0 0 2px rgba(233,139,125,.16);
+}
+.settings-font-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.settings-preview {
+  padding: 18px;
+  border-radius: 16px;
+  background: #FFF8F2;
+  border: 1px solid #EBCFBE;
+}
+.settings-preview p {
+  margin: 0;
+  font-family: var(--user-font-family, inherit);
+  font-size: calc(18px * var(--user-font-scale, 1));
+  line-height: 1.8;
+}
+.settings-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+.settings-actions button:last-child {
+  background: #F8DCD4;
+  border-color: #E98B7D;
+}
+:root {
+  --user-font-scale: 1;
+  --user-font-family: inherit;
+}
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--user-font-family, inherit);
+}
+.book-page .verse-text,
+.book-page .verse-number,
+.book-page .page-title,
+.book-page .page-subtitle,
+.write-page .verse-text,
+.write-page .verse-number,
+.christian-quote-text,
+.gratitude-panel textarea,
+.prayer-panel textarea,
+.notes-list,
+.today-verse-text {
+  font-size: calc(1em * var(--user-font-scale, 1));
+}
+.grid-label,
+.field-label,
+button,
+select,
+input,
+textarea {
+  font-size: calc(1em * var(--user-font-scale, 1));
+}
+@media (max-width: 600px) {
+  .cover-grid {
+    gap: 10px !important;
+  }
+  .settings-card {
+    margin: 12px 10px;
+    padding: 18px;
+  }
+  .settings-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .settings-actions {
+    grid-template-columns: 1fr;
+  }
+  .settings-home-emoji {
+    font-size: 30px;
+  }
+}
+@media (max-width: 380px) {
+  .cover-grid {
+    gap: 8px !important;
+  }
+  .settings-card {
+    padding: 14px;
+  }
+}
+
+
+/* ================= 찬송가 모바일 PDF 개선 ================= */
+.hymn-viewer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hymn-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hymn-pdf-scroll {
+  width: 100%;
+  height: min(72vh, 820px);
+  min-height: 420px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border: 1px solid #EBCFBE;
+  border-radius: 14px;
+  background: #fff;
+}
+.hymn-pdf-scroll iframe {
+  display: block;
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: 0;
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .hymn-viewer-head {
+    align-items: flex-start;
+  }
+  .hymn-viewer-head strong {
+    flex: 1 1 100%;
+    font-size: 18px;
+    line-height: 1.45;
+  }
+  .hymn-viewer-actions {
+    width: 100%;
+  }
+  .hymn-viewer-actions .secondary-button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  .hymn-pdf-scroll {
+    height: 65vh;
+    min-height: 360px;
+    border-radius: 12px;
+  }
+}

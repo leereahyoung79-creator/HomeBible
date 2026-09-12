@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>우리집 성경책</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="icon" href="icons/home.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/home.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#E98B7D">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,6 +23,7 @@
 <!-- 표지 화면 -->
 <section id="cover" class="cover">
   <div class="cover-card">
+    <img class="cover-icon" src="icons/home.png" alt="우리집 성경책 아이콘">
     <h1 class="cover-title">우리집 성경책</h1>
     <p class="cover-subtitle">말씀을 한 글자 한 글자 마음에 새기는 시간</p>
 
@@ -54,10 +55,15 @@
           <img class="grid-icon" src="icons/buttons/기독교명언.png" alt="">
           <span class="grid-label">기독교 명언</span>
         </button>
+        <button id="startBtn" type="button" class="grid-card card-coral">
+          <img class="grid-icon" src="icons/buttons/성경필사.png" alt="">
+          <span class="grid-label">성경필사</span>
+        </button>
+        <button id="settingsBtn" type="button" class="grid-card card-neutral" aria-label="설정 열기">
+          <span class="settings-home-emoji" aria-hidden="true">⚙️</span>
+          <span class="grid-label">설정</span>
+        </button>
       </div>
-      <button id="startBtn" type="button" class="wide-cta">
-        <img class="grid-icon wide-icon" src="icons/buttons/성경필사.png" alt=""> 성경필사
-      </button>
     </div>
   </div>
 </section>
@@ -119,7 +125,7 @@
 <section id="readScreen" class="app-screen hidden">
   <header class="topbar">
     <div class="topbar-inner">
-      <button id="readHomeBtn" class="icon-btn" title="처음 화면으로">←</button>
+      <button id="readHomeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
       <div class="field-group">
         <label class="field field-testament">
           <span class="field-label">구약/신약</span>
@@ -355,9 +361,14 @@
       <div id="hymnViewer" class="hymn-viewer hidden">
         <div class="hymn-viewer-head">
           <strong id="hymnViewerTitle"></strong>
-          <button id="hymnViewerClose" type="button" class="secondary-button">목록으로</button>
+          <div class="hymn-viewer-actions">
+            <a id="hymnOpenPdfBtn" class="secondary-button" href="#" target="_blank" rel="noopener">전체 PDF로 보기</a>
+            <button id="hymnViewerClose" type="button" class="secondary-button">목록으로</button>
+          </div>
         </div>
-        <iframe id="hymnFrame" title="찬송가 보기" loading="lazy"></iframe>
+        <div class="hymn-pdf-scroll" role="region" aria-label="찬송가 악보 스크롤 영역">
+          <iframe id="hymnFrame" title="찬송가 보기" loading="lazy" scrolling="yes"></iframe>
+        </div>
       </div>
     </div>
   </div>
@@ -443,7 +454,7 @@
 
   <header class="topbar">
     <div class="topbar-inner">
-      <button id="homeBtn" class="icon-btn" title="처음 화면으로">←</button>
+      <button id="homeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
 
       <div class="field-group">
         <label class="field field-testament">
@@ -591,5 +602,48 @@
 <script src="commentary-data.js"></script>
 <script src="christian-quotes.js"></script>
 <script src="app.js"></script>
+
+
+<!-- 설정 화면 -->
+<section id="settingsScreen" class="stats-screen hidden">
+  <div class="stats-card settings-card">
+    <div class="stats-head">
+      <h2>⚙️ 설정</h2>
+      <button id="closeSettingsBtn" class="icon-btn" title="닫기" aria-label="닫기">✕</button>
+    </div>
+    <p class="stats-sub">글씨 크기와 글씨체를 원하는 대로 바꿀 수 있어요.</p>
+
+    <div class="settings-section">
+      <h3>글씨 크기</h3>
+      <div class="settings-options" id="fontSizeOptions">
+        <button type="button" data-font-size="small">작게</button>
+        <button type="button" data-font-size="normal" class="selected">보통</button>
+        <button type="button" data-font-size="large">크게</button>
+        <button type="button" data-font-size="xlarge">아주 크게</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>글씨체</h3>
+      <div class="settings-options settings-font-options" id="fontFamilyOptions">
+        <button type="button" data-font-family="default" class="selected">기본 글씨체</button>
+        <button type="button" data-font-family="gothic">고딕체</button>
+        <button type="button" data-font-family="myeongjo">명조체</button>
+        <button type="button" data-font-family="soft">부드러운 글씨체</button>
+      </div>
+    </div>
+
+    <div class="settings-preview">
+      <h3>미리보기</h3>
+      <p>태초에 하나님이 천지를 창조하셨다.</p>
+    </div>
+
+    <div class="settings-actions">
+      <button id="resetSettingsBtn" type="button">기본값으로 복원</button>
+      <button id="saveSettingsBtn" type="button">저장하고 홈으로</button>
+    </div>
+  </div>
+</section>
+
 </body>
 </html>
