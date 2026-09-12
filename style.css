@@ -3542,3 +3542,16 @@ button, input, textarea, select, p, h1, h2, h3, h4 {
   .read-toolbar-second .highlight-group { gap: 4px; }
   .read-toolbar-second .hl-swatch { width: 21px; height: 21px; }
 }
+
+/* 찬송가 모바일 PDF 페이지 보기 */
+.hymn-pages{width:100%;min-height:240px;overflow:visible;padding:8px 0 18px;background:#f7f3ef;border:1px solid var(--border);border-radius:12px;}
+.hymn-page{width:100%;margin:0 auto 18px;padding:10px 10px 14px;background:#fff;border-bottom:1px solid #e8ddd4;box-sizing:border-box;}
+.hymn-page-label{font-size:12px;color:#8c7b70;text-align:center;margin-bottom:8px;}
+.hymn-page-canvas{display:block;width:100%;height:auto;max-width:100%;margin:0 auto;background:#fff;}
+.hymn-loading{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6;}
+#hymnFrame.hidden{display:none;}
+@media (max-width:600px){
+  .hymn-pages{border-radius:10px;padding:4px 0 10px;}
+  .hymn-page{padding:8px 6px 12px;margin-bottom:12px;}
+  .hymn-page-label{font-size:11px;margin-bottom:5px;}
+}

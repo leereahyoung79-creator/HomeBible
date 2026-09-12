@@ -106,6 +106,7 @@
     hymnFullPdfCloseBtn: document.getElementById("hymnFullPdfCloseBtn"),
     hymnFullPdfFrame: document.getElementById("hymnFullPdfFrame"),
     hymnFrame: document.getElementById("hymnFrame"),
+    hymnPages: document.getElementById("hymnPages"),
 
     readScreen: document.getElementById("readScreen"),
     readHomeBtn: document.getElementById("readHomeBtn"),
@@ -2570,15 +2571,8 @@
     }
     if (idx >= 0) notes[today][idx] = obj; else notes[today].push(obj);
     saveSermonNotes(notes);
-    // 저장 직후 현재 화면의 예배노트 표시를 즉시 갱신합니다.
-    // 저장 함수와 본문 렌더링 사이의 타이밍 차이로 목록이 늦게 보이는 문제를 방지합니다.
     if (els.sermonHistory && !els.sermonHistory.classList.contains("hidden")) renderSermonHistoryList();
-    if (els.readVerseList && readState.bookNo && readState.chapter) {
-      renderReadChapter();
-      setTimeout(function () {
-        if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
-      }, 0);
-    }
+    if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
 
     var p = getProfile(state.currentBirth);
     syncPost("sermonNote", {
@@ -2656,21 +2650,16 @@
     els.sermonNoteScreen.classList.add("hidden");
     if (els.sermonEditor) els.sermonEditor.classList.add("hidden");
     if (els.sermonHistory) els.sermonHistory.classList.add("hidden");
-    // 예배노트 창을 닫는 순간 저장된 노트 표시를 다시 그립니다.
-    // 저장 직후 선택 상태나 화면 전환 때문에 목록이 늦게 보이는 문제를 방지합니다.
-    if (els.readVerseList && readState.bookNo && readState.chapter) {
-      renderReadChapter();
-    }
   }
 
   function renderSermonHistoryList() {
     var notes = loadSermonNotes();
     var today = todayString();
-    var dates = Object.keys(notes).filter(function (d) { return notes[d] && notes[d].length; }).sort().reverse();
+    var dates = Object.keys(notes).filter(function (d) { return d !== today && notes[d] && notes[d].length; }).sort().reverse();
     els.sermonNoteDate.textContent = "지난 예배노트";
     els.sermonHistory.innerHTML = "";
     if (dates.length === 0) {
-      els.sermonHistory.innerHTML = '<p class="stats-empty">저장된 예배노트가 아직 없어요.</p>';
+      els.sermonHistory.innerHTML = '<p class="stats-empty">오늘 이전 기록이 아직 없어요.</p>';
       return;
     }
     dates.forEach(function (d) {
@@ -3266,7 +3255,7 @@
 
   function openHymn(h) {
     els.hymnViewerTitle.textContent = h.number + "장 · " + h.title;
-    els.hymnFrame.src = h.file + "#page=1&zoom=page-width&toolbar=0&navpanes=0";
+    renderHymnPdfPages(h.file);
     if (els.hymnOpenPdfBtn) {
       els.hymnOpenPdfBtn.onclick = function () {
         if (!els.hymnFullPdfScreen || !els.hymnFullPdfFrame) return;
@@ -3280,8 +3269,72 @@
     els.hymnViewer.scrollIntoView({behavior:"smooth", block:"start"});
   }
 
+  var hymnPdfRenderToken = 0;
+
+  function renderHymnPdfPages(url) {
+    var token = ++hymnPdfRenderToken;
+    if (els.hymnPages) {
+      els.hymnPages.innerHTML = '<div class="hymn-loading">악보를 불러오는 중이에요…</div>';
+      els.hymnPages.classList.remove("hidden");
+    }
+    if (els.hymnFrame) {
+      els.hymnFrame.src = "about:blank";
+      els.hymnFrame.classList.add("hidden");
+    }
+
+    if (!window.pdfjsLib || location.protocol === "file:") {
+      if (els.hymnPages) {
+        els.hymnPages.innerHTML = '<div class="hymn-loading">현재 파일로 미리보기 중입니다. 배포 후에는 페이지별 악보로 표시됩니다.</div>';
+      }
+      if (els.hymnFrame) {
+        els.hymnFrame.classList.remove("hidden");
+        els.hymnFrame.src = url + "#page=1&zoom=page-width&toolbar=0&navpanes=0";
+      }
+      return;
+    }
+
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    window.pdfjsLib.getDocument(url).promise.then(function (pdf) {
+      if (token !== hymnPdfRenderToken || !els.hymnPages) return;
+      els.hymnPages.innerHTML = "";
+      var jobs = [];
+      for (var pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+        jobs.push(pdf.getPage(pageNo).then(function (page) {
+          if (token !== hymnPdfRenderToken) return;
+          var wrap = document.createElement("div");
+          wrap.className = "hymn-page";
+          var label = document.createElement("div");
+          label.className = "hymn-page-label";
+          label.textContent = "" + page.pageNumber + "쪽";
+          var canvas = document.createElement("canvas");
+          canvas.className = "hymn-page-canvas";
+          wrap.appendChild(label);
+          wrap.appendChild(canvas);
+          els.hymnPages.appendChild(wrap);
+          var base = page.getViewport({ scale: 1 });
+          var maxWidth = Math.max(280, Math.min(900, els.hymnPages.clientWidth - 24));
+          var scale = maxWidth / base.width;
+          var viewport = page.getViewport({ scale: scale });
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          return page.render({ canvasContext: canvas.getContext("2d"), viewport: viewport }).promise;
+        }));
+      }
+      return Promise.all(jobs);
+    }).catch(function () {
+      if (token !== hymnPdfRenderToken) return;
+      if (els.hymnPages) els.hymnPages.innerHTML = '<div class="hymn-loading">페이지 표시를 지원하지 않아 PDF 화면으로 열었습니다.</div>';
+      if (els.hymnFrame) {
+        els.hymnFrame.classList.remove("hidden");
+        els.hymnFrame.src = url + "#page=1&zoom=page-width&toolbar=0&navpanes=0";
+      }
+    });
+  }
+
   function closeHymnViewer() {
-    els.hymnFrame.src = "about:blank";
+    hymnPdfRenderToken++;
+    if (els.hymnFrame) els.hymnFrame.src = "about:blank";
+    if (els.hymnPages) els.hymnPages.innerHTML = "";
     els.hymnViewer.classList.add("hidden");
     els.hymnResults.classList.remove("hidden");
   }
