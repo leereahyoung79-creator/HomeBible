@@ -25,6 +25,7 @@
     saveTranslationPref(key);
     if (els.translationSelect) els.translationSelect.value = key;
     if (els.readTranslationSelect) els.readTranslationSelect.value = key;
+    if (els.readTranslationPickerLabel) els.readTranslationPickerLabel.textContent = TRANSLATIONS[key].label;
   }
 
   var TOTAL_VERSES = 31102;
@@ -134,6 +135,29 @@
     readVerseSelect: document.getElementById("readVerseSelect"),
     readUserChip: document.getElementById("readUserChip"),
     readUserChipName: document.getElementById("readUserChipName"),
+    readBookPickerBtn: document.getElementById("readBookPickerBtn"),
+    readBookPickerLabel: document.getElementById("readBookPickerLabel"),
+    readTranslationPickerBtn: document.getElementById("readTranslationPickerBtn"),
+    readTranslationPickerLabel: document.getElementById("readTranslationPickerLabel"),
+    readToolsMenu: document.getElementById("readToolsMenu"),
+    readWordSearchAction: document.getElementById("readWordSearchAction"),
+    readHighlightAction: document.getElementById("readHighlightAction"),
+    readMoreBtn: document.getElementById("readMoreBtn"),
+    readFontSizeMenu: document.getElementById("readFontSizeMenu"),
+    readBookPickerScreen: document.getElementById("readBookPickerScreen"),
+    closeReadBookPickerBtn: document.getElementById("closeReadBookPickerBtn"),
+    readBookPickerStatus: document.getElementById("readBookPickerStatus"),
+    readBookPickerList: document.getElementById("readBookPickerList"),
+    readChapterPickerArea: document.getElementById("readChapterPickerArea"),
+    readTranslationPickerScreen: document.getElementById("readTranslationPickerScreen"),
+    closeReadTranslationPickerBtn: document.getElementById("closeReadTranslationPickerBtn"),
+    readTranslationPickerList: document.getElementById("readTranslationPickerList"),
+    readBottomSermonBtn: document.getElementById("readBottomSermonBtn"),
+    readBottomHistoryBtn: document.getElementById("readBottomHistoryBtn"),
+    readBottomCopyBtn: document.getElementById("readBottomCopyBtn"),
+    readBottomBookmarkBtn: document.getElementById("readBottomBookmarkBtn"),
+    readBottomBookmarkPanel: document.getElementById("readBottomBookmarkPanel"),
+    readBottomBookmarkSlots: document.getElementById("readBottomBookmarkSlots"),
 
     bookmarkSlots: document.getElementById("bookmarkSlots"),
     highlightSwatches: document.getElementById("highlightSwatches"),
@@ -1461,6 +1485,8 @@
   function readGoTo(bno, ch, focusVerse) {
     readState.bookNo = bno;
     readState.chapter = String(ch);
+    if (els.readBookPickerLabel && META.books[bno]) els.readBookPickerLabel.textContent = META.books[bno].name + " " + String(ch);
+    if (els.readTranslationPickerLabel && TRANSLATIONS[currentTranslation]) els.readTranslationPickerLabel.textContent = TRANSLATIONS[currentTranslation].label;
     pendingBookmarkVerse = null;
     sermonSelectionMode = false;
     selectedSermonVerses = {};
@@ -1685,18 +1711,9 @@
   }
 
   function getTranslationList() {
-    /*
-      이 앱에는 다음 3개 번역본이 들어 있습니다.
-      std = 표준새번역
-      easy = 쉬운성경
-      gae = 개역개정
-      비교 화면에서는 반드시 이 3개만 표시합니다.
-    */
-    return [
-      { key:"gae",  name:"개역개정",   data:TRANSLATIONS.gae.data },
-      { key:"std",  name:"표준새번역", data:TRANSLATIONS.std.data },
-      { key:"easy", name:"쉬운성경",   data:TRANSLATIONS.easy.data }
-    ];
+    return Object.keys(TRANSLATIONS).map(function(key) {
+      return { key:key, name:TRANSLATIONS[key].label, data:TRANSLATIONS[key].data, meta:TRANSLATIONS[key].meta };
+    });
   }
 
   function findVerseInTranslation(data, bno, ch, vs) {
@@ -1711,7 +1728,7 @@
   function renderCompareVerse(item) {
     if (!item) return;
     var ref = commentaryLabel(item);
-    els.compareRef.textContent = ref + " — 개역개정 · 표준새번역 · 쉬운성경 비교";
+    els.compareRef.textContent = ref + " — 현재 앱에 등록된 모든 번역본 비교";
     els.compareCards.innerHTML = "";
 
     var translations = getTranslationList();
@@ -2097,30 +2114,134 @@
   }
   function renderBookmarkSlots() {
     var slots = loadReadBookmarks();
-    els.bookmarkSlots.innerHTML = "";
-    slots.forEach(function (slot, i) {
+    function renderInto(container) {
+      if (!container) return;
+      container.innerHTML = "";
+      slots.forEach(function (slot, i) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bookmark-slot" + (slot ? " filled" : "") + (pendingBookmarkVerse ? " pending-save" : "");
+        btn.textContent = slot ? slot.label : ("자리 " + (i + 1));
+        btn.title = pendingBookmarkVerse
+          ? "눌러서 " + pendingBookmarkVerse.label + " 저장"
+          : (slot ? "눌러서 이동" : "절을 먼저 선택해주세요");
+        btn.addEventListener("click", function () {
+          if (pendingBookmarkVerse) {
+            slots[i] = { bno: pendingBookmarkVerse.bno, ch: pendingBookmarkVerse.ch, vs: pendingBookmarkVerse.vs, label: pendingBookmarkVerse.label };
+            saveReadBookmarks(slots);
+            pendingBookmarkVerse = null;
+            if (els.readVerseList) els.readVerseList.querySelectorAll(".read-verse.verse-selected").forEach(function (v) { v.classList.remove("verse-selected"); });
+            renderBookmarkSlots();
+            updateSelectedVerseActions();
+          } else if (slot) {
+            closeReadBookmarkPanel();
+            readGoTo(slot.bno, slot.ch, slot.vs);
+          }
+        });
+        container.appendChild(btn);
+      });
+    }
+    renderInto(els.bookmarkSlots);
+    renderInto(els.readBottomBookmarkSlots);
+  }
+
+  /* ---------------- 성경 읽기 상단 선택창 ---------------- */
+  function closeReadToolsMenus() {
+    if (els.readToolsMenu) els.readToolsMenu.classList.add("hidden");
+    if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+  }
+
+  function openReadBookPicker() {
+    if (!els.readBookPickerScreen) return;
+    closeReadToolsMenus();
+    els.readBookPickerScreen.classList.remove("hidden");
+    els.readChapterPickerArea.classList.add("hidden");
+    els.readChapterPickerArea.innerHTML = "";
+    els.readBookPickerStatus.textContent = "신약 → 구약 순서로 성경책을 선택하세요.";
+    els.readBookPickerList.innerHTML = "";
+    ["NT", "OT"].forEach(function(testament) {
+      var heading = document.createElement("div");
+      heading.className = "read-picker-testament-title";
+      heading.textContent = testament === "NT" ? "신약" : "구약";
+      els.readBookPickerList.appendChild(heading);
+      META.order.filter(function(bno){ return testamentOfBook(bno) === testament; }).forEach(function(bno) {
+        var book = META.books[bno] || {};
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "read-book-picker-item" + (String(bno) === String(readState.bookNo) ? " active" : "");
+        btn.innerHTML = '<b>' + escapeHtml2(book.name || bno) + '</b><span>' + escapeHtml2(book.abbr || "") + '</span>';
+        btn.addEventListener("click", function(){ showReadChapterPicker(bno); });
+        els.readBookPickerList.appendChild(btn);
+      });
+    });
+  }
+
+  function showReadChapterPicker(bno) {
+    var book = META.books[bno] || {};
+    els.readBookPickerList.classList.add("hidden");
+    els.readBookPickerStatus.textContent = (book.name || "성경") + " — 장을 선택하세요.";
+    els.readChapterPickerArea.classList.remove("hidden");
+    els.readChapterPickerArea.innerHTML = "";
+    var back = document.createElement("button");
+    back.type = "button";
+    back.className = "read-picker-back";
+    back.textContent = "← 성경책 목록";
+    back.addEventListener("click", function(){ els.readBookPickerList.classList.remove("hidden"); openReadBookPicker(); });
+    els.readChapterPickerArea.appendChild(back);
+    var title = document.createElement("h3");
+    title.textContent = (book.name || "성경") + " 장 선택";
+    els.readChapterPickerArea.appendChild(title);
+    var grid = document.createElement("div");
+    grid.className = "read-chapter-picker-grid";
+    chapterNumsSorted(bno).forEach(function(ch){
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "bookmark-slot" + (slot ? " filled" : "") + (pendingBookmarkVerse ? " pending-save" : "");
-      btn.textContent = slot ? slot.label : ("자리 " + (i + 1));
-      btn.title = pendingBookmarkVerse
-        ? "눌러서 " + pendingBookmarkVerse.label + " 저장"
-        : (slot ? "눌러서 이동" : "절을 먼저 선택해주세요");
-      btn.addEventListener("click", function () {
-        if (pendingBookmarkVerse) {
-          slots[i] = { bno: pendingBookmarkVerse.bno, ch: pendingBookmarkVerse.ch, vs: pendingBookmarkVerse.vs, label: pendingBookmarkVerse.label };
-          saveReadBookmarks(slots);
-          pendingBookmarkVerse = null;
-          els.readVerseList.querySelectorAll(".read-verse.verse-selected").forEach(function (v) {
-            v.classList.remove("verse-selected");
-          });
-          renderBookmarkSlots();
-        } else if (slot) {
-          readGoTo(slot.bno, slot.ch, slot.vs);
-        }
+      btn.className = "read-chapter-picker-item" + (String(bno) === String(readState.bookNo) && String(ch) === String(readState.chapter) ? " active" : "");
+      btn.textContent = ch + "장";
+      btn.addEventListener("click", function(){
+        closeReadBookPicker();
+        readGoTo(bno, ch);
       });
-      els.bookmarkSlots.appendChild(btn);
+      grid.appendChild(btn);
     });
+    els.readChapterPickerArea.appendChild(grid);
+  }
+
+  function closeReadBookPicker() {
+    if (els.readBookPickerScreen) els.readBookPickerScreen.classList.add("hidden");
+  }
+
+  function openReadTranslationPicker() {
+    if (!els.readTranslationPickerScreen) return;
+    closeReadToolsMenus();
+    els.readTranslationPickerList.innerHTML = "";
+    getTranslationList().forEach(function(t){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "read-translation-picker-item" + (t.key === currentTranslation ? " active" : "");
+      btn.innerHTML = '<b>' + escapeHtml2(t.name) + '</b><span>' + escapeHtml2(t.key.toUpperCase()) + '</span>';
+      btn.addEventListener("click", function(){
+        var bno = readState.bookNo, ch = readState.chapter;
+        setTranslation(t.key);
+        if (bno && TRANSLATIONS[t.key].meta.books[bno] && TRANSLATIONS[t.key].meta.books[bno].chapters[String(ch)]) {
+          readGoTo(bno, ch);
+        } else {
+          var fallbackBook = TRANSLATIONS[t.key].meta.order[0];
+          readGoTo(fallbackBook, "1");
+        }
+        closeReadTranslationPicker();
+      });
+      els.readTranslationPickerList.appendChild(btn);
+    });
+    els.readTranslationPickerScreen.classList.remove("hidden");
+  }
+
+  function closeReadTranslationPicker() {
+    if (els.readTranslationPickerScreen) els.readTranslationPickerScreen.classList.add("hidden");
+  }
+
+  function closeReadBookmarkPanel() {
+    if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.add("hidden");
   }
 
   /* ---------------- 성경책 검색 ---------------- */
@@ -3414,11 +3535,62 @@
     els.cover.classList.remove("hidden");
   });
 
-  els.readHomeBtn.addEventListener("click", function () {
+  if (els.readHomeBtn) els.readHomeBtn.addEventListener("click", function () {
+    closeReadToolsMenus();
+    closeReadBookPicker();
+    closeReadTranslationPicker();
+    closeReadBookmarkPanel();
     els.readScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
   });
-  els.readTestamentSelect.addEventListener("change", function () {
+  if (els.readBookPickerBtn) els.readBookPickerBtn.addEventListener("click", openReadBookPicker);
+  if (els.closeReadBookPickerBtn) els.closeReadBookPickerBtn.addEventListener("click", closeReadBookPicker);
+  if (els.readTranslationPickerBtn) els.readTranslationPickerBtn.addEventListener("click", openReadTranslationPicker);
+  if (els.closeReadTranslationPickerBtn) els.closeReadTranslationPickerBtn.addEventListener("click", closeReadTranslationPicker);
+  if (els.readBookPickerScreen) els.readBookPickerScreen.addEventListener("click", function(e){ if(e.target === els.readBookPickerScreen) closeReadBookPicker(); });
+  if (els.readTranslationPickerScreen) els.readTranslationPickerScreen.addEventListener("click", function(e){ if(e.target === els.readTranslationPickerScreen) closeReadTranslationPicker(); });
+
+  if (els.bibleSearchBtn) els.bibleSearchBtn.addEventListener("click", function(){
+    if (els.readToolsMenu) els.readToolsMenu.classList.toggle("hidden");
+    if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+  });
+  if (els.readMoreBtn) els.readMoreBtn.addEventListener("click", function(){
+    if (els.readFontSizeMenu) els.readFontSizeMenu.classList.toggle("hidden");
+    if (els.readToolsMenu) els.readToolsMenu.classList.add("hidden");
+  });
+  if (els.readWordSearchAction) els.readWordSearchAction.addEventListener("click", function(){ closeReadToolsMenus(); openBibleSearch(); });
+  if (els.readHighlightAction) els.readHighlightAction.addEventListener("click", function(){
+    highlightColor = null;
+    if (els.readVerseList) els.readVerseList.classList.remove("paint-mode");
+    if (els.readToolsMenu) els.readToolsMenu.classList.remove("hidden");
+    if (els.highlightSwatches) els.highlightSwatches.scrollIntoView({block:"nearest"});
+  });
+  if (els.readToolsMenu) els.readToolsMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+  document.addEventListener("click", function(e){
+    if (!e.target.closest || !e.target.closest("#readScreen .read-modern-toolbar")) closeReadToolsMenus();
+  });
+  document.querySelectorAll("[data-read-font-size]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var settings = loadDisplaySettings();
+      settings.fontSize = btn.getAttribute("data-read-font-size");
+      applyDisplaySettings(settings);
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+    });
+  });
+  if (els.readBottomSermonBtn) els.readBottomSermonBtn.addEventListener("click", function(){ if (els.sermonNoteBtn) els.sermonNoteBtn.click(); });
+  if (els.readBottomHistoryBtn) els.readBottomHistoryBtn.addEventListener("click", function(){ if (els.sermonHistoryBtn) els.sermonHistoryBtn.click(); });
+  if (els.readBottomCopyBtn) els.readBottomCopyBtn.addEventListener("click", function(){ if (els.copyVerseBtn) els.copyVerseBtn.click(); });
+  if (els.readBottomBookmarkBtn) els.readBottomBookmarkBtn.addEventListener("click", function(){
+    if (!pendingBookmarkVerse) {
+      var selected = els.readVerseList && els.readVerseList.querySelector(".read-verse.verse-selected");
+      if (!selected) { alert("책갈피로 저장하거나 이동할 말씀을 먼저 선택해주세요."); return; }
+    }
+    renderBookmarkSlots();
+    if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.toggle("hidden");
+  });
+
+  els.readTestamentSelect.addEventListener("change", function(){
     var test = els.readTestamentSelect.value;
     populateReadBooks(test);
     var bno = els.readBookSelect.value;
@@ -3433,6 +3605,7 @@
   });
   els.readPrevChBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   els.readNextChBtn.addEventListener("click", function () { readAdjacentChapter(1); });
+  if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.addEventListener("click", function(e){ e.stopPropagation(); });
   if (els.readPrevChTopBtn) els.readPrevChTopBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   if (els.readNextChTopBtn) els.readNextChTopBtn.addEventListener("click", function () { readAdjacentChapter(1); });
 
@@ -3470,7 +3643,7 @@
     updateCopyToolbar();
   });
   if (els.copySelectedVersesBtn) els.copySelectedVersesBtn.addEventListener("click", copySelectedVerses);
-  els.bibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "read"; openBibleBookSearch(); });
+  if (els.bibleBookSearchBtn) els.bibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "read"; openBibleBookSearch(); });
   if (els.writeBibleBookSearchBtn) els.writeBibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "write"; openBibleBookSearch(); });
   if (els.writeTranslationQuickSelect) els.writeTranslationQuickSelect.addEventListener("change", function () {
     var key = this.value;
@@ -3518,7 +3691,7 @@
     if (e.key === "Enter") searchBibleWord();
   });
 
-  els.readTranslationSelect.addEventListener("change", function () {
+  if (els.readTranslationSelect) els.readTranslationSelect.addEventListener("change", function () {
     setTranslation(els.readTranslationSelect.value);
     populateChapters(readState.bookNo, els.readChapterSelect);
     els.readChapterSelect.value = readState.chapter;
@@ -3579,7 +3752,7 @@
   });
 
   els.userChip.addEventListener("click", function () { showNameScreen("write"); });
-  els.readUserChip.addEventListener("click", function () { showNameScreen("read"); });
+  if (els.readUserChip) els.readUserChip.addEventListener("click", function () { showNameScreen("read"); });
 
   els.writeTestamentSelect.addEventListener("change", function () {
     var testament = els.writeTestamentSelect.value;

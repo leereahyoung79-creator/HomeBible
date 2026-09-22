@@ -123,24 +123,38 @@
 
 <!-- ✝️ 성경책보기 화면 (로그인 없이, 예배 중 찾아볼 때) -->
 <section id="readScreen" class="app-screen hidden">
-  <header class="topbar">
+  <header class="topbar read-fixed-topbar">
     <div class="read-hidden-selection" aria-hidden="true">
       <select id="readTestamentSelect"><option value="OT">구약</option><option value="NT">신약</option></select>
       <select id="readBookSelect"></select>
       <select id="readChapterSelect"></select>
       <select id="readVerseSelect"></select>
     </div>
-    <div class="read-toolbar">
-      <div class="toolbar-row read-toolbar-first">
-        <button id="bibleBookSearchBtn" class="pill-toggle book-search-top-btn" type="button">🔎 성경찾기</button>
-        <button id="bibleSearchBtn" class="pill-toggle" type="button">🔎 단어검색</button>
-        <label class="read-translation-inline" aria-label="번역본 선택"><span>번역</span><select id="readTranslationSelect" aria-label="번역본 선택"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select></label>
-        <button id="readUserChip" class="user-chip" title="필사자 바꾸기"><span id="readUserChipName">이름</span></button>
-        <button id="readHomeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
+    <div class="read-toolbar read-modern-toolbar">
+      <div class="read-top-main">
+        <button id="readBookPickerBtn" class="read-current-pill read-current-book" type="button" aria-label="성경책과 장 선택"><span id="readBookPickerLabel">창세기 1</span></button>
+        <button id="readTranslationPickerBtn" class="read-current-pill read-current-translation" type="button" aria-label="성경 번역 선택"><span id="readTranslationPickerLabel">KRV</span></button>
+        <div class="read-top-spacer"></div>
+        <button id="bibleSearchBtn" class="read-icon-action" type="button" aria-label="말씀 도구">⌕</button>
+        <button id="readMoreBtn" class="read-icon-action" type="button" aria-label="말씀 글씨 크기">•••</button>
       </div>
-      <div class="toolbar-row read-toolbar-second">
-        <div class="highlight-group"><span class="toolbar-label">🌈 형광펜</span><div id="highlightSwatches" class="highlight-swatches"></div></div>
-        <button id="compareBtn" class="pill-toggle compare-under-translation" type="button">📚 비교</button>
+      <div id="readToolsMenu" class="read-tools-menu hidden">
+        <button id="readWordSearchAction" type="button">🔎 단어 검색</button>
+        <button id="readHighlightAction" type="button">🌈 형광펜</button>
+        <button id="compareBtn" type="button">📚 모든 번역 비교</button>
+        <div class="read-highlight-panel">
+          <span class="toolbar-label">색상 선택</span>
+          <div id="highlightSwatches" class="highlight-swatches"></div>
+        </div>
+      </div>
+      <div id="readFontSizeMenu" class="read-font-size-menu hidden">
+        <div class="read-font-size-title">말씀 글씨 크기</div>
+        <div class="read-font-size-buttons">
+          <button type="button" data-read-font-size="small">작게</button>
+          <button type="button" data-read-font-size="normal">보통</button>
+          <button type="button" data-read-font-size="large">크게</button>
+          <button type="button" data-read-font-size="xlarge">아주 크게</button>
+        </div>
       </div>
     </div>
   </header>
@@ -177,6 +191,42 @@
       </div>
     </div>
   </main>
+  <nav id="readBottomNav" class="read-bottom-nav" aria-label="성경 말씀 기능">
+    <button id="readBottomSermonBtn" type="button"><span>📝</span><b>예배노트</b></button>
+    <button id="readBottomHistoryBtn" type="button"><span>🗓</span><b>지난노트</b></button>
+    <button id="readBottomCopyBtn" type="button"><span>📋</span><b>말씀복사</b></button>
+    <button id="readBottomBookmarkBtn" type="button"><span>🔖</span><b>책갈피</b></button>
+    <div id="readBottomBookmarkPanel" class="read-bottom-bookmark-panel hidden">
+      <div class="read-bottom-bookmark-title">책갈피</div>
+      <div id="readBottomBookmarkSlots" class="bookmark-slots"></div>
+      <p>말씀을 먼저 선택한 뒤 자리를 누르면 저장됩니다.</p>
+    </div>
+  </nav>
+</section>
+
+<!-- 성경책 선택 화면 -->
+<section id="readBookPickerScreen" class="read-picker-screen hidden">
+  <div class="read-picker-card">
+    <div class="read-picker-head">
+      <h2>성경책 선택</h2>
+      <button id="closeReadBookPickerBtn" class="icon-btn" type="button">✕</button>
+    </div>
+    <p id="readBookPickerStatus" class="read-picker-sub">신약 → 구약 순서로 선택하세요.</p>
+    <div id="readBookPickerList" class="read-book-picker-list"></div>
+    <div id="readChapterPickerArea" class="read-chapter-picker-area hidden"></div>
+  </div>
+</section>
+
+<!-- 성경 번역 선택 화면 -->
+<section id="readTranslationPickerScreen" class="read-picker-screen hidden">
+  <div class="read-picker-card">
+    <div class="read-picker-head">
+      <h2>성경 번역 선택</h2>
+      <button id="closeReadTranslationPickerBtn" class="icon-btn" type="button">✕</button>
+    </div>
+    <p class="read-picker-sub">현재 앱에 등록된 모든 번역본입니다.</p>
+    <div id="readTranslationPickerList" class="read-translation-picker-list"></div>
+  </div>
 </section>
 
 <!-- 성경책 검색 화면 -->
