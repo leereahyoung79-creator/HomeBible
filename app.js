@@ -129,6 +129,8 @@
     selectedVerseActions: document.getElementById("selectedVerseActions"),
     readPrevChBtn: document.getElementById("readPrevChBtn"),
     readNextChBtn: document.getElementById("readNextChBtn"),
+    readPrevChTopBtn: document.getElementById("readPrevChTopBtn"),
+    readNextChTopBtn: document.getElementById("readNextChTopBtn"),
     readVerseSelect: document.getElementById("readVerseSelect"),
     readUserChip: document.getElementById("readUserChip"),
     readUserChipName: document.getElementById("readUserChipName"),
@@ -1563,7 +1565,7 @@
       var commentaryButton = commentaryForVerse
         ? '<button type="button" class="verse-commentary-btn" data-vkey="' + vKey + '">📖 주석</button>'
         : '';
-      html += '<p class="read-verse' + (hl ? " hl-" + hl : "") + '" id="rv-' + vKey + '" data-vkey="' + vKey + '"><span class="read-verse-num">' + vs + "</span>" + escapeHtml2(v.t) + commentaryButton + "</p>";
+      html += '<p class="read-verse' + (hl ? " hl-" + hl : "") + '" id="rv-' + vKey + '" data-vkey="' + vKey + '"><span class="read-verse-num">' + vs + '</span><span class="read-verse-text">' + escapeHtml2(v.t) + '</span>' + commentaryButton + '</p>';
       var savedSermonsForVerse = getTodaySermonEntriesEndingAt(bno, ch, vs);
       savedSermonsForVerse.forEach(function(savedEntry, savedIdx){
         var savedKey = bno + "|" + ch + "|" + String(savedEntry.__index);
@@ -1575,8 +1577,12 @@
 
     var chNums = chapterNumsSorted(bno);
     var bPos = META.order.indexOf(bno);
-    els.readPrevChBtn.disabled = (chNums.indexOf(Number(ch)) === 0 && bPos === 0);
-    els.readNextChBtn.disabled = (chNums.indexOf(Number(ch)) === chNums.length - 1 && bPos === META.order.length - 1);
+    var isFirstChapter = (chNums.indexOf(Number(ch)) === 0 && bPos === 0);
+    var isLastChapter = (chNums.indexOf(Number(ch)) === chNums.length - 1 && bPos === META.order.length - 1);
+    els.readPrevChBtn.disabled = isFirstChapter;
+    els.readNextChBtn.disabled = isLastChapter;
+    if (els.readPrevChTopBtn) els.readPrevChTopBtn.disabled = isFirstChapter;
+    if (els.readNextChTopBtn) els.readNextChTopBtn.disabled = isLastChapter;
 
     els.readVerseList.querySelectorAll(".verse-commentary-btn").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
@@ -3427,6 +3433,8 @@
   });
   els.readPrevChBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   els.readNextChBtn.addEventListener("click", function () { readAdjacentChapter(1); });
+  if (els.readPrevChTopBtn) els.readPrevChTopBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
+  if (els.readNextChTopBtn) els.readNextChTopBtn.addEventListener("click", function () { readAdjacentChapter(1); });
 
   els.readVerseSelect.addEventListener("change", function () {
     scrollToReadVerse(els.readVerseSelect.value);
@@ -3642,33 +3650,96 @@
 
   /* ---------------- 설정: 글씨 크기·글씨체 ---------------- */
   var SETTINGS_KEY = "ourBibleDisplaySettings";
-  var DEFAULT_DISPLAY_SETTINGS = { fontSize: "normal", fontFamily: "default" };
+  var DEFAULT_DISPLAY_SETTINGS = { fontSize: "normal", generalFontSize: "normal", fontFamily: "nanumRound" };
 
   function loadDisplaySettings() {
     try {
       var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
-      return Object.assign({}, DEFAULT_DISPLAY_SETTINGS, saved || {});
+      var merged = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, saved || {});
+      var legacyMap = { default: "nanumRound", gothic: "notoSansKR", myeongjo: "notoSerifKR", soft: "gowunDodum" };
+      if (legacyMap[merged.fontFamily]) merged.fontFamily = legacyMap[merged.fontFamily];
+      return merged;
     } catch (e) {
       return Object.assign({}, DEFAULT_DISPLAY_SETTINGS);
     }
   }
 
+  var generalFontBaseSizes = new WeakMap();
+
+  function isBibleTextElement(el) {
+    if (!el || !el.closest) return false;
+    return !!el.closest('#readScreen .read-verse-text, #appScreen .verse-guide, #appScreen .write-overlay, #appScreen .write-input, #compareScreen .compare-translation-text, #settingsScreen .settings-preview p');
+  }
+
+  function hasDirectText(el) {
+    if (!el || !el.childNodes) return false;
+    for (var i = 0; i < el.childNodes.length; i++) {
+      if (el.childNodes[i].nodeType === 3 && el.childNodes[i].nodeValue.trim()) return true;
+    }
+    return false;
+  }
+
+  function applyGeneralFontScale(scale) {
+    var root = document.documentElement;
+    root.style.setProperty('--general-font-scale', scale);
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
+    var el;
+    while ((el = walker.nextNode())) {
+      if (isBibleTextElement(el) || el.closest('#fontSizeOptions, #generalFontSizeOptions, #fontFamilyOptions, #settingsScreen .settings-actions')) continue;
+      if (!hasDirectText(el)) continue;
+      if (!generalFontBaseSizes.has(el)) {
+        var computed = parseFloat(window.getComputedStyle(el).fontSize);
+        if (!isFinite(computed) || computed <= 0) continue;
+        generalFontBaseSizes.set(el, computed);
+      }
+      var base = generalFontBaseSizes.get(el);
+      el.style.fontSize = (base * scale) + 'px';
+      el.style.lineHeight = '';
+    }
+  }
+
+  var generalFontObserver = new MutationObserver(function() {
+    clearTimeout(generalFontObserver._timer);
+    generalFontObserver._timer = setTimeout(function() {
+      var current = loadDisplaySettings();
+      var generalMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
+      applyGeneralFontScale(generalMap[current.generalFontSize] || 1);
+    }, 30);
+  });
+
+  function startGeneralFontObserver() {
+    if (!document.body) return;
+    try { generalFontObserver.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  }
+
   function applyDisplaySettings(settings) {
     var sizeMap = { small: 0.90, normal: 1, large: 1.16, xlarge: 1.34 };
+    var generalSizeMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
     var familyMap = {
-      default: '"NanumSquareRoundB", "Gowun Dodum", sans-serif',
-      gothic: '"Noto Sans KR", "Malgun Gothic", sans-serif',
-      myeongjo: '"Nanum Myeongjo", serif',
-      soft: '"Gowun Dodum", "NanumSquareRoundB", sans-serif'
+      nanumRound: '"NanumSquareRoundB", sans-serif',
+      nanumPen: '"Nanum Pen Script", cursive',
+      nanumBrush: '"Nanum Brush Script", cursive',
+      baeminJua: '"BM JUA", sans-serif',
+      baeminDohyeon: '"BM DOHYEON", sans-serif',
+      hakgyoansim: '"Hakgyoansim Dunggeunmiso", sans-serif',
+      gowunDodum: '"Gowun Dodum", sans-serif',
+      gowunBatang: '"Gowun Batang", serif',
+      notoSansKR: '"Noto Sans KR", sans-serif',
+      notoSerifKR: '"Noto Serif KR", serif'
     };
     var root = document.documentElement;
-    root.style.setProperty("--user-font-scale", sizeMap[settings.fontSize] || 1);
-    root.style.setProperty("--user-font-family", familyMap[settings.fontFamily] || familyMap.default);
+    root.style.setProperty("--bible-font-scale", sizeMap[settings.fontSize] || 1);
+    root.style.setProperty("--user-font-family", familyMap[settings.fontFamily] || familyMap.nanumRound);
+    applyGeneralFontScale(generalSizeMap[settings.generalFontSize] || 1);
     root.setAttribute("data-font-size", settings.fontSize || "normal");
+    root.setAttribute("data-general-font-size", settings.generalFontSize || "normal");
     root.setAttribute("data-font-family", settings.fontFamily || "default");
 
-    document.querySelectorAll("[data-font-size]").forEach(function(btn) {
-      if (btn.closest("#fontSizeOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-size") === settings.fontSize);
+    document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
+      btn.classList.toggle("selected", btn.getAttribute("data-font-size") === settings.fontSize);
+    });
+    document.querySelectorAll("#generalFontSizeOptions button").forEach(function(btn) {
+      btn.classList.toggle("selected", btn.getAttribute("data-general-font-size") === (settings.generalFontSize || "normal"));
     });
     document.querySelectorAll("[data-font-family]").forEach(function(btn) {
       if (btn.closest("#fontFamilyOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-family") === settings.fontFamily);
@@ -3710,6 +3781,15 @@
     applyDisplaySettings(DEFAULT_DISPLAY_SETTINGS);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_DISPLAY_SETTINGS)); } catch (e) {}
   });
+  document.querySelectorAll("#generalFontSizeOptions button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var settings = loadDisplaySettings();
+      settings.generalFontSize = btn.getAttribute("data-general-font-size");
+      applyDisplaySettings(settings);
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    });
+  });
+
   document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
     btn.addEventListener("click", function() {
       var settings = loadDisplaySettings();
@@ -3735,6 +3815,7 @@
   /* ---------------- 초기화 ---------------- */
   function init() {
     applyDisplaySettings(loadDisplaySettings());
+    startGeneralFontObserver();
     setTranslation(loadTranslationPref());
     if (els.writeTestamentSelect) {
       els.writeTestamentSelect.value = "OT";

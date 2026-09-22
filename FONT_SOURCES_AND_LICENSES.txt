@@ -1,0 +1,44 @@
+우리집성경 글씨체 목록 및 출처
+
+이 프로젝트에는 아래 글씨체 선택 기능이 포함되어 있습니다. 웹앱에서는 일부 폰트를 외부 웹폰트로 불러옵니다.
+
+1. 나눔스퀘어라운드
+   - 현재 프로젝트에 포함된 NanumSquareRoundB.ttf 사용
+   - 네이버 나눔글꼴 라이선스: https://hangeul.naver.com/download
+
+2. 나눔손글씨 펜
+   - Google Fonts / Nanum Pen Script
+   - 네이버 나눔글꼴 계열의 무료 글꼴
+
+3. 나눔손글씨 붓
+   - Google Fonts / Nanum Brush Script
+   - 네이버 나눔글꼴 계열의 무료 글꼴
+
+4. 배민 주아체
+   - 웹폰트: fonts-archive/BMJUA (jsDelivr)
+   - 공식 배포처: 우아한형제들 배민 글꼴
+   - 참고: https://www.woowahan.com/
+
+5. 배민 도현체
+   - 웹폰트: fonts-archive/BMDOHYEON (jsDelivr)
+   - 공식 배포처: 우아한형제들 배민 글꼴
+   - 참고: https://www.woowahan.com/
+
+6. 학교안심 둥근미소체
+   - 웹폰트: fonts-archive/HakgyoansimDunggeunmiso (jsDelivr)
+   - 저작권자: 한국교육학술정보원(KERIS)
+   - 공유마당에 OFL 이용조건으로 제공됨
+
+7. Gowun Dodum
+   - Google Fonts / SIL Open Font License
+
+8. Gowun Batang
+   - Google Fonts / SIL Open Font License
+
+9. 본고딕
+   - Google Fonts / Noto Sans KR
+
+10. 본명조
+   - Google Fonts / Noto Serif KR
+
+주의: 배민 및 학교안심 글꼴은 현재 웹폰트 URL을 통해 불러오므로 인터넷 연결이 없는 환경에서는 해당 글꼴이 기본 대체 글꼴로 표시될 수 있습니다.
