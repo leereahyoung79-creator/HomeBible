@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="우리집 성경책">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Gamja+Flower&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -149,6 +149,10 @@
     <div class="book-page" id="readPage">
       <div class="page-heading">
         <span id="readBookName">창세기</span> <span id="readChapterLabel">1장</span>
+      </div>
+      <div class="read-chapter-top-nav" aria-label="장 이동">
+        <button id="readPrevChTopBtn" class="ghost-button read-chapter-top-btn" type="button">← 이전 장</button>
+        <button id="readNextChTopBtn" class="ghost-button read-chapter-top-btn" type="button">다음 장 →</button>
       </div>
       <div id="readVerseList" class="read-verse-list"></div>
 
@@ -601,7 +605,7 @@
     <p class="stats-sub">글씨 크기와 글씨체를 원하는 대로 바꿀 수 있어요.</p>
 
     <div class="settings-section">
-      <h3>글씨 크기</h3>
+      <h3>성경 말씀 글씨 크기 <span class="settings-help">성경 본문에만 적용</span></h3>
       <div class="settings-options" id="fontSizeOptions">
         <button type="button" data-font-size="small">작게</button>
         <button type="button" data-font-size="normal" class="selected">보통</button>
@@ -611,12 +615,28 @@
     </div>
 
     <div class="settings-section">
-      <h3>글씨체</h3>
+      <h3>일반 글씨 크기 <span class="settings-help">성경 본문을 제외한 화면에 적용</span></h3>
+      <div class="settings-options" id="generalFontSizeOptions">
+        <button type="button" data-general-font-size="small">작게</button>
+        <button type="button" data-general-font-size="normal" class="selected">보통</button>
+        <button type="button" data-general-font-size="large">크게</button>
+        <button type="button" data-general-font-size="xlarge">아주 크게</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>글씨체 <span class="settings-help">전체 화면에 적용</span></h3>
       <div class="settings-options settings-font-options" id="fontFamilyOptions">
-        <button type="button" data-font-family="default" class="selected">기본 글씨체</button>
-        <button type="button" data-font-family="gothic">고딕체</button>
-        <button type="button" data-font-family="myeongjo">명조체</button>
-        <button type="button" data-font-family="soft">부드러운 글씨체</button>
+        <button type="button" data-font-family="nanumRound" class="selected">나눔스퀘어라운드</button>
+        <button type="button" data-font-family="nanumPen">나눔손글씨 펜</button>
+        <button type="button" data-font-family="nanumBrush">나눔손글씨 붓</button>
+        <button type="button" data-font-family="baeminJua">배민 주아체</button>
+        <button type="button" data-font-family="baeminDohyeon">배민 도현체</button>
+        <button type="button" data-font-family="hakgyoansim">학교안심 둥근미소체</button>
+        <button type="button" data-font-family="gowunDodum">Gowun Dodum</button>
+        <button type="button" data-font-family="gowunBatang">Gowun Batang</button>
+        <button type="button" data-font-family="notoSansKR">본고딕</button>
+        <button type="button" data-font-family="notoSerifKR">본명조</button>
       </div>
     </div>
 
