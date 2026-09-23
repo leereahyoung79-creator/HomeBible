@@ -72,8 +72,18 @@
     nextChristianQuoteBtn: document.getElementById("nextChristianQuoteBtn"),
     christianQuoteCopyStatus: document.getElementById("christianQuoteCopyStatus"),
     backChristianQuoteCategoriesBtn: document.getElementById("backChristianQuoteCategoriesBtn"),
+    quotesFontSizeBtn: document.getElementById("quotesFontSizeBtn"),
+    quotesFontSizeMenu: document.getElementById("quotesFontSizeMenu"),
+    quotesFontSizeValue: document.getElementById("quotesFontSizeValue"),
+    quotesFontMinusBtn: document.getElementById("quotesFontMinusBtn"),
+    quotesFontPlusBtn: document.getElementById("quotesFontPlusBtn"),
     gratitudePrayerScreen: document.getElementById("gratitudePrayerScreen"),
     closeGratitudePrayerBtn: document.getElementById("closeGratitudePrayerBtn"),
+    gratitudeFontSizeBtn: document.getElementById("gratitudeFontSizeBtn"),
+    gratitudeFontSizeMenu: document.getElementById("gratitudeFontSizeMenu"),
+    gratitudeFontSizeValue: document.getElementById("gratitudeFontSizeValue"),
+    gratitudeFontMinusBtn: document.getElementById("gratitudeFontMinusBtn"),
+    gratitudeFontPlusBtn: document.getElementById("gratitudeFontPlusBtn"),
     gratitudePrayerDate: document.getElementById("gratitudePrayerDate"),
     gratitude1: document.getElementById("gratitude1"),
     gratitude2: document.getElementById("gratitude2"),
@@ -128,6 +138,7 @@
     readChapterLabel: document.getElementById("readChapterLabel"),
     readVerseList: document.getElementById("readVerseList"),
     selectedVerseActions: document.getElementById("selectedVerseActions"),
+    selectedVerseActionsTitle: document.getElementById("selectedVerseActionsTitle"),
     readPrevChBtn: document.getElementById("readPrevChBtn"),
     readNextChBtn: document.getElementById("readNextChBtn"),
     readPrevChTopBtn: document.getElementById("readPrevChTopBtn"),
@@ -138,6 +149,14 @@
     readBookPickerBtn: document.getElementById("readBookPickerBtn"),
     readBookPickerLabel: document.getElementById("readBookPickerLabel"),
     readTranslationPickerBtn: document.getElementById("readTranslationPickerBtn"),
+    readTopCompareBtn: document.getElementById("readTopCompareBtn"),
+    readTopSearchBtn: document.getElementById("readTopSearchBtn"),
+    readTopFontSizeBtn: document.getElementById("readTopFontSizeBtn"),
+    readTopCloseBtn: document.getElementById("readTopCloseBtn"),
+    readFontMinusBtn: document.getElementById("readFontMinusBtn"),
+    readFontPlusBtn: document.getElementById("readFontPlusBtn"),
+    readFontSizeValue: document.getElementById("readFontSizeValue"),
+    readHighlightMenu: document.getElementById("readHighlightMenu"),
     readTranslationPickerLabel: document.getElementById("readTranslationPickerLabel"),
     readToolsMenu: document.getElementById("readToolsMenu"),
     readWordSearchAction: document.getElementById("readWordSearchAction"),
@@ -154,6 +173,8 @@
     readTranslationPickerList: document.getElementById("readTranslationPickerList"),
     readBottomSermonBtn: document.getElementById("readBottomSermonBtn"),
     readBottomHistoryBtn: document.getElementById("readBottomHistoryBtn"),
+    readBottomReflectionBtn: document.getElementById("readBottomReflectionBtn"),
+    readBottomHighlightBtn: document.getElementById("readBottomHighlightBtn"),
     readBottomCopyBtn: document.getElementById("readBottomCopyBtn"),
     readBottomBookmarkBtn: document.getElementById("readBottomBookmarkBtn"),
     readBottomBookmarkPanel: document.getElementById("readBottomBookmarkPanel"),
@@ -257,14 +278,13 @@
     closeStatsBtn: document.getElementById("closeStatsBtn"),
 
     notesListBtn: document.getElementById("notesListBtn"),
-    writeBibleBookSearchBtn: document.getElementById("writeBibleBookSearchBtn"),
-    writeTranslationQuickSelect: document.getElementById("writeTranslationQuickSelect"),
-    writeUserQuickBtn: document.getElementById("writeUserQuickBtn"),
-    writeUserQuickName: document.getElementById("writeUserQuickName"),
-    writeHomeQuickBtn: document.getElementById("writeHomeQuickBtn"),
-    writeContinueBtn: document.getElementById("writeContinueBtn"),
-    writeStatsQuickBtn: document.getElementById("writeStatsQuickBtn"),
-    writeNotesQuickBtn: document.getElementById("writeNotesQuickBtn"),
+    writeFontSizeBtn: document.getElementById("writeFontSizeBtn"),
+    writeFontSizeMenu: document.getElementById("writeFontSizeMenu"),
+    writeFontSizeValue: document.getElementById("writeFontSizeValue"),
+    writeFontMinusBtn: document.getElementById("writeFontMinusBtn"),
+    writeFontPlusBtn: document.getElementById("writeFontPlusBtn"),
+    writeBookPickerBtn: document.getElementById("writeBookPickerBtn"),
+    writeTranslationPickerBtn: document.getElementById("writeTranslationPickerBtn"),
     notesListScreen: document.getElementById("notesListScreen"),
     notesList: document.getElementById("notesList"),
     closeNotesListBtn: document.getElementById("closeNotesListBtn"),
@@ -581,7 +601,6 @@
     var p = getProfile(birth);
     var displayName = p ? p.name : birth;
     els.userChipName.textContent = displayName;
-    if (els.writeUserQuickName) els.writeUserQuickName.textContent = displayName;
     if (els.readUserChipName) els.readUserChipName.textContent = displayName;
   }
   function isLoggedIn() {
@@ -751,7 +770,8 @@
 
     var birth = state.currentBirth;
     var p = getProfile(birth);
-    var today = todayString();
+    var today = gratitudeEditingDate || todayString();
+    var wasEditing = !!gratitudeEditingDate;
     var obj = {
       date: today,
       gratitude1: els.gratitude1 ? els.gratitude1.value.trim() : "",
@@ -791,6 +811,11 @@
         }, 3000);
       }
     });
+
+    if (wasEditing) {
+      gratitudeEditingDate = null;
+      renderGratitudePrayer();
+    }
   }
 
   function renderGratitudePrayer() {
@@ -857,7 +882,13 @@
     var html = dates.map(function (date) {
       var item = normalizeGratitudeRecord(map[date], date);
       return '<article class="gratitude-history-record">' +
+        '<div class="gratitude-history-record-head">' +
         '<div class="gratitude-history-record-date">' + formatGratitudeDateLong(date) + '</div>' +
+        '<div class="gratitude-history-record-buttons">' +
+        '<button type="button" class="gratitude-history-edit-btn" data-edit-date="' + escapeHtml2(date) + '" aria-label="기록 수정">✏️ 수정</button>' +
+        '<button type="button" class="gratitude-history-delete-btn" data-delete-date="' + escapeHtml2(date) + '" aria-label="기록 삭제">🗑 삭제</button>' +
+        '</div>' +
+        '</div>' +
         '<div class="gratitude-history-section"><div class="gratitude-history-title">🌿 감사</div>' +
         '<div class="gratitude-history-item"><b>1</b><span>' + escapeHtml2(item.gratitude1 || "-") + '</span></div>' +
         '<div class="gratitude-history-item"><b>2</b><span>' + escapeHtml2(item.gratitude2 || "-") + '</span></div>' +
@@ -868,6 +899,57 @@
     }).join('');
 
     els.gratitudeHistoryList.innerHTML = html + '<div class="gratitude-history-more">↓ 아래로 스크롤하면 더 이전 기록을 볼 수 있습니다.</div>';
+
+    els.gratitudeHistoryList.querySelectorAll(".gratitude-history-delete-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var date = btn.getAttribute("data-delete-date");
+        if (!date) return;
+        if (!confirm(formatGratitudeDateLong(date) + " 기록을 삭제할까요?")) return;
+        deleteGratitudeRecord(date);
+      });
+    });
+    els.gratitudeHistoryList.querySelectorAll(".gratitude-history-edit-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var date = btn.getAttribute("data-edit-date");
+        if (!date) return;
+        editGratitudeRecord(date);
+      });
+    });
+  }
+
+  function deleteGratitudeRecord(date) {
+    if (!state.currentBirth) return;
+    updateProfile(state.currentBirth, function (profile) {
+      if (profile.gratitudePrayer) delete profile.gratitudePrayer[date];
+    });
+    renderGratitudeHistory();
+    if (date === todayString()) renderGratitudePrayer();
+    if (gratitudeEditingDate === date) gratitudeEditingDate = null;
+  }
+
+  /* 지난 기록의 '수정'을 누르면 그 날짜의 내용을 편집 화면에 불러오고,
+     저장을 누르면 오늘 날짜가 아니라 그 날짜로 다시 저장합니다. */
+  var gratitudeEditingDate = null;
+
+  function editGratitudeRecord(date) {
+    var p = getProfile(state.currentBirth);
+    var map = p && p.gratitudePrayer ? p.gratitudePrayer : {};
+    var item = normalizeGratitudeRecord(map[date], date);
+    if (!item) return;
+    gratitudeEditingDate = date;
+    if (els.gratitude1) els.gratitude1.value = item.gratitude1 || "";
+    if (els.gratitude2) els.gratitude2.value = item.gratitude2 || "";
+    if (els.gratitude3) els.gratitude3.value = item.gratitude3 || "";
+    if (els.prayerInput) els.prayerInput.value = item.prayer || "";
+    if (els.gratitudePrayerDate) {
+      var displayName = p && p.name ? " · " + p.name + "님" : "";
+      els.gratitudePrayerDate.textContent = formatGratitudeDateLong(date) + " 기록 수정 중" + displayName;
+    }
+    closeGratitudeHistory();
   }
 
   function showGratitudeHistory() {
@@ -893,6 +975,7 @@
       showNameScreen("gratitudePrayer");
       return;
     }
+    gratitudeEditingDate = null;
     els.cover.classList.add("hidden");
     els.nameScreen.classList.add("hidden");
     els.appScreen.classList.add("hidden");
@@ -915,6 +998,7 @@
   function closeGratitudePrayer() {
     els.gratitudePrayerScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
+    if (els.gratitudeFontSizeMenu) els.gratitudeFontSizeMenu.classList.add("hidden");
   }
 
   /* ---------------- 오늘의 말씀 ---------------- */
@@ -1143,6 +1227,7 @@
   }
 
   function goTo(bno, chapter, verseIndex) {
+    if (els.appScreen) els.appScreen.classList.remove("nav-hidden");
     state.bookNo = bno;
     state.chapter = String(chapter);
     var versesObj = DATA[bno].chapters[state.chapter];
@@ -1469,6 +1554,7 @@
     els.nameScreen.classList.add("hidden");
     els.appScreen.classList.add("hidden");
     els.readScreen.classList.remove("hidden");
+    els.readScreen.classList.remove("nav-hidden");
 
     var lastForSection = loadReadLast();
     var initialBno = (lastForSection && META.books[lastForSection.bookNo]) ? lastForSection.bookNo : META.order[0];
@@ -1667,37 +1753,47 @@
 
   function updateSelectedVerseActions() {
     if (!els.selectedVerseActions) return;
-    var selected = els.readVerseList ? els.readVerseList.querySelector(".read-verse.verse-selected") : null;
-    els.selectedVerseActions.classList.toggle("hidden", !selected);
-    if (selected) {
+    var count = els.readVerseList ? els.readVerseList.querySelectorAll(".read-verse.verse-selected").length : 0;
+    var show = count > 0 || copyMode;
+    els.selectedVerseActions.classList.toggle("hidden", !show);
+    if (els.selectedVerseActionsTitle) {
+      els.selectedVerseActionsTitle.textContent = count > 1 ? ("선택한 말씀 (" + count + "절)") : "선택한 말씀";
+    }
+    if (show) {
       els.readScreen.classList.add("focus-reading");
     } else {
       els.readScreen.classList.remove("focus-reading");
     }
   }
 
+  /* 여러 절을 동시에 선택할 수 있습니다. 선택한 절들에 하단 메뉴(예배/복사/형광펜)를 바로 적용합니다. */
   function selectVerseForNote(el) {
     var wasSelected = el.classList.contains("verse-selected");
-    els.readVerseList.querySelectorAll(".read-verse.verse-selected").forEach(function (v) {
-      v.classList.remove("verse-selected");
-    });
+    el.classList.toggle("verse-selected", !wasSelected);
 
-    if (wasSelected) {
+    if (!wasSelected) {
+      var vs = el.querySelector(".read-verse-num").textContent;
+      els.readVerseSelect.value = vs;
+      pendingBookmarkVerse = {
+        bno: readState.bookNo,
+        ch: readState.chapter,
+        vs: vs,
+        label: META.books[readState.bookNo].name + " " + readState.chapter + ":" + vs
+      };
+      renderBookmarkSlots();
+    } else if (!els.readVerseList.querySelector(".read-verse.verse-selected")) {
       pendingBookmarkVerse = null;
-      updateSelectedVerseActions();
-      return;
     }
+    updateSelectedVerseActions();
+  }
 
-    el.classList.add("verse-selected");
-    var vs = el.querySelector(".read-verse-num").textContent;
-    els.readVerseSelect.value = vs;
-    pendingBookmarkVerse = {
-      bno: readState.bookNo,
-      ch: readState.chapter,
-      vs: vs,
-      label: META.books[readState.bookNo].name + " " + readState.chapter + ":" + vs
-    };
-    renderBookmarkSlots();
+  function getSelectedVerseElements() {
+    return els.readVerseList ? Array.prototype.slice.call(els.readVerseList.querySelectorAll(".read-verse.verse-selected")) : [];
+  }
+
+  function clearVerseSelection() {
+    getSelectedVerseElements().forEach(function (el) { el.classList.remove("verse-selected"); });
+    pendingBookmarkVerse = null;
     updateSelectedVerseActions();
   }
 
@@ -1949,13 +2045,10 @@
   /* ---------------- 형광펜 ---------------- */
   var HL_COLORS = [
     { key: "yellow", hex: "#fdf0b8" },
-    { key: "orange", hex: "#f8d7b0" },
     { key: "pink", hex: "#fbdfe6" },
-    { key: "purple", hex: "#e6d9f5" },
     { key: "green", hex: "#dcefd8" },
-    { key: "mint", hex: "#cfeee5" },
     { key: "blue", hex: "#d9e8f5" },
-    { key: "sky", hex: "#cfe8f8" }
+    { key: "purple", hex: "#e6d9f5" }
   ];
   var highlightColor = null;
 
@@ -1993,6 +2086,26 @@
       color: newColor
     });
   }
+  /* 여러 절을 한 번에 칠할 때는 토글이 아니라 항상 지정한 색으로 맞춥니다. */
+  function setHighlight(vKey, el, color) {
+    var hl = loadHighlights();
+    HL_COLORS.forEach(function (c) { el.classList.remove("hl-" + c.key); });
+    hl[vKey] = color;
+    el.classList.add("hl-" + color);
+    saveHighlights(hl);
+
+    var parts = vKey.split("-");
+    var p = getProfile(state.currentBirth);
+    syncPost("highlight", {
+      birth: state.currentBirth,
+      name: p ? p.name : "",
+      bookNo: parts[0],
+      bookName: META.books[parts[0]].name,
+      chapter: parts[1],
+      verse: parts[2],
+      color: color
+    });
+  }
   function renderHighlightSwatches() {
     els.highlightSwatches.innerHTML = "";
     HL_COLORS.forEach(function (c) {
@@ -2005,6 +2118,19 @@
         highlightColor = (highlightColor === c.key) ? null : c.key;
         els.readVerseList.classList.toggle("paint-mode", !!highlightColor);
         renderHighlightSwatches();
+        var selectedEls = getSelectedVerseElements();
+        if (highlightColor && selectedEls.length) {
+          selectedEls.forEach(function (el) {
+            setHighlight(el.getAttribute("data-vkey"), el, highlightColor);
+          });
+          if (els.readHighlightMenu) els.readHighlightMenu.classList.add("hidden");
+          clearVerseSelection();
+          /* 여러 절에 바로 칠하고 나면 형광펜(붓칠) 모드를 꺼서,
+             다음에 절을 탭했을 때 다시 형광펜이 칠해지지 않고 선택(다중 선택) 모드로 돌아가게 합니다. */
+          highlightColor = null;
+          els.readVerseList.classList.remove("paint-mode");
+          renderHighlightSwatches();
+        }
       });
       els.highlightSwatches.appendChild(btn);
     });
@@ -2024,6 +2150,8 @@
   }
 
   function updateCopyToolbar() {
+    if (els.readBottomReflectionBtn) els.readBottomReflectionBtn.classList.toggle("active", copyMode);
+    updateSelectedVerseActions();
     if (!els.copyVerseBtn) return;
     els.copyVerseBtn.classList.toggle("active", copyMode);
     els.copyVerseBtn.textContent = copyMode ? "✕ 복사 취소" : "📋 말씀 복사";
@@ -2049,8 +2177,8 @@
     updateCopyToolbar();
   }
 
-  function getSelectedCopyText() {
-    var keys = Object.keys(selectedCopyVerses);
+  function getSelectedCopyText(keysOverride) {
+    var keys = keysOverride || Object.keys(selectedCopyVerses);
     var current = keys.map(function (key) {
       var parts = key.split("-");
       var bno = parts[0], ch = parts[1], vs = parts[2];
@@ -2149,17 +2277,44 @@
   function closeReadToolsMenus() {
     if (els.readToolsMenu) els.readToolsMenu.classList.add("hidden");
     if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+    if (els.readHighlightMenu) els.readHighlightMenu.classList.add("hidden");
+  }
+
+  /* 성경책/번역 선택 팝업은 성경책보기(read)와 성경필사(write) 화면이 함께 씁니다.
+     bookPickerTarget으로 어느 화면에서 열었는지 구분합니다. */
+  var bookPickerTarget = "read";
+
+  function pickerCurrentBookNo() {
+    return bookPickerTarget === "write" ? state.bookNo : readState.bookNo;
+  }
+  function pickerCurrentChapter() {
+    return bookPickerTarget === "write" ? state.chapter : readState.chapter;
+  }
+  function pickerGoTo(bno, ch, vs) {
+    if (bookPickerTarget === "write") {
+      var idx = 0;
+      if (vs !== undefined && vs !== null) {
+        var keys = verseKeysSorted(DATA[bno].chapters[String(ch)]);
+        var found = keys.indexOf(String(vs));
+        if (found >= 0) idx = found;
+      }
+      goTo(bno, ch, idx);
+    } else {
+      readGoTo(bno, ch, vs);
+    }
   }
 
   function openReadBookPicker() {
     if (!els.readBookPickerScreen) return;
     closeReadToolsMenus();
     els.readBookPickerScreen.classList.remove("hidden");
+    els.readBookPickerList.classList.remove("hidden");
     els.readChapterPickerArea.classList.add("hidden");
     els.readChapterPickerArea.innerHTML = "";
-    els.readBookPickerStatus.textContent = "신약 → 구약 순서로 성경책을 선택하세요.";
+    els.readBookPickerStatus.textContent = "";
+    if (els.readBookPickerStatus) els.readBookPickerStatus.classList.add("hidden");
     els.readBookPickerList.innerHTML = "";
-    ["NT", "OT"].forEach(function(testament) {
+    ["OT", "NT"].forEach(function(testament) {
       var heading = document.createElement("div");
       heading.className = "read-picker-testament-title";
       heading.textContent = testament === "NT" ? "신약" : "구약";
@@ -2168,7 +2323,7 @@
         var book = META.books[bno] || {};
         var btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "read-book-picker-item" + (String(bno) === String(readState.bookNo) ? " active" : "");
+        btn.className = "read-book-picker-item" + (String(bno) === String(pickerCurrentBookNo()) ? " active" : "");
         btn.innerHTML = '<b>' + escapeHtml2(book.name || bno) + '</b><span>' + escapeHtml2(book.abbr || "") + '</span>';
         btn.addEventListener("click", function(){ showReadChapterPicker(bno); });
         els.readBookPickerList.appendChild(btn);
@@ -2180,6 +2335,7 @@
     var book = META.books[bno] || {};
     els.readBookPickerList.classList.add("hidden");
     els.readBookPickerStatus.textContent = (book.name || "성경") + " — 장을 선택하세요.";
+    if (els.readBookPickerStatus) els.readBookPickerStatus.classList.remove("hidden");
     els.readChapterPickerArea.classList.remove("hidden");
     els.readChapterPickerArea.innerHTML = "";
     var back = document.createElement("button");
@@ -2196,11 +2352,43 @@
     chapterNumsSorted(bno).forEach(function(ch){
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "read-chapter-picker-item" + (String(bno) === String(readState.bookNo) && String(ch) === String(readState.chapter) ? " active" : "");
+      btn.className = "read-chapter-picker-item" + (String(bno) === String(pickerCurrentBookNo()) && String(ch) === String(pickerCurrentChapter()) ? " active" : "");
       btn.textContent = ch + "장";
       btn.addEventListener("click", function(){
+        showReadVersePicker(bno, ch);
+      });
+      grid.appendChild(btn);
+    });
+    els.readChapterPickerArea.appendChild(grid);
+  }
+
+  function showReadVersePicker(bno, ch) {
+    var book = META.books[bno] || {};
+    els.readBookPickerStatus.textContent = (book.name || "성경") + " " + ch + "장 — 절을 선택하세요.";
+    if (els.readBookPickerStatus) els.readBookPickerStatus.classList.remove("hidden");
+    els.readChapterPickerArea.innerHTML = "";
+    var back = document.createElement("button");
+    back.type = "button";
+    back.className = "read-picker-back";
+    back.textContent = "← 장 목록";
+    back.addEventListener("click", function(){ showReadChapterPicker(bno); });
+    els.readChapterPickerArea.appendChild(back);
+    var title = document.createElement("h3");
+    title.textContent = (book.name || "성경") + " " + ch + "장 절 선택";
+    els.readChapterPickerArea.appendChild(title);
+    var grid = document.createElement("div");
+    grid.className = "read-chapter-picker-grid";
+    var versesObj = DATA[bno] && DATA[bno].chapters[String(ch)];
+    var verseKeys = versesObj ? verseKeysSorted(versesObj) : [];
+    verseKeys.forEach(function(vs){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      var isCurrent = bookPickerTarget === "write" && String(bno) === String(pickerCurrentBookNo()) && String(ch) === String(pickerCurrentChapter()) && String(vs) === String(state.verse);
+      btn.className = "read-chapter-picker-item" + (isCurrent ? " active" : "");
+      btn.textContent = vs + "절";
+      btn.addEventListener("click", function(){
         closeReadBookPicker();
-        readGoTo(bno, ch);
+        pickerGoTo(bno, ch, vs);
       });
       grid.appendChild(btn);
     });
@@ -2221,13 +2409,13 @@
       btn.className = "read-translation-picker-item" + (t.key === currentTranslation ? " active" : "");
       btn.innerHTML = '<b>' + escapeHtml2(t.name) + '</b><span>' + escapeHtml2(t.key.toUpperCase()) + '</span>';
       btn.addEventListener("click", function(){
-        var bno = readState.bookNo, ch = readState.chapter;
+        var bno = pickerCurrentBookNo(), ch = pickerCurrentChapter();
         setTranslation(t.key);
         if (bno && TRANSLATIONS[t.key].meta.books[bno] && TRANSLATIONS[t.key].meta.books[bno].chapters[String(ch)]) {
-          readGoTo(bno, ch);
+          pickerGoTo(bno, ch);
         } else {
           var fallbackBook = TRANSLATIONS[t.key].meta.order[0];
-          readGoTo(fallbackBook, "1");
+          pickerGoTo(fallbackBook, "1");
         }
         closeReadTranslationPicker();
       });
@@ -3503,8 +3691,8 @@
   if (els.saveGratitudePrayerBtn) els.saveGratitudePrayerBtn.addEventListener("click", saveGratitudePrayer);
   if (els.showGratitudeHistoryBtn) els.showGratitudeHistoryBtn.addEventListener("click", showGratitudeHistory);
   if (els.christianQuotesBtn) els.christianQuotesBtn.addEventListener("click", showChristianQuotesScreen);
-  if (els.closeChristianQuotesBtn) els.closeChristianQuotesBtn.addEventListener("click", function(){ els.christianQuotesScreen.classList.add("hidden"); els.cover.classList.remove("hidden"); });
-  if (els.christianQuotesScreen) els.christianQuotesScreen.addEventListener("click", function(e){ if (e.target === els.christianQuotesScreen) { els.christianQuotesScreen.classList.add("hidden"); els.cover.classList.remove("hidden"); } });
+  if (els.closeChristianQuotesBtn) els.closeChristianQuotesBtn.addEventListener("click", function(){ els.christianQuotesScreen.classList.add("hidden"); els.cover.classList.remove("hidden"); if (els.quotesFontSizeMenu) els.quotesFontSizeMenu.classList.add("hidden"); });
+  if (els.christianQuotesScreen) els.christianQuotesScreen.addEventListener("click", function(e){ if (e.target === els.christianQuotesScreen) { els.christianQuotesScreen.classList.add("hidden"); els.cover.classList.remove("hidden"); if (els.quotesFontSizeMenu) els.quotesFontSizeMenu.classList.add("hidden"); } });
   if (els.copyChristianQuoteBtn) els.copyChristianQuoteBtn.addEventListener("click", copyChristianQuote);
   if (els.nextChristianQuoteBtn) els.nextChristianQuoteBtn.addEventListener("click", function(){
     christianQuoteIndex++;
@@ -3543,44 +3731,238 @@
     els.readScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
   });
-  if (els.readBookPickerBtn) els.readBookPickerBtn.addEventListener("click", openReadBookPicker);
+  if (els.readBookPickerBtn) els.readBookPickerBtn.addEventListener("click", function(){ bookPickerTarget = "read"; openReadBookPicker(); });
   if (els.closeReadBookPickerBtn) els.closeReadBookPickerBtn.addEventListener("click", closeReadBookPicker);
-  if (els.readTranslationPickerBtn) els.readTranslationPickerBtn.addEventListener("click", openReadTranslationPicker);
+  if (els.readTranslationPickerBtn) els.readTranslationPickerBtn.addEventListener("click", function(){ bookPickerTarget = "read"; openReadTranslationPicker(); });
+  if (els.writeBookPickerBtn) els.writeBookPickerBtn.addEventListener("click", function(){ bookPickerTarget = "write"; openReadBookPicker(); });
+  if (els.writeTranslationPickerBtn) els.writeTranslationPickerBtn.addEventListener("click", function(){ bookPickerTarget = "write"; openReadTranslationPicker(); });
   if (els.closeReadTranslationPickerBtn) els.closeReadTranslationPickerBtn.addEventListener("click", closeReadTranslationPicker);
   if (els.readBookPickerScreen) els.readBookPickerScreen.addEventListener("click", function(e){ if(e.target === els.readBookPickerScreen) closeReadBookPicker(); });
   if (els.readTranslationPickerScreen) els.readTranslationPickerScreen.addEventListener("click", function(e){ if(e.target === els.readTranslationPickerScreen) closeReadTranslationPicker(); });
 
-  if (els.bibleSearchBtn) els.bibleSearchBtn.addEventListener("click", function(){
-    if (els.readToolsMenu) els.readToolsMenu.classList.toggle("hidden");
-    if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+  if (els.readTopSearchBtn) els.readTopSearchBtn.addEventListener("click", function(){
+    closeReadToolsMenus();
+    openBibleSearch();
   });
-  if (els.readMoreBtn) els.readMoreBtn.addEventListener("click", function(){
+  if (els.readTopCompareBtn) els.readTopCompareBtn.addEventListener("click", function(){
+    closeReadToolsMenus();
+    openCompare();
+  });
+  if (els.readTopFontSizeBtn) els.readTopFontSizeBtn.addEventListener("click", function(){
     if (els.readFontSizeMenu) els.readFontSizeMenu.classList.toggle("hidden");
-    if (els.readToolsMenu) els.readToolsMenu.classList.add("hidden");
+    if (els.readHighlightMenu) els.readHighlightMenu.classList.add("hidden");
+    updateReadFontSizeValue(loadDisplaySettings().fontSize);
   });
-  if (els.readWordSearchAction) els.readWordSearchAction.addEventListener("click", function(){ closeReadToolsMenus(); openBibleSearch(); });
-  if (els.readHighlightAction) els.readHighlightAction.addEventListener("click", function(){
-    highlightColor = null;
-    if (els.readVerseList) els.readVerseList.classList.remove("paint-mode");
-    if (els.readToolsMenu) els.readToolsMenu.classList.remove("hidden");
-    if (els.highlightSwatches) els.highlightSwatches.scrollIntoView({block:"nearest"});
+  if (els.readTopCloseBtn) els.readTopCloseBtn.addEventListener("click", function(){
+    closeReadToolsMenus();
+    closeReadBookPicker();
+    closeReadTranslationPicker();
+    closeReadBookmarkPanel();
+    els.readScreen.classList.add("hidden");
+    els.cover.classList.remove("hidden");
   });
-  if (els.readToolsMenu) els.readToolsMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+
+  if (els.readBottomHighlightBtn) els.readBottomHighlightBtn.addEventListener("click", function(){
+    if (!highlightColor) {
+      highlightColor = HL_COLORS[0].key;
+    }
+    renderHighlightSwatches();
+    if (els.readHighlightMenu) els.readHighlightMenu.classList.toggle("hidden");
+    if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
+    els.readVerseList.classList.toggle("paint-mode", !!highlightColor);
+  });
+
+  if (els.readBottomReflectionBtn) els.readBottomReflectionBtn.addEventListener("click", function(){
+    var selectedEls = getSelectedVerseElements();
+    if (selectedEls.length) {
+      var keys = selectedEls.map(function (el) { return el.getAttribute("data-vkey"); });
+      var text = getSelectedCopyText(keys);
+      var done = function () {
+        alert((selectedEls.length > 1 ? "선택한 말씀을 복사했습니다." : "말씀을 복사했습니다.") + "\n카카오톡, 문자, 메신저 등에 붙여넣어 보내세요.");
+        clearVerseSelection();
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done).catch(function () {
+          if (fallbackCopyText(text)) done(); else alert("복사하지 못했습니다. 다시 시도해 주세요.");
+        });
+      } else if (fallbackCopyText(text)) {
+        done();
+      } else {
+        alert("복사하지 못했습니다. 다시 시도해 주세요.");
+      }
+      return;
+    }
+    copyMode = !copyMode;
+    if (!copyMode) clearCopyVerseSelection();
+    updateCopyToolbar();
+    if (copyMode) alert("복사할 말씀을 선택한 뒤 '복사하기'를 눌러주세요.");
+  });
+
+  function updateReadFontSizeValue(size) {
+    var map = { small: "90%", normal: "100%", large: "116%", xlarge: "134%" };
+    if (els.readFontSizeValue) els.readFontSizeValue.textContent = map[size] || "100%";
+  }
+
+  function stepReadFontSize(direction) {
+    var order = ["small", "normal", "large", "xlarge"];
+    var settings = loadDisplaySettings();
+    var idx = order.indexOf(settings.fontSize);
+    if (idx < 0) idx = 1;
+    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
+    settings.fontSize = order[idx];
+    applyDisplaySettings(settings);
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    updateReadFontSizeValue(settings.fontSize);
+  }
+
+  if (els.readFontMinusBtn) els.readFontMinusBtn.addEventListener("click", function(){ stepReadFontSize(-1); });
+  if (els.readFontPlusBtn) els.readFontPlusBtn.addEventListener("click", function(){ stepReadFontSize(1); });
+
+  /* ---------------- 감사&기도 / 기독교명언 / 성경필사 글씨크기 (공통) ---------------- */
+  function updateGeneralFontSizeValueEl(el, size) {
+    var map = { small: "92%", normal: "100%", large: "114%", xlarge: "128%" };
+    if (el) el.textContent = map[size] || "100%";
+  }
+
+  function stepGeneralFontSize(direction, valueEl) {
+    var order = ["small", "normal", "large", "xlarge"];
+    var settings = loadDisplaySettings();
+    var idx = order.indexOf(settings.generalFontSize || "normal");
+    if (idx < 0) idx = 1;
+    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
+    settings.generalFontSize = order[idx];
+    applyDisplaySettings(settings);
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    updateGeneralFontSizeValueEl(valueEl, settings.generalFontSize);
+  }
+
+  if (els.gratitudeFontSizeBtn) els.gratitudeFontSizeBtn.addEventListener("click", function(){
+    if (els.gratitudeFontSizeMenu) els.gratitudeFontSizeMenu.classList.toggle("hidden");
+    updateGeneralFontSizeValueEl(els.gratitudeFontSizeValue, loadDisplaySettings().generalFontSize);
+  });
+  if (els.gratitudeFontMinusBtn) els.gratitudeFontMinusBtn.addEventListener("click", function(){ stepGeneralFontSize(-1, els.gratitudeFontSizeValue); });
+  if (els.gratitudeFontPlusBtn) els.gratitudeFontPlusBtn.addEventListener("click", function(){ stepGeneralFontSize(1, els.gratitudeFontSizeValue); });
+  if (els.gratitudeFontSizeMenu) els.gratitudeFontSizeMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+
+  if (els.quotesFontSizeBtn) els.quotesFontSizeBtn.addEventListener("click", function(){
+    if (els.quotesFontSizeMenu) els.quotesFontSizeMenu.classList.toggle("hidden");
+    updateGeneralFontSizeValueEl(els.quotesFontSizeValue, loadDisplaySettings().generalFontSize);
+  });
+  if (els.quotesFontMinusBtn) els.quotesFontMinusBtn.addEventListener("click", function(){ stepGeneralFontSize(-1, els.quotesFontSizeValue); });
+  if (els.quotesFontPlusBtn) els.quotesFontPlusBtn.addEventListener("click", function(){ stepGeneralFontSize(1, els.quotesFontSizeValue); });
+  if (els.quotesFontSizeMenu) els.quotesFontSizeMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+
+  function updateWriteFontSizeValue(size) {
+    var map = { small: "90%", normal: "100%", large: "116%", xlarge: "134%" };
+    if (els.writeFontSizeValue) els.writeFontSizeValue.textContent = map[size] || "100%";
+  }
+
+  function stepWriteFontSize(direction) {
+    var order = ["small", "normal", "large", "xlarge"];
+    var settings = loadDisplaySettings();
+    var idx = order.indexOf(settings.fontSize);
+    if (idx < 0) idx = 1;
+    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
+    settings.fontSize = order[idx];
+    applyDisplaySettings(settings);
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    updateWriteFontSizeValue(settings.fontSize);
+  }
+
+  if (els.writeFontSizeBtn) els.writeFontSizeBtn.addEventListener("click", function(){
+    if (els.writeFontSizeMenu) els.writeFontSizeMenu.classList.toggle("hidden");
+    updateWriteFontSizeValue(loadDisplaySettings().fontSize);
+  });
+  if (els.writeFontMinusBtn) els.writeFontMinusBtn.addEventListener("click", function(){ stepWriteFontSize(-1); });
+  if (els.writeFontPlusBtn) els.writeFontPlusBtn.addEventListener("click", function(){ stepWriteFontSize(1); });
+  if (els.writeFontSizeMenu) els.writeFontSizeMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+
   document.addEventListener("click", function(e){
-    if (!e.target.closest || !e.target.closest("#readScreen .read-modern-toolbar")) closeReadToolsMenus();
+    if (!e.target.closest) return;
+    if (els.gratitudeFontSizeMenu && !els.gratitudeFontSizeMenu.classList.contains("hidden") && !e.target.closest("#gratitudeFontSizeBtn") && !e.target.closest("#gratitudeFontSizeMenu")) {
+      els.gratitudeFontSizeMenu.classList.add("hidden");
+    }
+    if (els.quotesFontSizeMenu && !els.quotesFontSizeMenu.classList.contains("hidden") && !e.target.closest("#quotesFontSizeBtn") && !e.target.closest("#quotesFontSizeMenu")) {
+      els.quotesFontSizeMenu.classList.add("hidden");
+    }
+    if (els.writeFontSizeMenu && !els.writeFontSizeMenu.classList.contains("hidden") && !e.target.closest("#writeFontSizeBtn") && !e.target.closest("#writeFontSizeMenu")) {
+      els.writeFontSizeMenu.classList.add("hidden");
+    }
   });
-  document.querySelectorAll("[data-read-font-size]").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      var settings = loadDisplaySettings();
-      settings.fontSize = btn.getAttribute("data-read-font-size");
-      applyDisplaySettings(settings);
-      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
-      if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
-    });
+
+  if (els.readHighlightMenu) els.readHighlightMenu.addEventListener("click", function(e){ e.stopPropagation(); });
+  document.addEventListener("click", function(e){
+    if (!e.target.closest || (!e.target.closest("#readScreen .read-top-nav") && !e.target.closest("#readScreen .read-bottom-nav") && !e.target.closest("#readFontSizeMenu") && !e.target.closest("#readHighlightMenu"))) {
+      closeReadToolsMenus();
+    }
   });
-  if (els.readBottomSermonBtn) els.readBottomSermonBtn.addEventListener("click", function(){ if (els.sermonNoteBtn) els.sermonNoteBtn.click(); });
+
+  /* 스크롤하면 성경책보기 상/하단 메뉴가 숨었다가, 위로 스크롤하거나 맨 위 근처면 다시 보임
+     (실제 스크롤이 window가 아니라 body 내부에서 일어나는 레이아웃이라 양쪽 다 감지) */
+  (function () {
+    var lastScrollY = 0;
+    var HIDE_DELTA = 10;
+    var TOP_REVEAL = 40;
+    function getScrollY() {
+      return (document.scrollingElement && document.scrollingElement.scrollTop) ||
+        document.body.scrollTop || document.documentElement.scrollTop ||
+        window.scrollY || window.pageYOffset || 0;
+    }
+    function onScroll() {
+      if (!els.readScreen || els.readScreen.classList.contains("hidden")) return;
+      var y = getScrollY();
+      if (y <= TOP_REVEAL) {
+        els.readScreen.classList.remove("nav-hidden");
+        lastScrollY = y;
+        return;
+      }
+      var diff = y - lastScrollY;
+      if (Math.abs(diff) < HIDE_DELTA) return;
+      if (diff > 0) {
+        els.readScreen.classList.add("nav-hidden");
+        closeReadToolsMenus();
+      } else {
+        els.readScreen.classList.remove("nav-hidden");
+      }
+      lastScrollY = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.body.addEventListener("scroll", onScroll, { passive: true });
+    document.documentElement.addEventListener("scroll", onScroll, { passive: true });
+  })();
+
+  function openReflectionFromReadScreen() {
+    var item = currentReadVerse();
+    if (!item) {
+      alert("먼저 묵상할 말씀을 선택해주세요.");
+      return;
+    }
+    els.readScreen.classList.add("hidden");
+    els.appScreen.classList.remove("hidden");
+    els.cover.classList.add("hidden");
+    els.nameScreen.classList.add("hidden");
+    els.writeTestamentSelect.value = testamentOfBook(item.bno);
+    populateWriteBooks(testamentOfBook(item.bno));
+    goTo(item.bno, String(item.ch), verseKeysSorted(DATA[item.bno].chapters[String(item.ch)]).indexOf(String(item.vs)));
+    setTimeout(function(){
+      if (els.reflectionArea) els.reflectionArea.classList.remove("hidden");
+      if (els.reflectionInput) els.reflectionInput.focus();
+    }, 60);
+  }
+
+  if (els.readBottomSermonBtn) els.readBottomSermonBtn.addEventListener("click", function(){
+    var selectedEls = getSelectedVerseElements();
+    if (selectedEls.length) {
+      sermonSelectionMode = false;
+      selectedSermonVerses = {};
+      selectedEls.forEach(function (el) { selectedSermonVerses[el.getAttribute("data-vkey")] = true; });
+      openSermonEditor();
+      clearVerseSelection();
+      return;
+    }
+    if (els.sermonNoteBtn) els.sermonNoteBtn.click();
+  });
   if (els.readBottomHistoryBtn) els.readBottomHistoryBtn.addEventListener("click", function(){ if (els.sermonHistoryBtn) els.sermonHistoryBtn.click(); });
-  if (els.readBottomCopyBtn) els.readBottomCopyBtn.addEventListener("click", function(){ if (els.copyVerseBtn) els.copyVerseBtn.click(); });
   if (els.readBottomBookmarkBtn) els.readBottomBookmarkBtn.addEventListener("click", function(){
     if (!pendingBookmarkVerse) {
       var selected = els.readVerseList && els.readVerseList.querySelector(".read-verse.verse-selected");
@@ -3644,21 +4026,6 @@
   });
   if (els.copySelectedVersesBtn) els.copySelectedVersesBtn.addEventListener("click", copySelectedVerses);
   if (els.bibleBookSearchBtn) els.bibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "read"; openBibleBookSearch(); });
-  if (els.writeBibleBookSearchBtn) els.writeBibleBookSearchBtn.addEventListener("click", function () { bibleBookSearchTarget = "write"; openBibleBookSearch(); });
-  if (els.writeTranslationQuickSelect) els.writeTranslationQuickSelect.addEventListener("change", function () {
-    var key = this.value;
-    setTranslation(key);
-    if (els.translationSelect) els.translationSelect.value = key;
-    if (state.bookNo && state.chapter) {
-      var idx = currentVerseIndex();
-      goTo(state.bookNo, state.chapter, idx >= 0 ? idx : 0);
-    }
-  });
-  if (els.writeUserQuickBtn) els.writeUserQuickBtn.addEventListener("click", function () { showNameScreen("write"); });
-  if (els.writeHomeQuickBtn) els.writeHomeQuickBtn.addEventListener("click", function () { if (els.homeBtn) els.homeBtn.click(); });
-  if (els.writeContinueBtn) els.writeContinueBtn.addEventListener("click", openBookmarks);
-  if (els.writeStatsQuickBtn) els.writeStatsQuickBtn.addEventListener("click", openStats);
-  if (els.writeNotesQuickBtn) els.writeNotesQuickBtn.addEventListener("click", openNotesList);
   els.closeBibleBookSearchBtn.addEventListener("click", closeBibleBookSearch);
   els.bibleBookSearchBottomCloseBtn.addEventListener("click", closeBibleBookSearch);
   els.bibleBookSearchScreen.addEventListener("click", function (e) {
@@ -3671,10 +4038,10 @@
   els.bibleBookSearchInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") searchBibleBook();
   });
-  els.bibleSearchBtn.addEventListener("click", openBibleSearch);
+  if (els.bibleSearchBtn) els.bibleSearchBtn.addEventListener("click", openBibleSearch);
   els.closeCommentaryBtn.addEventListener("click", closeCommentary);
   els.commentaryBottomCloseBtn.addEventListener("click", closeCommentary);
-  els.compareBtn.addEventListener("click", openCompare);
+  if (els.compareBtn) els.compareBtn.addEventListener("click", openCompare);
   els.closeCompareBtn.addEventListener("click", closeCompare);
   els.compareBottomCloseBtn.addEventListener("click", closeCompare);
   els.comparePrevVerseBtn.addEventListener("click", function () { moveCompareVerse(-1); });
@@ -3749,6 +4116,7 @@
     saveWritePosition(true);
     els.appScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
+    if (els.writeFontSizeMenu) els.writeFontSizeMenu.classList.add("hidden");
   });
 
   els.userChip.addEventListener("click", function () { showNameScreen("write"); });
@@ -3795,7 +4163,13 @@
     goTo(state.bookNo, state.chapter, currentVerseIndex());
   });
 
-  els.writeInput.addEventListener("input", function () { renderOverlay(); saveWritePosition(false); });
+  els.writeInput.addEventListener("input", function () {
+    renderOverlay(); saveWritePosition(false);
+    if (els.appScreen) els.appScreen.classList.add("nav-hidden");
+  });
+  els.writeInput.addEventListener("blur", function () {
+    if (els.appScreen) els.appScreen.classList.remove("nav-hidden");
+  });
 
   els.reflectionToggle.addEventListener("click", function () {
     els.reflectionArea.classList.toggle("hidden");
@@ -3898,7 +4272,12 @@
       gowunDodum: '"Gowun Dodum", sans-serif',
       gowunBatang: '"Gowun Batang", serif',
       notoSansKR: '"Noto Sans KR", sans-serif',
-      notoSerifKR: '"Noto Serif KR", serif'
+      notoSerifKR: '"Noto Serif KR", serif',
+      songMyung: '"Song Myung", serif',
+      eastSeaDokdo: '"East Sea Dokdo", cursive',
+      blackHanSans: '"Black Han Sans", sans-serif',
+      jua: '"Jua", sans-serif',
+      doHyeon: '"Do Hyeon", sans-serif'
     };
     var root = document.documentElement;
     root.style.setProperty("--bible-font-scale", sizeMap[settings.fontSize] || 1);
@@ -3907,6 +4286,7 @@
     root.setAttribute("data-font-size", settings.fontSize || "normal");
     root.setAttribute("data-general-font-size", settings.generalFontSize || "normal");
     root.setAttribute("data-font-family", settings.fontFamily || "default");
+    updateReadFontSizeValue(settings.fontSize);
 
     document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
       btn.classList.toggle("selected", btn.getAttribute("data-font-size") === settings.fontSize);

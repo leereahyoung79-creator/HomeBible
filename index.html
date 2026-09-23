@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="우리집 성경책">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&family=Gamja+Flower&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&family=Gamja+Flower&family=Song+Myung&family=East+Sea+Dokdo&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -74,9 +74,21 @@
     <div class="modal-sticky-top">
       <div class="stats-head">
         <h2>🙏 감사 &amp; 기도</h2>
-        <button id="closeGratitudePrayerBtn" class="icon-btn" title="닫기">✕</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="gratitudeFontSizeBtn" class="icon-btn icon-btn-aa" title="글씨 크기" aria-label="글씨 크기 조절">Aa</button>
+          <button id="closeGratitudePrayerBtn" class="icon-btn" title="닫기">✕</button>
+        </div>
       </div>
       <p class="stats-sub" id="gratitudePrayerDate">오늘의 감사와 기도</p>
+    </div>
+
+    <div id="gratitudeFontSizeMenu" class="inline-font-size-menu hidden">
+      <div class="inline-font-size-title">글씨 크기</div>
+      <div class="inline-font-size-stepper">
+        <button id="gratitudeFontMinusBtn" type="button" aria-label="글씨 작게">−</button>
+        <span id="gratitudeFontSizeValue" class="inline-font-size-value">100%</span>
+        <button id="gratitudeFontPlusBtn" type="button" aria-label="글씨 크게">+</button>
+      </div>
     </div>
 
     <div class="gratitude-prayer-body">
@@ -103,7 +115,6 @@
     <div class="gratitude-prayer-footer">
       <span id="gratitudePrayerSaved" class="reflection-saved"></span>
       <div class="gratitude-prayer-actions">
-        <button id="gratitudePrayerHomeBtn" type="button" class="ghost-button small">🏠 메인화면</button>
         <button id="showGratitudeHistoryBtn" type="button" class="ghost-button small">📖 지난 기록 보기</button>
         <button id="saveGratitudePrayerBtn" type="button" class="primary-button small">저장</button>
       </div>
@@ -130,34 +141,43 @@
       <select id="readChapterSelect"></select>
       <select id="readVerseSelect"></select>
     </div>
-    <div class="read-toolbar read-modern-toolbar">
-      <div class="read-top-main">
-        <button id="readBookPickerBtn" class="read-current-pill read-current-book" type="button" aria-label="성경책과 장 선택"><span id="readBookPickerLabel">창세기 1</span></button>
-        <button id="readTranslationPickerBtn" class="read-current-pill read-current-translation" type="button" aria-label="성경 번역 선택"><span id="readTranslationPickerLabel">KRV</span></button>
-        <div class="read-top-spacer"></div>
-        <button id="bibleSearchBtn" class="read-icon-action" type="button" aria-label="말씀 도구">⌕</button>
-        <button id="readMoreBtn" class="read-icon-action" type="button" aria-label="말씀 글씨 크기">•••</button>
-      </div>
-      <div id="readToolsMenu" class="read-tools-menu hidden">
-        <button id="readWordSearchAction" type="button">🔎 단어 검색</button>
-        <button id="readHighlightAction" type="button">🌈 형광펜</button>
-        <button id="compareBtn" type="button">📚 모든 번역 비교</button>
-        <div class="read-highlight-panel">
-          <span class="toolbar-label">색상 선택</span>
-          <div id="highlightSwatches" class="highlight-swatches"></div>
-        </div>
-      </div>
-      <div id="readFontSizeMenu" class="read-font-size-menu hidden">
-        <div class="read-font-size-title">말씀 글씨 크기</div>
-        <div class="read-font-size-buttons">
-          <button type="button" data-read-font-size="small">작게</button>
-          <button type="button" data-read-font-size="normal">보통</button>
-          <button type="button" data-read-font-size="large">크게</button>
-          <button type="button" data-read-font-size="xlarge">아주 크게</button>
-        </div>
+
+    <!-- 하단 메뉴와 동일한 디자인의 성경책보기 상단 메뉴 -->
+    <nav class="read-top-nav" aria-label="성경 말씀 상단 메뉴">
+      <button id="readBookPickerBtn" type="button">
+        <span>📖</span><b>성경</b>
+      </button>
+      <button id="readTranslationPickerBtn" type="button">
+        <span>📜</span><b>번역</b>
+      </button>
+      <button id="readTopCompareBtn" type="button">
+        <span>📚</span><b>비교</b>
+      </button>
+      <button id="readTopSearchBtn" type="button">
+        <span>🔍</span><b>검색</b>
+      </button>
+      <button id="readTopFontSizeBtn" type="button" aria-label="말씀 글씨 크기 조절">
+        <span>Aa</span><b>글씨</b>
+      </button>
+      <button id="readTopCloseBtn" type="button" aria-label="성경책보기 닫기">
+        <span>✕</span><b>창닫기</b>
+      </button>
+    </nav>
+
+    <div id="readFontSizeMenu" class="read-font-size-menu hidden">
+      <div class="read-font-size-title">말씀 글씨 크기</div>
+      <div class="read-font-size-stepper">
+        <button id="readFontMinusBtn" type="button" aria-label="글씨 작게">−</button>
+        <span id="readFontSizeValue">100%</span>
+        <button id="readFontPlusBtn" type="button" aria-label="글씨 크게">＋</button>
       </div>
     </div>
   </header>
+
+  <div id="readHighlightMenu" class="read-highlight-menu hidden">
+    <div class="read-highlight-title">형광펜 색상</div>
+    <div id="highlightSwatches" class="highlight-swatches"></div>
+  </div>
 
   <main class="page-wrap">
     <div class="book-page" id="readPage">
@@ -171,7 +191,7 @@
       <div id="readVerseList" class="read-verse-list"></div>
 
       <div id="selectedVerseActions" class="selected-verse-actions hidden" aria-live="polite">
-        <div class="selected-verse-actions-title">선택한 말씀</div>
+        <div class="selected-verse-actions-title" id="selectedVerseActionsTitle">선택한 말씀</div>
         <div class="selected-verse-actions-buttons">
           <button id="sermonNoteBtn" class="pill-toggle" type="button">📝 예배노트</button>
           <button id="sermonHistoryBtn" class="pill-toggle" type="button">🗓 지난 노트</button>
@@ -191,10 +211,12 @@
       </div>
     </div>
   </main>
-  <nav id="readBottomNav" class="read-bottom-nav" aria-label="성경 말씀 기능">
-    <button id="readBottomSermonBtn" type="button"><span>📝</span><b>예배노트</b></button>
-    <button id="readBottomHistoryBtn" type="button"><span>🗓</span><b>지난노트</b></button>
-    <button id="readBottomCopyBtn" type="button"><span>📋</span><b>말씀복사</b></button>
+
+  <nav id="readBottomNav" class="read-bottom-nav" aria-label="성경 말씀 하단 메뉴">
+    <button id="readBottomSermonBtn" type="button"><span>📝</span><b>예배</b></button>
+    <button id="readBottomHistoryBtn" type="button"><span>🗓</span><b>노트</b></button>
+    <button id="readBottomReflectionBtn" type="button"><span>📋</span><b>복사</b></button>
+    <button id="readBottomHighlightBtn" type="button"><span>🖍</span><b>형광펜</b></button>
     <button id="readBottomBookmarkBtn" type="button"><span>🔖</span><b>책갈피</b></button>
     <div id="readBottomBookmarkPanel" class="read-bottom-bookmark-panel hidden">
       <div class="read-bottom-bookmark-title">책갈피</div>
@@ -211,7 +233,7 @@
       <h2>성경책 선택</h2>
       <button id="closeReadBookPickerBtn" class="icon-btn" type="button">✕</button>
     </div>
-    <p id="readBookPickerStatus" class="read-picker-sub">신약 → 구약 순서로 선택하세요.</p>
+    <p id="readBookPickerStatus" class="read-picker-sub hidden"></p>
     <div id="readBookPickerList" class="read-book-picker-list"></div>
     <div id="readChapterPickerArea" class="read-chapter-picker-area hidden"></div>
   </div>
@@ -246,7 +268,7 @@
     <div class="modal-body">
       <div id="bibleBookSearchResults" class="bible-book-search-results"></div>
       <div class="compare-bottom-close">
-        <button id="bibleBookSearchBottomCloseBtn" type="button" class="secondary-button">닫기</button>
+        <button id="bibleBookSearchBottomCloseBtn" type="button" class="ghost-button">닫기</button>
       </div>
     </div>
   </div>
@@ -265,9 +287,9 @@
     <div class="modal-body compare-body">
       <div id="compareCards" class="compare-cards"></div>
       <div class="compare-bottom-nav">
-        <button id="comparePrevVerseBtn" type="button" class="secondary-button">← 이전 절</button>
-        <button id="compareBottomCloseBtn" type="button" class="secondary-button">닫기</button>
-        <button id="compareNextVerseBtn" type="button" class="secondary-button">다음 절 →</button>
+        <button id="comparePrevVerseBtn" type="button" class="ghost-button">← 이전 절</button>
+        <button id="compareBottomCloseBtn" type="button" class="ghost-button">닫기</button>
+        <button id="compareNextVerseBtn" type="button" class="ghost-button">다음 절 →</button>
       </div>
     </div>
   </div>
@@ -290,7 +312,7 @@
       </div>
       <div id="commentaryContent" class="commentary-content"></div>
       <div class="commentary-bottom-close">
-        <button id="commentaryBottomCloseBtn" type="button" class="secondary-button">닫기</button>
+        <button id="commentaryBottomCloseBtn" type="button" class="ghost-button">닫기</button>
       </div>
     </div>
   </div>
@@ -397,8 +419,8 @@
         <div class="hymn-viewer-head">
           <strong id="hymnViewerTitle"></strong>
           <div class="hymn-viewer-actions">
-            <button id="hymnOpenPdfBtn" type="button" class="secondary-button">전체 PDF로 보기</button>
-            <button id="hymnViewerClose" type="button" class="secondary-button">목록으로</button>
+            <button id="hymnOpenPdfBtn" type="button" class="ghost-button">전체 PDF로 보기</button>
+            <button id="hymnViewerClose" type="button" class="ghost-button">목록으로</button>
           </div>
         </div>
         <div class="hymn-pdf-scroll" role="region" aria-label="찬송가 악보 스크롤 영역">
@@ -416,10 +438,23 @@
     <div class="modal-sticky-top">
       <div class="stats-head">
         <h2>💬 기독교 명언</h2>
-        <button id="closeChristianQuotesBtn" class="icon-btn" title="닫기">✕</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="quotesFontSizeBtn" class="icon-btn icon-btn-aa" title="글씨 크기" aria-label="글씨 크기 조절">Aa</button>
+          <button id="closeChristianQuotesBtn" class="icon-btn" title="닫기">✕</button>
+        </div>
       </div>
       <p class="stats-sub">지금 나의 마음과 상황에 필요한 주제를 선택해보세요.</p>
     </div>
+
+    <div id="quotesFontSizeMenu" class="inline-font-size-menu hidden">
+      <div class="inline-font-size-title">글씨 크기</div>
+      <div class="inline-font-size-stepper">
+        <button id="quotesFontMinusBtn" type="button" aria-label="글씨 작게">−</button>
+        <span id="quotesFontSizeValue" class="inline-font-size-value">100%</span>
+        <button id="quotesFontPlusBtn" type="button" aria-label="글씨 크게">+</button>
+      </div>
+    </div>
+
     <div class="modal-body christian-quotes-body">
       <div id="christianQuoteCategories" class="christian-quote-categories"></div>
       <div id="christianQuoteEmpty" class="christian-quote-empty hidden">이 주제의 명언을 준비하고 있어요.</div>
@@ -479,7 +514,7 @@
         <input id="registerNameInput" type="text" maxlength="8" placeholder="이름 입력 (예: 엄마, 민준)" autocomplete="off">
         <button type="submit" class="primary-button">등록하고 입장하기</button>
       </form>
-      <button id="registerBackBtn" class="text-link">다시 입력할게요 ←</button>
+      <button id="registerBackBtn" class="text-link">← 다시 입력할게요</button>
     </div>
 
   </div>
@@ -489,59 +524,32 @@
 <section id="appScreen" class="app-screen hidden">
 
   <header class="topbar">
-    <div class="write-toolbar" aria-label="성경필사 메뉴">
-      <div class="write-toolbar-first">
-        <button id="writeBibleBookSearchBtn" class="pill-toggle" type="button">🔎 성경찾기</button>
-        <label class="read-translation-inline" aria-label="필사 번역본 선택"><span>번역</span><select id="writeTranslationQuickSelect" aria-label="필사 번역본 선택"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select></label>
-        <button id="writeUserQuickBtn" class="user-chip" type="button"><span id="writeUserQuickName">이름</span></button>
-        <button id="writeHomeQuickBtn" class="icon-btn close-top-btn" type="button" title="닫기" aria-label="닫기">✕</button>
-      </div>
-      <div class="write-toolbar-second">
-        <button id="writeContinueBtn" class="pill-toggle" type="button">🔖 이어쓰기</button>
-        <button id="writeStatsQuickBtn" class="pill-toggle" type="button">📊 필사현황</button>
-        <button id="writeNotesQuickBtn" class="pill-toggle" type="button">📝 묵상노트</button>
-      </div>
+    <div class="write-hidden-selection" aria-hidden="true">
+      <select id="writeTestamentSelect"><option value="OT">구약</option><option value="NT">신약</option></select>
+      <select id="bookSelect"></select>
+      <select id="chapterSelect"></select>
+      <select id="verseSelect"></select>
+      <select id="translationSelect"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select>
     </div>
-    <div class="topbar-inner">
-      <button id="homeBtn" class="icon-btn close-top-btn" title="닫기" aria-label="닫기">✕</button>
 
-      <div class="field-group">
-        <label class="field field-testament">
-          <span class="field-label">구약/신약</span>
-          <select id="writeTestamentSelect" aria-label="구약 또는 신약 선택">
-            <option value="OT">구약</option>
-            <option value="NT">신약</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field-label">성경</span>
-          <select id="bookSelect" aria-label="성경책 선택"></select>
-        </label>
-        <label class="field field-narrow">
-          <span class="field-label">장</span>
-          <select id="chapterSelect" aria-label="장 선택"></select>
-        </label>
-        <label class="field field-narrow">
-          <span class="field-label">절</span>
-          <select id="verseSelect" aria-label="절 선택"></select>
-        </label>
-        <label class="field field-narrow">
-          <span class="field-label">번역</span>
-          <select id="translationSelect" aria-label="번역본 선택">
-            <option value="std">표준새번역</option>
-            <option value="easy">쉬운성경</option>
-            <option value="gae">개역개정</option>
-          </select>
-        </label>
-      </div>
-
+    <div class="write-user-row">
       <button id="userChip" class="user-chip" title="필사자 바꾸기">
         <span id="userChipName">이름</span>
       </button>
-      <button id="bookmarksBtn" class="icon-btn" title="이어쓰기 목록">🔖</button>
-      <button id="statsBtn" class="icon-btn" title="가족 현황">📊</button>
-      <button id="notesListBtn" class="icon-btn" title="내 묵상 노트">🗒️</button>
     </div>
+
+    <!-- 하단 메뉴와 동일한 디자인의 성경필사 상단 메뉴 -->
+    <nav class="write-top-nav" aria-label="성경필사 상단 메뉴">
+      <button id="writeBookPickerBtn" type="button">
+        <span>📖</span><b>성경</b>
+      </button>
+      <button id="writeTranslationPickerBtn" type="button">
+        <span>📜</span><b>번역</b>
+      </button>
+      <button id="homeBtn" type="button" aria-label="성경필사 닫기">
+        <span>✕</span><b>창닫기</b>
+      </button>
+    </nav>
   </header>
 
   <main class="page-wrap">
@@ -589,6 +597,22 @@
   <footer class="chapter-progress">
     <div class="dots" id="chapterDots"></div>
   </footer>
+
+  <nav id="writeBottomNav" class="write-bottom-nav" aria-label="성경필사 하단 메뉴">
+    <button id="bookmarksBtn" type="button"><span>🔖</span><b>이어쓰기</b></button>
+    <button id="statsBtn" type="button"><span>📊</span><b>현황</b></button>
+    <button id="notesListBtn" type="button"><span>📝</span><b>묵상</b></button>
+    <button id="writeFontSizeBtn" type="button" aria-label="글씨 크기 조절"><span>Aa</span><b>글씨</b></button>
+  </nav>
+
+  <div id="writeFontSizeMenu" class="write-font-size-menu hidden">
+    <div class="read-font-size-title">말씀 글씨 크기</div>
+    <div class="read-font-size-stepper">
+      <button id="writeFontMinusBtn" type="button" aria-label="글씨 작게">−</button>
+      <span id="writeFontSizeValue">100%</span>
+      <button id="writeFontPlusBtn" type="button" aria-label="글씨 크게">＋</button>
+    </div>
+  </div>
 
 </section>
 
@@ -654,50 +678,57 @@
     </div>
     <p class="stats-sub">글씨 크기와 글씨체를 원하는 대로 바꿀 수 있어요.</p>
 
-    <div class="settings-section">
-      <h3>성경 말씀 글씨 크기 <span class="settings-help">성경 본문에만 적용</span></h3>
-      <div class="settings-options" id="fontSizeOptions">
-        <button type="button" data-font-size="small">작게</button>
-        <button type="button" data-font-size="normal" class="selected">보통</button>
-        <button type="button" data-font-size="large">크게</button>
-        <button type="button" data-font-size="xlarge">아주 크게</button>
+    <div class="settings-scroll">
+      <div class="settings-section">
+        <h3>성경 말씀 글씨 크기 <span class="settings-help">성경 본문에만 적용</span></h3>
+        <div class="settings-options" id="fontSizeOptions">
+          <button type="button" data-font-size="small">작게</button>
+          <button type="button" data-font-size="normal" class="selected">보통</button>
+          <button type="button" data-font-size="large">크게</button>
+          <button type="button" data-font-size="xlarge">아주 크게</button>
+        </div>
       </div>
-    </div>
 
-    <div class="settings-section">
-      <h3>일반 글씨 크기 <span class="settings-help">성경 본문을 제외한 화면에 적용</span></h3>
-      <div class="settings-options" id="generalFontSizeOptions">
-        <button type="button" data-general-font-size="small">작게</button>
-        <button type="button" data-general-font-size="normal" class="selected">보통</button>
-        <button type="button" data-general-font-size="large">크게</button>
-        <button type="button" data-general-font-size="xlarge">아주 크게</button>
+      <div class="settings-section">
+        <h3>일반 글씨 크기 <span class="settings-help">성경 본문을 제외한 화면에 적용</span></h3>
+        <div class="settings-options" id="generalFontSizeOptions">
+          <button type="button" data-general-font-size="small">작게</button>
+          <button type="button" data-general-font-size="normal" class="selected">보통</button>
+          <button type="button" data-general-font-size="large">크게</button>
+          <button type="button" data-general-font-size="xlarge">아주 크게</button>
+        </div>
       </div>
-    </div>
 
-    <div class="settings-section">
-      <h3>글씨체 <span class="settings-help">전체 화면에 적용</span></h3>
-      <div class="settings-options settings-font-options" id="fontFamilyOptions">
-        <button type="button" data-font-family="nanumRound" class="selected">나눔스퀘어라운드</button>
-        <button type="button" data-font-family="nanumPen">나눔손글씨 펜</button>
-        <button type="button" data-font-family="nanumBrush">나눔손글씨 붓</button>
-        <button type="button" data-font-family="baeminJua">배민 주아체</button>
-        <button type="button" data-font-family="baeminDohyeon">배민 도현체</button>
-        <button type="button" data-font-family="hakgyoansim">학교안심 둥근미소체</button>
-        <button type="button" data-font-family="gowunDodum">Gowun Dodum</button>
-        <button type="button" data-font-family="gowunBatang">Gowun Batang</button>
-        <button type="button" data-font-family="notoSansKR">본고딕</button>
-        <button type="button" data-font-family="notoSerifKR">본명조</button>
+      <div class="settings-section">
+        <h3>글씨체 <span class="settings-help">전체 화면에 적용</span></h3>
+        <div class="settings-options settings-font-options" id="fontFamilyOptions">
+          <button type="button" data-font-family="nanumRound" class="selected">나눔스퀘어라운드</button>
+          <button type="button" data-font-family="nanumPen">나눔손글씨 펜</button>
+          <button type="button" data-font-family="nanumBrush">나눔손글씨 붓</button>
+          <button type="button" data-font-family="baeminJua">배민 주아체</button>
+          <button type="button" data-font-family="baeminDohyeon">배민 도현체</button>
+          <button type="button" data-font-family="hakgyoansim">학교안심 둥근미소체</button>
+          <button type="button" data-font-family="gowunDodum">Gowun Dodum</button>
+          <button type="button" data-font-family="gowunBatang">Gowun Batang</button>
+          <button type="button" data-font-family="notoSansKR">본고딕</button>
+          <button type="button" data-font-family="notoSerifKR">본명조</button>
+          <button type="button" data-font-family="songMyung">송명체</button>
+          <button type="button" data-font-family="eastSeaDokdo">이스트씨 독도체</button>
+          <button type="button" data-font-family="blackHanSans">블랙 한 산스</button>
+          <button type="button" data-font-family="jua">주아체 (구글판)</button>
+          <button type="button" data-font-family="doHyeon">도현체 (구글판)</button>
+        </div>
       </div>
-    </div>
 
-    <div class="settings-preview">
-      <h3>미리보기</h3>
-      <p>태초에 하나님이 천지를 창조하셨다.</p>
+      <div class="settings-preview">
+        <h3>미리보기</h3>
+        <p>태초에 하나님이 천지를 창조하셨다.</p>
+      </div>
     </div>
 
     <div class="settings-actions">
-      <button id="resetSettingsBtn" type="button">기본값으로 복원</button>
-      <button id="saveSettingsBtn" type="button">저장하고 홈으로</button>
+      <button id="resetSettingsBtn" type="button" class="ghost-button">기본값으로 복원</button>
+      <button id="saveSettingsBtn" type="button" class="primary-button">저장하고 홈으로</button>
     </div>
   </div>
 </section>

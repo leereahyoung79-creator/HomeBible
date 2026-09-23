@@ -217,6 +217,7 @@ select{font-family:inherit;}
 }
 .ghost-button:hover{background:rgba(74,59,50,0.03);}
 .ghost-button:disabled{opacity:0.35;cursor:default;}
+.ghost-button.small{padding:6px 14px;font-size:12px;}
 
 .text-link{
   border:none;
@@ -261,6 +262,8 @@ select{font-family:inherit;}
   border-radius:0;
   width:fit-content;
   height:auto;
+  text-decoration:underline;
+  text-underline-offset:3px;
 }
 .nav-back-btn:hover{color:var(--ink);}
 .name-eyebrow{
@@ -409,6 +412,7 @@ select{font-family:inherit;}
   align-items:flex-end;
   gap:14px;
   padding:18px 20px 14px;
+  position:relative;
 }
 .icon-btn{
   width:34px;height:34px;
@@ -421,6 +425,8 @@ select{font-family:inherit;}
   flex:none;
   margin-bottom:2px;
 }
+/* 글씨 크기(Aa) 원형 아이콘 버튼: 같은 .icon-btn을 쓰되 "Aa" 글자가 들어갈 때는 이 보조 클래스로 크기를 맞춥니다. */
+.icon-btn-aa{font-size:12px;font-weight:800;}
 .field-group{
   flex:1;
   display:flex;
@@ -672,6 +678,7 @@ select{font-family:inherit;}
 .read-verse.hl-pink{background:#fbdfe6;}
 .read-verse.hl-green{background:#dcefd8;}
 .read-verse.hl-blue{background:#d9e8f5;}
+.read-verse.hl-purple{background:#e6d9f5;}
 .read-verse.jump-flash{
   animation:jumpFlash 1.6s ease;
 }
@@ -821,6 +828,7 @@ select{font-family:inherit;}
   display:flex;
   flex-direction:column;
   overflow:hidden;
+  position:relative;
 }
 .modal-sticky-top{
   flex:none;
@@ -937,15 +945,21 @@ select{font-family:inherit;}
   font-weight:700;
   color:var(--accent);
 }
+/* 삭제 버튼 공통 스타일: 예배노트/책갈피/감사기록의 삭제 버튼이 모두 같은 모양을 씁니다. */
+.danger-btn,
 .sermon-entry-delete{
   border:1px solid var(--border);
   border-radius:999px;
-  background:var(--card);
-  color:var(--ink-soft);
-  font-size:11px;
-  padding:5px 12px;
+  background:#fff;
+  color:var(--incorrect);
+  font-size:12px;
+  font-weight:700;
+  padding:6px 12px;
+  white-space:nowrap;
 }
-.sermon-entry-delete:hover{border-color:var(--incorrect);color:var(--incorrect);}
+.danger-btn:hover,
+.danger-btn:focus-visible,
+.sermon-entry-delete:hover{background:#FDEAE6;border-color:var(--incorrect);outline:none;}
 .sermon-entry textarea{
   width:100%;
   border:1px solid var(--border);
@@ -1274,7 +1288,7 @@ select{font-family:inherit;}
   justify-content:center;
   padding:22px 0 4px;
 }
-.commentary-bottom-close .secondary-button{
+.commentary-bottom-close .ghost-button{
   min-width:120px;
   padding:10px 24px;
 }
@@ -1339,7 +1353,7 @@ select{font-family:inherit;}
   justify-content:center;
   padding:20px 0 4px;
 }
-.compare-bottom-close .secondary-button{min-width:120px;padding:10px 24px;}
+.compare-bottom-close .ghost-button{min-width:120px;padding:10px 24px;}
 @media (max-width:600px){
   .stats-screen{padding:10px;}
   .stats-card,.commentary-card,.compare-card{
@@ -1415,7 +1429,7 @@ body {
   gap: 8px;
   padding: 14px 0 4px;
 }
-.compare-bottom-nav .secondary-button {
+.compare-bottom-nav .ghost-button {
   min-width: 92px;
   white-space: nowrap;
 }
@@ -1423,7 +1437,7 @@ body {
   .compare-bottom-nav {
     gap: 6px;
   }
-  .compare-bottom-nav .secondary-button {
+  .compare-bottom-nav .ghost-button {
     min-width: 0;
     flex: 1;
     padding-left: 10px;
@@ -1685,16 +1699,16 @@ select {
   align-self: center;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--paper);
-  color: var(--ink-soft);
-  padding: 7px 12px;
+  background: #fff;
+  color: var(--incorrect);
+  padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
 .note-row-delete:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: #FDEAE6;
+  border-color: var(--incorrect);
 }
 @media (max-width: 520px) {
   .note-row-main { gap: 6px; }
@@ -2087,7 +2101,7 @@ textarea::placeholder {
 .hymn-viewer{display:flex;flex-direction:column;gap:10px;height:65vh;height:65dvh;min-height:360px;}
 .hymn-viewer-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--ink);}
 .hymn-viewer-head strong{font-size:15px;color:var(--accent);}
-.hymn-viewer-head .secondary-button{flex:none;}
+.hymn-viewer-head .ghost-button{flex:none;}
 #hymnFrame{width:100%;flex:1;min-height:0;border:1px solid var(--border);border-radius:12px;background:#fff;}
 @media(max-width:600px){
   .hymn-card{max-width:100%;}
@@ -2255,7 +2269,18 @@ textarea::placeholder {
 .gratitude-history-label{font-size:15px;font-weight:800;color:var(--ink)}
 .gratitude-history-list{display:flex;flex-direction:column;gap:18px}
 .gratitude-history-record{padding:20px 22px;border:1px solid var(--border);border-radius:16px;background:var(--paper);box-shadow:0 5px 18px rgba(74,59,50,.04)}
-.gratitude-history-record-date{font-size:18px;font-weight:800;color:var(--accent);padding-bottom:13px;border-bottom:1px dashed var(--border);margin-bottom:16px}
+.gratitude-history-record-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:13px;border-bottom:1px dashed var(--border);margin-bottom:16px}
+.gratitude-history-record-date{font-size:18px;font-weight:800;color:var(--accent);}
+.gratitude-history-record-buttons{display:flex;gap:6px;flex:none;}
+/* 수정 버튼은 강조색, 삭제 버튼은 공통 .danger-btn 스타일(앱 전체 삭제 버튼과 동일)을 씁니다. */
+.gratitude-history-edit-btn,
+.gratitude-history-delete-btn{flex:none;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px;font-weight:700;padding:6px 12px;white-space:nowrap;}
+.gratitude-history-edit-btn{color:var(--accent);}
+.gratitude-history-edit-btn:hover,
+.gratitude-history-edit-btn:focus-visible{background:var(--accent-soft);border-color:var(--accent);outline:none;}
+.gratitude-history-delete-btn{color:var(--incorrect);}
+.gratitude-history-delete-btn:hover,
+.gratitude-history-delete-btn:focus-visible{background:#FDEAE6;border-color:var(--incorrect);outline:none;}
 .gratitude-history-section + .gratitude-history-section{margin-top:22px;padding-top:20px;border-top:1px dashed var(--border)}
 .gratitude-history-title{font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px}
 .gratitude-history-item{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:13px;line-height:1.7;color:var(--ink)}
@@ -2384,9 +2409,14 @@ textarea::placeholder {
 .sermon-editor-actions .sermon-editor-saved{
   margin-right:auto;
 }
+/* 다른 삭제 버튼들과 같은 빨간 danger 색(--incorrect)을 씁니다. */
 .sermon-delete-button{
-  border-color:rgba(233,139,125,.35);
-  color:#D97662;
+  border-color:var(--border);
+  color:var(--incorrect);
+}
+.sermon-delete-button:hover:not(:disabled){
+  background:#FDEAE6;
+  border-color:var(--incorrect);
 }
 .sermon-delete-button:disabled{
   opacity:.45;
@@ -2569,7 +2599,6 @@ textarea::placeholder {
 }
 
 .ghost-button,
-.secondary-button,
 .cover-actions .ghost-button{
   border:1px solid var(--border);
   border-radius:999px;
@@ -2584,7 +2613,6 @@ textarea::placeholder {
   transition:transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
 }
 .ghost-button:hover,
-.secondary-button:hover,
 .cover-actions .ghost-button:hover{
   background:#FDEAE6;
   border-color:#F6D9CE;
@@ -2592,7 +2620,6 @@ textarea::placeholder {
   transform:translateY(-1px);
 }
 .ghost-button:active,
-.secondary-button:active,
 .cover-actions .ghost-button:active{
   transform:translateY(0);
 }
@@ -2952,9 +2979,6 @@ html, body {
     padding: 8px 6px;
     font-size: 13px;
   }
-  .gratitude-prayer-actions button:last-child {
-    grid-column: 1 / -1;
-  }
 
   .cover-icon {
     width: 82px;
@@ -3037,10 +3061,22 @@ html, body {
   max-width: 720px;
   margin: 24px auto;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.settings-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .settings-section,
 .settings-preview {
   margin-top: 22px;
+}
+.settings-actions {
+  flex: none;
 }
 .settings-section h3,
 .settings-preview h3 {
@@ -3053,8 +3089,7 @@ html, body {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
-.settings-options button,
-.settings-actions button {
+.settings-options button {
   min-width: 0;
   padding: 12px 8px;
   border: 1px solid #EBCFBE;
@@ -3091,9 +3126,12 @@ html, body {
   gap: 10px;
   margin-top: 22px;
 }
-.settings-actions button:last-child {
-  background: #F8DCD4;
-  border-color: #E98B7D;
+/* 저장/취소 버튼은 앱 전체와 같은 .primary-button/.ghost-button 스타일을 그대로 씁니다. */
+.settings-actions .primary-button,
+.settings-actions .ghost-button {
+  width: 100%;
+  padding: 12px 8px;
+  font-size: 14px;
 }
  :root {
   --bible-font-scale: 1;
@@ -3118,6 +3156,11 @@ select {
 #fontFamilyOptions button[data-font-family="gowunBatang"]{font-family:"Gowun Batang" !important;}
 #fontFamilyOptions button[data-font-family="notoSansKR"]{font-family:"Noto Sans KR" !important;}
 #fontFamilyOptions button[data-font-family="notoSerifKR"]{font-family:"Noto Serif KR" !important;}
+#fontFamilyOptions button[data-font-family="songMyung"]{font-family:"Song Myung" !important;}
+#fontFamilyOptions button[data-font-family="eastSeaDokdo"]{font-family:"East Sea Dokdo" !important;font-size:18px !important;}
+#fontFamilyOptions button[data-font-family="blackHanSans"]{font-family:"Black Han Sans" !important;}
+#fontFamilyOptions button[data-font-family="jua"]{font-family:"Jua" !important;}
+#fontFamilyOptions button[data-font-family="doHyeon"]{font-family:"Do Hyeon" !important;}
 .settings-preview p {
   font-family: var(--user-font-family, inherit);
   font-size: calc(18px * var(--bible-font-scale, 1));
@@ -3213,7 +3256,7 @@ select {
   .hymn-viewer-actions {
     width: 100%;
   }
-  .hymn-viewer-actions .secondary-button {
+  .hymn-viewer-actions .ghost-button {
     flex: 1 1 0;
     min-width: 0;
     white-space: normal;
@@ -3326,6 +3369,11 @@ body * {
 #fontFamilyOptions button[data-font-family="gowunBatang"]{font-family:"Gowun Batang" !important;}
 #fontFamilyOptions button[data-font-family="notoSansKR"]{font-family:"Noto Sans KR" !important;}
 #fontFamilyOptions button[data-font-family="notoSerifKR"]{font-family:"Noto Serif KR" !important;}
+#fontFamilyOptions button[data-font-family="songMyung"]{font-family:"Song Myung" !important;}
+#fontFamilyOptions button[data-font-family="eastSeaDokdo"]{font-family:"East Sea Dokdo" !important;font-size:18px !important;}
+#fontFamilyOptions button[data-font-family="blackHanSans"]{font-family:"Black Han Sans" !important;}
+#fontFamilyOptions button[data-font-family="jua"]{font-family:"Jua" !important;}
+#fontFamilyOptions button[data-font-family="doHyeon"]{font-family:"Do Hyeon" !important;}
 
 body, main, section, .screen, .card, .panel, .content,
 button, input, textarea, select, p, h1, h2, h3, h4 {
@@ -3380,6 +3428,16 @@ html[data-general-font-size="xlarge"] .cover-grid .wide-cta {
   background: var(--paper);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 3px 14px rgba(74,59,50,.10);
+  transition: transform 0.25s ease;
+}
+#readScreen.nav-hidden .read-fixed-topbar {
+  transform: translateY(-100%);
+}
+#readScreen .read-bottom-nav {
+  transition: transform 0.25s ease;
+}
+#readScreen.nav-hidden .read-bottom-nav {
+  transform: translate(-50%, 140%);
 }
 #readScreen .read-modern-toolbar {
   max-width: 900px;
@@ -3487,17 +3545,17 @@ html[data-general-font-size="xlarge"] .cover-grid .wide-cta {
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 7px;
-  border: 1px solid rgba(255,255,255,.25);
+  border: 1px solid rgba(0,0,0,.08);
   border-radius: 28px;
-  background: rgba(48,48,50,.96);
-  box-shadow: 0 10px 28px rgba(0,0,0,.25);
+  background: #FCE3DC;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
   z-index: 290;
 }
 .read-bottom-nav > button {
   border: 0;
   border-radius: 21px;
   background: transparent;
-  color: #fff;
+  color: #4A3B32;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -3510,7 +3568,7 @@ html[data-general-font-size="xlarge"] .cover-grid .wide-cta {
 .read-bottom-nav > button span { font-size: 21px; line-height: 1; }
 .read-bottom-nav > button b { font-size: 12px; white-space: nowrap; }
 .read-bottom-nav > button:hover,
-.read-bottom-nav > button:focus-visible { background: rgba(255,255,255,.10); outline: none; }
+.read-bottom-nav > button:focus-visible { background: rgba(0,0,0,.06); outline: none; }
 .read-bottom-bookmark-panel {
   position: absolute;
   right: 6px;
@@ -3636,3 +3694,382 @@ html[data-general-font-size="xlarge"] .cover-grid .wide-cta {
   .read-chapter-picker-grid { grid-template-columns: repeat(5, 1fr); }
 }
 #readScreen .read-hidden-selection { display: none !important; }
+
+/* ===================== 성경책보기 상단/하단 공통 메뉴 디자인 ===================== */
+#readScreen .read-top-nav,
+#readScreen .read-bottom-nav {
+  width: min(900px, calc(100vw - 20px));
+  min-height: 68px;
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 28px;
+  background: #FCE3DC;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
+}
+
+#readScreen .read-bottom-nav {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+#readScreen .read-top-nav {
+  position: relative;
+  grid-template-columns: repeat(6, 1fr);
+  margin: 0 auto;
+  z-index: 305;
+}
+
+#readScreen .read-top-nav > button,
+#readScreen .read-bottom-nav > button {
+  border: 0;
+  border-radius: 21px;
+  background: transparent;
+  color: #4A3B32;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#readScreen .read-top-nav > button span,
+#readScreen .read-bottom-nav > button span {
+  font-size: 21px;
+  line-height: 1;
+}
+
+#readScreen .read-top-nav > button b,
+#readScreen .read-bottom-nav > button b {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#readScreen .read-top-nav > button:hover,
+#readScreen .read-top-nav > button:focus-visible,
+#readScreen .read-bottom-nav > button:hover,
+#readScreen .read-bottom-nav > button:focus-visible {
+  background: rgba(0,0,0,.06);
+  outline: none;
+}
+
+/* 닫기(X) 버튼만 이름 없이 원형 아이콘 버튼으로 */
+#readTopCloseBtn {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  margin: 0 auto;
+  background: rgba(0,0,0,.06) !important;
+}
+#readTopCloseBtn b { display: none; }
+
+#readScreen .read-top-nav > button:active,
+#readScreen .read-bottom-nav > button:active {
+  transform: translateY(1px);
+}
+
+#readScreen .read-top-nav > button.active,
+#readScreen .read-bottom-nav > button.active {
+  background: rgba(0,0,0,.10);
+}
+
+#readScreen .read-top-nav > button span:first-child {
+  font-weight: 800;
+}
+
+#readScreen .read-font-size-menu {
+  position: absolute;
+  top: 76px;
+  right: max(10px, calc((100vw - 900px) / 2 + 10px));
+  width: 220px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 12px 28px rgba(0,0,0,.20);
+  z-index: 320;
+}
+
+#readScreen .read-font-size-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+#readScreen .read-font-size-stepper {
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  gap: 8px;
+}
+
+#readScreen .read-font-size-stepper button {
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#readScreen .read-font-size-stepper button:hover,
+#readScreen .read-font-size-stepper button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+#readScreen #readFontSizeValue {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+#readScreen .read-highlight-menu {
+  position: fixed;
+  left: 50%;
+  bottom: 88px;
+  transform: translateX(-50%);
+  width: min(330px, calc(100vw - 28px));
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 12px 28px rgba(0,0,0,.20);
+  z-index: 315;
+}
+
+#readScreen .read-highlight-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 9px;
+}
+
+#readScreen .read-highlight-menu .highlight-swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+#readScreen .read-highlight-menu .hl-swatch {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  justify-self: center;
+}
+
+#readScreen .read-highlight-menu .hl-swatch.active {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+/* 새 메뉴에서는 기존 도구바를 사용하지 않습니다. */
+#readScreen .read-toolbar,
+#readScreen .read-modern-toolbar { display: none; }
+
+@media (max-width: 600px) {
+  #readScreen { padding-top: 76px; padding-bottom: 92px; }
+
+  #readScreen .read-top-nav {
+    width: calc(100vw - 12px);
+    min-height: 66px;
+    border-radius: 24px;
+    padding: 6px;
+    gap: 2px;
+  }
+
+  #readScreen .read-top-nav > button span,
+  #readScreen .read-bottom-nav > button span { font-size: 18px; }
+
+  #readScreen .read-top-nav > button b,
+  #readScreen .read-bottom-nav > button b { font-size: 10px; }
+
+  #readScreen .read-font-size-menu {
+    top: 72px;
+    right: 8px;
+    width: 210px;
+  }
+
+  #readScreen .read-highlight-menu { bottom: 82px; }
+}
+
+/* 감사&기도 / 기독교명언 / 성경필사 공통 글씨크기 팝업 */
+.inline-font-size-menu{
+  position:absolute;
+  top:56px;
+  right:16px;
+  width:200px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--card);
+  color:var(--ink);
+  box-shadow:0 12px 28px rgba(74,59,50,.18);
+  z-index:400;
+}
+.inline-font-size-title{
+  text-align:center;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:10px;
+}
+.inline-font-size-stepper{
+  display:grid;
+  grid-template-columns:44px 1fr 44px;
+  align-items:center;
+  gap:8px;
+}
+.inline-font-size-stepper button{
+  height:38px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--paper);
+  color:var(--ink);
+  font-size:20px;
+  font-weight:800;
+  cursor:pointer;
+}
+.inline-font-size-stepper button:hover,
+.inline-font-size-stepper button:focus-visible{
+  border-color:var(--accent);
+  outline:none;
+}
+.inline-font-size-value{
+  text-align:center;
+  font-size:14px;
+  font-weight:800;
+}
+/* ===================== 성경필사 화면 메뉴 개편 (성경책보기와 동일한 구조) ===================== */
+#appScreen {
+  padding-bottom: 88px;
+}
+.write-hidden-selection { display: none !important; }
+
+.write-user-row {
+  display: none;
+}
+
+#appScreen .write-top-nav,
+#appScreen .write-bottom-nav {
+  width: min(900px, calc(100vw - 20px));
+  min-height: 68px;
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 28px;
+  background: #FCE3DC;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+#appScreen .write-top-nav {
+  grid-template-columns: repeat(3, 1fr);
+  margin: 6px auto 10px;
+  position: relative;
+  z-index: 305;
+}
+#appScreen.nav-hidden .write-top-nav {
+  transform: translateY(-140%);
+  opacity: 0;
+}
+#appScreen .write-bottom-nav {
+  grid-template-columns: repeat(4, 1fr);
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  margin: 0;
+  z-index: 290;
+}
+#appScreen.nav-hidden .write-bottom-nav {
+  transform: translate(-50%, 140%);
+  opacity: 0;
+}
+#appScreen .write-top-nav > button,
+#appScreen .write-bottom-nav > button {
+  border: 0;
+  border-radius: 21px;
+  background: transparent;
+  color: #4A3B32;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#appScreen .write-top-nav > button span,
+#appScreen .write-bottom-nav > button span {
+  font-size: 21px;
+  line-height: 1;
+}
+#appScreen .write-top-nav > button b,
+#appScreen .write-bottom-nav > button b {
+  font-size: 12px;
+  white-space: nowrap;
+}
+#appScreen .write-top-nav > button:hover,
+#appScreen .write-top-nav > button:focus-visible,
+#appScreen .write-bottom-nav > button:hover,
+#appScreen .write-bottom-nav > button:focus-visible {
+  background: rgba(0,0,0,.06);
+  outline: none;
+}
+#appScreen .write-top-nav > button:active,
+#appScreen .write-bottom-nav > button:active {
+  transform: translateY(1px);
+}
+
+/* 닫기(X) 버튼만 이름 없이 원형 아이콘 버튼으로 */
+#homeBtn {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  margin: 0 auto;
+  background: rgba(0,0,0,.06) !important;
+}
+#homeBtn b { display: none; }
+
+.write-font-size-menu {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  width: min(220px, calc(100vw - 20px));
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 12px 28px rgba(74,59,50,.18);
+  z-index: 320;
+}
+
+@media (max-width: 600px) {
+  #appScreen .write-bottom-nav { bottom: 7px; width: calc(100vw - 12px); min-height: 66px; border-radius: 24px; }
+  #appScreen .write-top-nav { width: calc(100vw - 20px); }
+  #appScreen .write-top-nav > button span,
+  #appScreen .write-bottom-nav > button span { font-size: 19px; }
+  #appScreen .write-top-nav > button b,
+  #appScreen .write-bottom-nav > button b { font-size: 11px; }
+  .write-font-size-menu { bottom: 82px; }
+}
