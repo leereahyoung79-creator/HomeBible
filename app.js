@@ -2137,6 +2137,16 @@
 
   }
 
+  /* 형광펜(붓칠) 모드를 끕니다. 예배노트/복사 등 다른 도구를 쓸 때
+     형광펜 모드가 계속 켜져 있으면 절 탭이 계속 형광펜으로만 동작하는 문제를 막습니다. */
+  function exitPaintMode() {
+    if (!highlightColor) return;
+    highlightColor = null;
+    if (els.readVerseList) els.readVerseList.classList.remove("paint-mode");
+    if (els.readHighlightMenu) els.readHighlightMenu.classList.add("hidden");
+    renderHighlightSwatches();
+  }
+
   /* ---------------- 말씀 복사 (여러 구절 선택 가능) ---------------- */
   var copyMode = false;
   var selectedCopyVerses = {};
@@ -2147,6 +2157,13 @@
       el.classList.remove("copy-selected");
     });
     updateCopyToolbar();
+  }
+
+  /* 말씀 복사(탭-누적) 모드를 끕니다. 형광펜/예배노트 등 다른 도구로 전환할 때 씁니다. */
+  function exitCopyMode() {
+    if (!copyMode) return;
+    copyMode = false;
+    clearCopyVerseSelection();
   }
 
   function updateCopyToolbar() {
@@ -2796,6 +2813,13 @@
     selectedSermonVerses = {};
     if (els.readVerseList) els.readVerseList.querySelectorAll(".read-verse.sermon-selected").forEach(function(el){ el.classList.remove("sermon-selected"); });
     updateSermonSelectionToolbar();
+  }
+
+  /* 예배노트 말씀 선택(탭-누적) 모드를 끕니다. 형광펜/복사 등 다른 도구로 전환할 때 씁니다. */
+  function exitSermonSelectionMode() {
+    if (!sermonSelectionMode) return;
+    sermonSelectionMode = false;
+    clearSermonSelection();
   }
 
   function toggleSermonVerse(el) {
@@ -3763,6 +3787,10 @@
   });
 
   if (els.readBottomHighlightBtn) els.readBottomHighlightBtn.addEventListener("click", function(){
+    /* 형광펜을 켤 때는 복사/예배노트 선택 모드가 남아있지 않도록 먼저 꺼줍니다. */
+    exitCopyMode();
+    exitSermonSelectionMode();
+    closeReadBookmarkPanel();
     if (!highlightColor) {
       highlightColor = HL_COLORS[0].key;
     }
@@ -3775,6 +3803,10 @@
   if (els.readBottomReflectionBtn) els.readBottomReflectionBtn.addEventListener("click", function(){
     var selectedEls = getSelectedVerseElements();
     if (selectedEls.length) {
+      /* 이미 선택된 절이 있으면 바로 복사하고, 형광펜/예배노트 모드도 함께 정리합니다. */
+      exitPaintMode();
+      exitSermonSelectionMode();
+      closeReadBookmarkPanel();
       var keys = selectedEls.map(function (el) { return el.getAttribute("data-vkey"); });
       var text = getSelectedCopyText(keys);
       var done = function () {
@@ -3792,6 +3824,10 @@
       }
       return;
     }
+    /* 복사 모드로 들어갈 때는 형광펜/예배노트 선택 모드가 남아있지 않도록 먼저 꺼줍니다. */
+    exitPaintMode();
+    exitSermonSelectionMode();
+    closeReadBookmarkPanel();
     copyMode = !copyMode;
     if (!copyMode) clearCopyVerseSelection();
     updateCopyToolbar();
@@ -3953,6 +3989,10 @@
   if (els.readBottomSermonBtn) els.readBottomSermonBtn.addEventListener("click", function(){
     var selectedEls = getSelectedVerseElements();
     if (selectedEls.length) {
+      /* 이미 선택된 절이 있으면 바로 예배노트를 열고, 형광펜/복사 모드도 함께 정리합니다. */
+      exitPaintMode();
+      exitCopyMode();
+      closeReadBookmarkPanel();
       sermonSelectionMode = false;
       selectedSermonVerses = {};
       selectedEls.forEach(function (el) { selectedSermonVerses[el.getAttribute("data-vkey")] = true; });
@@ -3960,16 +4000,32 @@
       clearVerseSelection();
       return;
     }
+    /* 예배 말씀 선택 모드로 들어갈 때는 형광펜/복사 모드가 남아있지 않도록 먼저 꺼줍니다. */
+    exitPaintMode();
+    exitCopyMode();
+    closeReadBookmarkPanel();
     if (els.sermonNoteBtn) els.sermonNoteBtn.click();
   });
   if (els.readBottomHistoryBtn) els.readBottomHistoryBtn.addEventListener("click", function(){ if (els.sermonHistoryBtn) els.sermonHistoryBtn.click(); });
   if (els.readBottomBookmarkBtn) els.readBottomBookmarkBtn.addEventListener("click", function(){
+    /* 패널이 이미 열려 있으면 그냥 닫습니다. (닫으려는 클릭까지 "절을 선택해주세요" 경고가
+       뜨면서 막히면, 책갈피가 계속 안 되는 것처럼 보이는 문제가 있었습니다.) */
+    if (els.readBottomBookmarkPanel && !els.readBottomBookmarkPanel.classList.contains("hidden")) {
+      closeReadBookmarkPanel();
+      return;
+    }
+    /* 형광펜/복사/예배노트 선택 모드가 남아있으면 절을 탭해도 책갈피로 선택되지 않고
+       계속 그 도구가 실행되어 버립니다. 책갈피를 쓸 때는 그 모드들을 먼저 꺼서
+       다음 탭이 정상적으로 책갈피 선택(말씀 선택)으로 이어지게 합니다. */
+    exitPaintMode();
+    exitCopyMode();
+    exitSermonSelectionMode();
     if (!pendingBookmarkVerse) {
       var selected = els.readVerseList && els.readVerseList.querySelector(".read-verse.verse-selected");
       if (!selected) { alert("책갈피로 저장하거나 이동할 말씀을 먼저 선택해주세요."); return; }
     }
     renderBookmarkSlots();
-    if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.toggle("hidden");
+    if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.remove("hidden");
   });
 
   els.readTestamentSelect.addEventListener("change", function(){
