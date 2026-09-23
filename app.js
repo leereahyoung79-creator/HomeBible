@@ -4020,10 +4020,10 @@
     exitPaintMode();
     exitCopyMode();
     exitSermonSelectionMode();
-    if (!pendingBookmarkVerse) {
-      var selected = els.readVerseList && els.readVerseList.querySelector(".read-verse.verse-selected");
-      if (!selected) { alert("책갈피로 저장하거나 이동할 말씀을 먼저 선택해주세요."); return; }
-    }
+    /* 책갈피 버튼은 "선택한 절을 새 자리에 저장"뿐 아니라 "예전에 저장해둔 자리들을
+       보고 그 자리로 이동"하는 용도로도 쓰입니다. 절을 선택하지 않았다고 패널 자체를
+       못 열게 막으면 저장된 책갈피를 보러 갈 수가 없으므로, 항상 패널을 엽니다.
+       (선택한 절이 없으면 각 자리에 "절을 먼저 선택해주세요"라는 안내만 표시됩니다.) */
     renderBookmarkSlots();
     if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.remove("hidden");
   });
