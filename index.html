@@ -351,6 +351,7 @@
             <span id="bibleplanOrderBadge" class="bibleplan-method-badge"></span>
           </div>
           <div class="bibleplan-method-desc">창세기부터 요한계시록까지, 성경에 실린 순서 그대로 읽어요.</div>
+          <div id="bibleplanOrderActiveNote" class="bibleplan-method-active-note hidden"></div>
         </button>
         <button id="bibleplanPickHistoricalBtn" type="button" class="bibleplan-method-card" data-method="historical">
           <div class="bibleplan-method-top">
@@ -358,6 +359,7 @@
             <span id="bibleplanHistoricalBadge" class="bibleplan-method-badge"></span>
           </div>
           <div class="bibleplan-method-desc">사건이 실제로 일어난 시대 순서로 읽어요.</div>
+          <div id="bibleplanHistoricalActiveNote" class="bibleplan-method-active-note hidden"></div>
         </button>
         <div class="bibleplan-mode-note">방법을 바꿔도 이전 방법의 진행 기록은 그대로 남아있어요.</div>
       </div>
@@ -377,8 +379,12 @@
         </div>
 
         <div id="bibleplanTodayCard" class="bibleplan-today-card">
-          <div id="bibleplanTodayLabel" class="bibleplan-today-label"></div>
+          <div class="bibleplan-today-top-row">
+            <div id="bibleplanTodayLabel" class="bibleplan-today-label"></div>
+            <span id="bibleplanSegBadge" class="bibleplan-seg-badge hidden"></span>
+          </div>
           <div id="bibleplanTodayRange" class="bibleplan-today-range"></div>
+          <div id="bibleplanTodayDate" class="bibleplan-today-date hidden"></div>
           <button id="bibleplanReadBtn" type="button" class="primary-button bibleplan-read-btn">오늘 읽기</button>
         </div>
 
@@ -387,6 +393,17 @@
 
         <div id="bibleplanEmptyNote" class="bibleplan-empty-note hidden">며칠 못 읽어도 괜찮아요. 체크된 장만 진행률에 반영돼요.</div>
         <div id="bibleplanMissingNote" class="bibleplan-missing-note hidden"></div>
+        <div id="bibleplanNextSegNote" class="bibleplan-next-seg-note hidden"></div>
+
+        <div id="bibleplanFlowMap" class="bibleplan-flowmap hidden">
+          <div class="bibleplan-flowmap-title">역사 흐름 지도</div>
+          <div id="bibleplanFlowMapBar" class="bibleplan-flowmap-bar"></div>
+          <div class="bibleplan-flowmap-labels">
+            <span id="bibleplanFlowMapStart"></span>
+            <span id="bibleplanFlowMapNow"></span>
+            <span id="bibleplanFlowMapEnd"></span>
+          </div>
+        </div>
       </div>
 
       <!-- 완독 -->
@@ -401,7 +418,7 @@
           <div class="bibleplan-complete-diff-wrap"><span id="bibleplanCompleteDiff" class="bibleplan-complete-diff"></span></div>
         </div>
         <div class="bibleplan-complete-actions">
-          <button id="bibleplanCompleteCloseBtn" type="button" class="ghost-button">닫기</button>
+          <button id="bibleplanCompleteCloseBtn" type="button" class="ghost-button">기록 보기</button>
           <button id="bibleplanCompleteRestartBtn" type="button" class="primary-button">다음 회차 시작</button>
         </div>
       </div>

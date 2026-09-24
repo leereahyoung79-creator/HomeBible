@@ -2412,6 +2412,8 @@ textarea::placeholder {
 .bibleplan-method-badge{font-size:11px;font-weight:800;color:var(--ink-faint);background:var(--paper);border-radius:999px;padding:4px 10px;}
 .bibleplan-method-card.active .bibleplan-method-badge{background:var(--card);color:var(--accent);}
 .bibleplan-method-desc{font-size:12.5px;color:var(--ink-soft);margin-top:8px;line-height:1.6;}
+.bibleplan-method-active-note{font-size:11px;color:var(--ink-faint);margin-top:8px;}
+.bibleplan-method-active-note.hidden{display:none;}
 .bibleplan-mode-note{font-size:11px;color:var(--ink-faint);text-align:center;margin-top:6px;}
 
 .bibleplan-progress-card{border:1px solid var(--border);border-radius:18px;background:var(--card);padding:16px 18px;margin-bottom:14px;}
@@ -2425,9 +2427,30 @@ textarea::placeholder {
 .bibleplan-progress-fill{height:100%;border-radius:999px;background:var(--accent);}
 
 .bibleplan-today-card{border:1px solid var(--border);border-radius:18px;background:var(--accent-soft);padding:18px;margin-bottom:16px;}
+.bibleplan-today-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .bibleplan-today-label{font-size:11.5px;font-weight:800;color:var(--accent);}
+.bibleplan-seg-badge{flex:none;font-size:10px;font-weight:800;color:var(--ink-faint);background:var(--card);border-radius:999px;padding:2px 9px;}
+.bibleplan-seg-badge.hidden{display:none;}
 .bibleplan-today-range{font-size:18px;font-weight:800;color:var(--ink);margin-top:6px;}
+.bibleplan-today-date{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+.bibleplan-today-date.hidden{display:none;}
 .bibleplan-read-btn{margin-top:14px;width:100%;}
+
+.bibleplan-next-seg-note{border:1px dashed var(--border);border-radius:14px;padding:12px 14px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;margin-top:14px;}
+.bibleplan-next-seg-note.hidden{display:none;}
+
+.bibleplan-flowmap{border-top:1px dashed var(--border);padding:16px 0 4px;margin-top:6px;}
+.bibleplan-flowmap.hidden{display:none;}
+.bibleplan-flowmap-title{font-size:11.5px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;}
+.bibleplan-flowmap-bar{display:flex;gap:2px;}
+.bibleplan-flowmap-seg{flex:1;height:6px;border-radius:999px;background:var(--border);}
+.bibleplan-flowmap-seg.done{background:var(--correct);}
+.bibleplan-flowmap-seg.current{background:var(--gold);}
+.bibleplan-flowmap-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);margin-top:5px;gap:6px;}
+.bibleplan-flowmap-labels span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bibleplan-flowmap-labels span:first-child{text-align:left;}
+.bibleplan-flowmap-labels span:nth-child(2){flex:none;text-align:center;color:var(--gold);font-weight:700;max-width:45%;}
+.bibleplan-flowmap-labels span:last-child{text-align:right;}
 
 .bibleplan-checklist-head{font-size:12.5px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;}
 .bibleplan-chapter-list{display:flex;flex-direction:column;gap:8px;}
@@ -2453,7 +2476,7 @@ textarea::placeholder {
   font-size:28px;color:var(--accent);font-weight:800;
 }
 .bibleplan-complete-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
-.bibleplan-complete-sub{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.6;}
+.bibleplan-complete-sub{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.6;white-space:pre-line;}
 .bibleplan-complete-stats{border:1px solid var(--border);border-radius:16px;background:var(--paper);padding:16px 18px;margin-top:20px;}
 .bibleplan-complete-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);padding:5px 0;}
 .bibleplan-complete-row span:last-child{font-weight:700;color:var(--ink);}

@@ -67,19 +67,29 @@
     bibleplanCompleteView: document.getElementById("bibleplanCompleteView"),
     bibleplanPickOrderBtn: document.getElementById("bibleplanPickOrderBtn"),
     bibleplanOrderBadge: document.getElementById("bibleplanOrderBadge"),
+    bibleplanOrderActiveNote: document.getElementById("bibleplanOrderActiveNote"),
     bibleplanPickHistoricalBtn: document.getElementById("bibleplanPickHistoricalBtn"),
     bibleplanHistoricalBadge: document.getElementById("bibleplanHistoricalBadge"),
+    bibleplanHistoricalActiveNote: document.getElementById("bibleplanHistoricalActiveNote"),
     bibleplanRoundLabel: document.getElementById("bibleplanRoundLabel"),
     bibleplanDateRange: document.getElementById("bibleplanDateRange"),
     bibleplanProgressPct: document.getElementById("bibleplanProgressPct"),
     bibleplanProgressDetail: document.getElementById("bibleplanProgressDetail"),
     bibleplanProgressFill: document.getElementById("bibleplanProgressFill"),
     bibleplanTodayLabel: document.getElementById("bibleplanTodayLabel"),
+    bibleplanSegBadge: document.getElementById("bibleplanSegBadge"),
     bibleplanTodayRange: document.getElementById("bibleplanTodayRange"),
+    bibleplanTodayDate: document.getElementById("bibleplanTodayDate"),
     bibleplanReadBtn: document.getElementById("bibleplanReadBtn"),
     bibleplanChapterList: document.getElementById("bibleplanChapterList"),
     bibleplanEmptyNote: document.getElementById("bibleplanEmptyNote"),
     bibleplanMissingNote: document.getElementById("bibleplanMissingNote"),
+    bibleplanNextSegNote: document.getElementById("bibleplanNextSegNote"),
+    bibleplanFlowMap: document.getElementById("bibleplanFlowMap"),
+    bibleplanFlowMapBar: document.getElementById("bibleplanFlowMapBar"),
+    bibleplanFlowMapStart: document.getElementById("bibleplanFlowMapStart"),
+    bibleplanFlowMapNow: document.getElementById("bibleplanFlowMapNow"),
+    bibleplanFlowMapEnd: document.getElementById("bibleplanFlowMapEnd"),
     bibleplanCompleteTitle: document.getElementById("bibleplanCompleteTitle"),
     bibleplanCompleteSub: document.getElementById("bibleplanCompleteSub"),
     bibleplanCompleteStart: document.getElementById("bibleplanCompleteStart"),
@@ -1157,6 +1167,15 @@
     var parts = String(key).split("-");
     return parts[0] + "." + parts[1] + "." + parts[2];
   }
+  function bpFormatMonthDayFromKey(key) {
+    if (!key) return "";
+    var d = bpKeyToDate(key);
+    return (d.getMonth() + 1) + "월 " + d.getDate() + "일";
+  }
+  function bpFormatThousands(n) {
+    n = Number(n) || 0;
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
 
   function biblePlanGetDay(method, dayNum) {
     if (method === "order") {
@@ -1289,7 +1308,11 @@
     if (bp.activeMethod && bp.methods[bp.activeMethod] && bp.methods[bp.activeMethod].started) {
       biblePlanCurrentMethod = bp.activeMethod;
       renderBiblePlanToday();
-      showBiblePlanView("today");
+      // renderBiblePlanToday()가 회차 완료를 감지하면 내부적으로 완독 화면을 이미 띄웠을 수 있어요.
+      // 그 경우 여기서 다시 "오늘의 읽기" 화면으로 덮어쓰지 않도록 확인합니다.
+      if (els.bibleplanCompleteView.classList.contains("hidden")) {
+        showBiblePlanView("today");
+      }
     } else {
       renderBiblePlanMode();
       showBiblePlanView("mode");
@@ -1347,8 +1370,11 @@
   function renderBiblePlanMode() {
     var p = getProfile(state.currentBirth);
     var bp = ensureBiblePlan(p);
-    [["order", els.bibleplanPickOrderBtn, els.bibleplanOrderBadge], ["historical", els.bibleplanPickHistoricalBtn, els.bibleplanHistoricalBadge]].forEach(function (row) {
-      var m = row[0], cardEl = row[1], badgeEl = row[2];
+    [
+      ["order", els.bibleplanPickOrderBtn, els.bibleplanOrderBadge, els.bibleplanOrderActiveNote],
+      ["historical", els.bibleplanPickHistoricalBtn, els.bibleplanHistoricalBadge, els.bibleplanHistoricalActiveNote]
+    ].forEach(function (row) {
+      var m = row[0], cardEl = row[1], badgeEl = row[2], noteEl = row[3];
       var ms = bp.methods[m];
       if (ms.started) {
         var prog = biblePlanProgress(p, m);
@@ -1356,7 +1382,16 @@
       } else {
         badgeEl.textContent = "아직 시작 전";
       }
-      cardEl.classList.toggle("active", bp.activeMethod === m);
+      var isActive = bp.activeMethod === m;
+      cardEl.classList.toggle("active", isActive);
+      if (noteEl) {
+        if (isActive && ms.started && ms.startDate) {
+          noteEl.textContent = "현재 선택됨 · " + bpFormatKey(ms.startDate) + " 시작";
+          noteEl.classList.remove("hidden");
+        } else {
+          noteEl.classList.add("hidden");
+        }
+      }
     });
   }
   function selectBiblePlanMethod(method) {
@@ -1405,8 +1440,60 @@
       biblePlanCompleteRound(method);
       return;
     }
-    els.bibleplanTodayLabel.textContent = todayEntry.day + "일차" + (todayEntry.title ? " · " + todayEntry.title : "");
+    els.bibleplanTodayLabel.textContent = todayEntry.day + "일차" + (todayEntry.title ? " · " + todayEntry.title + (todayEntry.era ? " · " + todayEntry.era : "") : "");
     els.bibleplanTodayRange.textContent = biblePlanRangeLabel(todayEntry.chapters);
+
+    if (method === "order") {
+      els.bibleplanSegBadge.classList.add("hidden");
+      els.bibleplanNextSegNote.classList.add("hidden");
+      els.bibleplanFlowMap.classList.add("hidden");
+      if (ms.startDate) {
+        els.bibleplanTodayDate.textContent = bpFormatMonthDayFromKey(bpAddDaysKey(ms.startDate, todayEntry.day - 1)) + " 읽을 분량";
+        els.bibleplanTodayDate.classList.remove("hidden");
+      } else {
+        els.bibleplanTodayDate.classList.add("hidden");
+      }
+    } else {
+      els.bibleplanTodayDate.classList.add("hidden");
+      var segMeta = window.BIBLE_PLAN_HIST_SEGMENTS || [];
+      var segTotal = segMeta.length;
+      if (todayEntry.segId && segTotal) {
+        els.bibleplanSegBadge.textContent = todayEntry.segId + "/" + segTotal + " 구간";
+        els.bibleplanSegBadge.classList.remove("hidden");
+      } else {
+        els.bibleplanSegBadge.classList.add("hidden");
+      }
+
+      // 다음 구간으로 넘어가는 날짜를 찾아서 미리 알려줍니다.
+      var nextEntry = null;
+      var totalHistDays = biblePlanTotalDays("historical");
+      for (var nd = todayEntry.day + 1; nd <= totalHistDays; nd++) {
+        var e2 = biblePlanGetDay("historical", nd);
+        if (e2 && e2.segId && e2.segId !== todayEntry.segId) { nextEntry = e2; break; }
+      }
+      if (nextEntry) {
+        els.bibleplanNextSegNote.textContent = "다음 구간(" + nextEntry.segId + ". " + nextEntry.title + " · " + nextEntry.era + ")은 " + nextEntry.day + "일차부터 자연스럽게 이어져요.";
+        els.bibleplanNextSegNote.classList.remove("hidden");
+      } else {
+        els.bibleplanNextSegNote.classList.add("hidden");
+      }
+
+      // 역사 흐름 지도
+      if (segTotal) {
+        els.bibleplanFlowMap.classList.remove("hidden");
+        els.bibleplanFlowMapBar.innerHTML = "";
+        for (var si = 1; si <= segTotal; si++) {
+          var segDiv = document.createElement("div");
+          segDiv.className = "bibleplan-flowmap-seg" + (si < todayEntry.segId ? " done" : si === todayEntry.segId ? " current" : "");
+          els.bibleplanFlowMapBar.appendChild(segDiv);
+        }
+        els.bibleplanFlowMapStart.textContent = segMeta[0] ? segMeta[0].title : "";
+        els.bibleplanFlowMapNow.textContent = "지금: " + todayEntry.title;
+        els.bibleplanFlowMapEnd.textContent = segMeta[segTotal - 1] ? segMeta[segTotal - 1].title : "";
+      } else {
+        els.bibleplanFlowMap.classList.add("hidden");
+      }
+    }
 
     els.bibleplanChapterList.innerHTML = "";
     todayEntry.chapters.forEach(function (c) {
@@ -1458,13 +1545,14 @@
   function renderBiblePlanComplete(method, record) {
     var methodLabel = method === "order" ? "순서대로 읽기" : "역사 흐름대로 읽기";
     els.bibleplanCompleteTitle.textContent = record.round + "회차 성경일독 완주!";
-    els.bibleplanCompleteSub.textContent = methodLabel + " · 총 " + biblePlanTotalChapters(method) + "장을 다 읽었어요.";
+    els.bibleplanCompleteSub.textContent = methodLabel + " · 창세기부터 요한계시록까지\n총 " + bpFormatThousands(biblePlanTotalChapters(method)) + "장을 다 읽었어요.";
     els.bibleplanCompleteStart.textContent = bpFormatKey(record.startDate);
     els.bibleplanCompleteTarget.textContent = bpFormatKey(record.targetDate);
     els.bibleplanCompleteActual.textContent = bpFormatKey(record.actualDate);
     var diff = record.diffDays;
     var diffText = diff > 0 ? ("목표보다 " + diff + "일 일찍 완독했어요") : diff < 0 ? ("목표보다 " + (-diff) + "일 늦게 완독했어요") : "목표일에 정확히 완독했어요";
     els.bibleplanCompleteDiff.textContent = diffText;
+    els.bibleplanCompleteRestartBtn.textContent = (record.round + 1) + "회차 다시 시작";
     biblePlanCurrentMethod = method;
   }
 
@@ -4541,7 +4629,10 @@
     enterReadScreen();
     readGoTo(target[0], String(target[1]));
   });
-  if (els.bibleplanCompleteCloseBtn) els.bibleplanCompleteCloseBtn.addEventListener("click", closeBiblePlan);
+  if (els.bibleplanCompleteCloseBtn) els.bibleplanCompleteCloseBtn.addEventListener("click", function () {
+    els.bibleplanScreen.classList.add("hidden");
+    openRecordsHub();
+  });
   if (els.bibleplanCompleteRestartBtn) els.bibleplanCompleteRestartBtn.addEventListener("click", function () {
     if (biblePlanCurrentMethod) selectBiblePlanMethod(biblePlanCurrentMethod);
   });
