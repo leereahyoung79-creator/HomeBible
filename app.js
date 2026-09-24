@@ -53,6 +53,20 @@
     gratitudePrayerBtn: document.getElementById("gratitudePrayerBtn"),
     christianQuotesBtn: document.getElementById("christianQuotesBtn"),
     settingsBtn: document.getElementById("settingsBtn"),
+    recordsHubBtn: document.getElementById("recordsHubBtn"),
+    recordsHubScreen: document.getElementById("recordsHubScreen"),
+    recordsHubShell: document.getElementById("recordsHubShell"),
+    closeRecordsHubBtn: document.getElementById("closeRecordsHubBtn"),
+    recordsHubNav: document.getElementById("recordsHubNav"),
+    recordsHubContent: document.getElementById("recordsHubContent"),
+    recordsHubBackBtn: document.getElementById("recordsHubBackBtn"),
+    recordsHubContentTitle: document.getElementById("recordsHubContentTitle"),
+    recordsHubContentCloseBtn: document.getElementById("recordsHubContentCloseBtn"),
+    recordsHubContentBody: document.getElementById("recordsHubContentBody"),
+    recordsHubHighlightCount: document.getElementById("recordsHubHighlightCount"),
+    recordsHubReflectionCount: document.getElementById("recordsHubReflectionCount"),
+    recordsHubSermonCount: document.getElementById("recordsHubSermonCount"),
+    recordsHubGratitudeCount: document.getElementById("recordsHubGratitudeCount"),
     settingsScreen: document.getElementById("settingsScreen"),
     closeSettingsBtn: document.getElementById("closeSettingsBtn"),
     resetSettingsBtn: document.getElementById("resetSettingsBtn"),
@@ -419,24 +433,78 @@
   function verseTextLength(bno, ch, vs) {
     try { return DATA[bno].chapters[ch][vs].t.length; } catch (e) { return 0; }
   }
+
+  /* 구글시트를 거쳐 온 값은 "01" 같은 책번호가 숫자 1로 바뀌어 앞자리 0이
+     사라지는 경우가 있어서(예: "1-1-11"), 성경구절 키는 항상 이 함수로
+     책번호를 2자리로 맞춰서 사용합니다. */
+  function padBookNo(bno) {
+    var s = String(bno);
+    return /^\d$/.test(s) ? "0" + s : s;
+  }
+  function normalizeVerseKey(key) {
+    var parts = String(key).split("-");
+    if (parts.length !== 3) return key;
+    return padBookNo(parts[0]) + "-" + parts[1] + "-" + parts[2];
+  }
+  /* 이미 저장돼 있던 프로필에 책번호 앞자리 0이 빠진 손상된 키가 있으면
+     자동으로 정상 키로 합쳐줍니다(기존 데이터 자가 복구). */
+  function repairProfileVerseKeys(p) {
+    var changed = false;
+    function fixMap(map, mergeFn) {
+      if (!map) return;
+      var malformed = Object.keys(map).filter(function (k) { return normalizeVerseKey(k) !== k; });
+      malformed.forEach(function (k) {
+        var nk = normalizeVerseKey(k);
+        if (mergeFn) {
+          map[nk] = mergeFn(map[nk], map[k]);
+        } else if (!(nk in map)) {
+          map[nk] = map[k];
+        }
+        delete map[k];
+        changed = true;
+      });
+    }
+    fixMap(p.highlights);
+    fixMap(p.highlightTimes, function (a, b) { return Math.max(Number(a) || 0, Number(b) || 0); });
+    fixMap(p.completed, function (a, b) { return a || b; });
+    fixMap(p.notes, function (a, b) {
+      if (!a) return b;
+      if (!b) return a;
+      return (Number(b.updatedAt) || 0) > (Number(a.updatedAt) || 0) ? b : a;
+    });
+    if (p.bookTouch) {
+      var badBooks = Object.keys(p.bookTouch).filter(function (bno) { return padBookNo(bno) !== bno; });
+      badBooks.forEach(function (bno) {
+        var nb = padBookNo(bno);
+        p.bookTouch[nb] = Math.max(Number(p.bookTouch[nb]) || 0, Number(p.bookTouch[bno]) || 0);
+        delete p.bookTouch[bno];
+        changed = true;
+      });
+    }
+    return changed;
+  }
+
   function mergeRemoteIntoLocal(birth, remote) {
     updateProfile(birth, function (p) {
       if (remote.name) p.name = remote.name;
-      Object.keys(remote.completed || {}).forEach(function (key) {
+      Object.keys(remote.completed || {}).forEach(function (rawKey) {
+        var key = normalizeVerseKey(rawKey);
         if (!p.completed[key]) {
           p.completed[key] = true;
           var parts = key.split("-");
           p.totalCorrectChars += verseTextLength(parts[0], parts[1], parts[2]);
         }
       });
-      Object.keys(remote.notes || {}).forEach(function (key) {
-        if (!p.notes[key]) p.notes[key] = { text: remote.notes[key], updatedAt: 0 };
+      Object.keys(remote.notes || {}).forEach(function (rawKey) {
+        var key = normalizeVerseKey(rawKey);
+        if (!p.notes[key]) p.notes[key] = { text: remote.notes[rawKey], updatedAt: 0 };
       });
       // 구글시트의 예배노트를 병합하면서 오래된 브라우저 데이터의
       // 날짜 키(Fri Sep 04 2026...)도 yyyy-MM-dd로 자동 정리합니다.
       p.sermonNotes = mergeSermonNotes(p.sermonNotes || {}, remote.sermonNotes || {});
-      Object.keys(remote.highlights || {}).forEach(function (key) {
-        if (!(key in p.highlights)) p.highlights[key] = remote.highlights[key];
+      Object.keys(remote.highlights || {}).forEach(function (rawKey) {
+        var key = normalizeVerseKey(rawKey);
+        if (!(key in p.highlights)) p.highlights[key] = remote.highlights[rawKey];
       });
       p.gratitudePrayer = mergeGratitudePrayer(p.gratitudePrayer || {}, remote.gratitudePrayer || {});
       if (remote.lastActive && (!p.lastActive || remote.lastActive > p.lastActive)) {
@@ -549,7 +617,7 @@
   function blankProfile(name) {
     return {
       name: name, completed: {}, totalCorrectChars: 0, lastActive: null, bookTouch: {}, notes: {},
-      highlights: {}, readBookmarks: [null, null, null, null, null], sermonNotes: {}, gratitudePrayer: {}, lastReadPosition: null, lastWritePosition: null
+      highlights: {}, highlightTimes: {}, readBookmarks: [null, null, null, null, null], sermonNotes: {}, gratitudePrayer: {}, lastReadPosition: null, lastWritePosition: null
     };
   }
   function getProfile(birth) {
@@ -559,12 +627,14 @@
     if (!p.bookTouch) p.bookTouch = {};
     if (!p.notes) p.notes = {};
     if (!p.highlights) p.highlights = {};
+    if (!p.highlightTimes) p.highlightTimes = {};
     if (!p.readBookmarks) p.readBookmarks = [null, null, null, null, null];
     if (!p.sermonNotes) p.sermonNotes = {};
     else p.sermonNotes = normalizeSermonNotes(p.sermonNotes);
     if (!p.gratitudePrayer || typeof p.gratitudePrayer !== "object") p.gratitudePrayer = {};
     if (p.lastReadPosition === undefined) p.lastReadPosition = null;
     if (p.lastWritePosition === undefined) p.lastWritePosition = null;
+    if (repairProfileVerseKeys(p)) saveProfiles(profiles);
     return p;
   }
   function createProfile(birth, name) {
@@ -586,6 +656,7 @@
     if (!p.gratitudePrayer || typeof p.gratitudePrayer !== "object") p.gratitudePrayer = {};
     if (p.lastReadPosition === undefined) p.lastReadPosition = null;
     if (p.lastWritePosition === undefined) p.lastWritePosition = null;
+    repairProfileVerseKeys(p);
     mutateFn(p);
     saveProfiles(profiles);
   }
@@ -706,6 +777,8 @@
       if (tv) readGoTo(tv.bno, tv.ch, tv.vs);
     } else if (state.loginDestination === "gratitudePrayer") {
       openGratitudePrayer();
+    } else if (state.loginDestination === "recordsHub") {
+      openRecordsHub();
     } else {
       els.appScreen.classList.remove("hidden");
       startAppForUser(birth);
@@ -2056,9 +2129,18 @@
     var p = getProfile(state.currentBirth);
     return p ? p.highlights : {};
   }
-  function saveHighlights(obj) {
+  function saveHighlights(obj, touchedKey) {
     if (!state.currentBirth) return;
-    updateProfile(state.currentBirth, function (p) { p.highlights = obj; });
+    updateProfile(state.currentBirth, function (p) {
+      p.highlights = obj;
+      if (touchedKey) {
+        if (!p.highlightTimes) p.highlightTimes = {};
+        /* 형광펜 칠한 시간은 화면에는 표시되지 않고, 기록보기의 칠모아를
+           최신순으로 정렬할 때만 내부적으로 쓰입니다. */
+        if (obj[touchedKey]) p.highlightTimes[touchedKey] = nowStamp();
+        else delete p.highlightTimes[touchedKey];
+      }
+    });
   }
   function toggleHighlight(vKey, el) {
     var hl = loadHighlights();
@@ -2072,7 +2154,7 @@
       el.classList.add("hl-" + highlightColor);
       newColor = highlightColor;
     }
-    saveHighlights(hl);
+    saveHighlights(hl, vKey);
 
     var parts = vKey.split("-");
     var p = getProfile(state.currentBirth);
@@ -2092,7 +2174,7 @@
     HL_COLORS.forEach(function (c) { el.classList.remove("hl-" + c.key); });
     hl[vKey] = color;
     el.classList.add("hl-" + color);
-    saveHighlights(hl);
+    saveHighlights(hl, vKey);
 
     var parts = vKey.split("-");
     var p = getProfile(state.currentBirth);
@@ -3202,6 +3284,326 @@
     els.statsScreen.classList.add("hidden");
   }
 
+  /* ---------------- 기록보기 허브 ---------------- */
+  var HIGHLIGHT_COLOR_HEX = { yellow: "#fdf0b8", pink: "#fbdfe6", green: "#dcefd8", blue: "#d9e8f5", purple: "#e6d9f5" };
+  var HIGHLIGHT_COLOR_LABEL = { yellow: "노랑", pink: "분홍", green: "초록", blue: "파랑", purple: "보라" };
+  var RECORDS_CAT_LABEL = { highlight: "칠모아", reflection: "묵상모아", sermon: "노트모아", gratitude: "감·기모아", write: "필사모아" };
+
+  var recordsHubCat = null;          // null | "highlight" | "reflection" | "sermon" | "gratitude" | "write"
+  var recordsHubDrillDate = null;    // 묵상/노트/감·기모아에서 날짜를 선택했을 때만 값이 있음
+  var recordsHubHighlightFilter = "all";
+
+  function verseKeyToRefLabel(vKey) {
+    var parts = vKey.split("-");
+    var bno = parts[0], ch = parts[1], vs = parts[2];
+    var bookName = META.books[bno] ? META.books[bno].name : bno;
+    return bookName + " " + ch + ":" + vs;
+  }
+
+  function verseKeyToText(vKey) {
+    var parts = vKey.split("-");
+    try { return DATA[parts[0]].chapters[parts[1]][parts[2]].t; } catch (e) { return ""; }
+  }
+
+  function formatRecordDateShort(dateKey) {
+    var m = String(dateKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return "날짜 미상";
+    return m[1] + "." + m[2] + "." + m[3];
+  }
+
+  function goToVerseByParts(bno, ch, vs) {
+    closeRecordsHub();
+    showReadScreen();
+    setTimeout(function () { readGoTo(bno, ch, vs); }, 30);
+  }
+  function goToVerseFromRecords(vKey) {
+    var parts = vKey.split("-");
+    goToVerseByParts(parts[0], parts[1], parts[2]);
+  }
+
+  /* 묵상(p.notes)은 절 단위로 저장돼 있어서, 날짜별로 묶어서 보여줍니다. */
+  function groupReflectionsByDate(notesMap) {
+    var byDate = {};
+    Object.keys(notesMap || {}).forEach(function (vKey) {
+      var note = notesMap[vKey] || {};
+      var ts = Number(note.updatedAt) || 0;
+      var dateKey;
+      if (ts) {
+        var d = new Date(ts);
+        dateKey = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+      } else {
+        dateKey = "0000-00-00"; // 날짜 정보가 없는 옛 기록은 맨 뒤로
+      }
+      if (!byDate[dateKey]) byDate[dateKey] = [];
+      byDate[dateKey].push({ vKey: vKey, text: note.text || "", updatedAt: ts });
+    });
+    return byDate;
+  }
+
+  function recordsDateGroupsFor(cat) {
+    var p = state.currentBirth ? getProfile(state.currentBirth) : null;
+    if (!p) return [];
+    if (cat === "reflection") {
+      var byDate = groupReflectionsByDate(p.notes || {});
+      return Object.keys(byDate).sort().reverse().map(function (d) {
+        var entries = byDate[d].sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+        return { date: d, count: entries.length, preview: entries[0] ? entries[0].text : "" };
+      });
+    }
+    if (cat === "sermon") {
+      var notes = p.sermonNotes || {};
+      return Object.keys(notes).filter(function (d) { return notes[d] && notes[d].length; }).sort().reverse().map(function (d) {
+        var entries = notes[d];
+        var first = parseSermonEntry(entries[0]);
+        return { date: d, count: entries.length, preview: first.insight || first.text || "" };
+      });
+    }
+    if (cat === "gratitude") {
+      var map = p.gratitudePrayer || {};
+      return Object.keys(map).filter(function (d) { return normalizeGratitudeRecord(map[d], d); }).sort().reverse().map(function (d) {
+        var rec = normalizeGratitudeRecord(map[d], d);
+        var preview = rec.gratitude1 || rec.gratitude2 || rec.gratitude3 || rec.prayer || "";
+        return { date: d, count: 1, preview: preview };
+      });
+    }
+    return [];
+  }
+
+  function renderDateListBody(cat) {
+    var groups = recordsDateGroupsFor(cat);
+    var emptyMsg = {
+      reflection: "아직 남긴 묵상이 없어요.",
+      sermon: "아직 작성한 예배노트가 없어요.",
+      gratitude: "아직 작성한 감사&기도 기록이 없어요."
+    }[cat];
+    if (!groups.length) {
+      els.recordsHubContentBody.innerHTML = '<p class="records-hub-content-empty">' + emptyMsg + '</p>';
+      return;
+    }
+    var html = '<div class="records-list">' + groups.map(function (g) {
+      return '<button type="button" class="record-date-row" data-date="' + escapeHtml2(g.date) + '">' +
+        '<span class="record-date-body">' +
+          '<span class="record-date-top">' +
+            '<span class="record-date-label">' + escapeHtml2(formatRecordDateShort(g.date)) + '</span>' +
+            (g.count > 1 ? '<span class="record-date-badge">' + g.count + '건</span>' : '') +
+          '</span>' +
+          '<span class="record-date-preview">' + escapeHtml2(g.preview || "") + '</span>' +
+        '</span>' +
+        '<span class="record-date-arrow">›</span>' +
+      '</button>';
+    }).join('') + '</div>';
+    els.recordsHubContentBody.innerHTML = html;
+    els.recordsHubContentBody.querySelectorAll(".record-date-row").forEach(function (row) {
+      row.addEventListener("click", function () {
+        recordsHubDrillDate = row.getAttribute("data-date");
+        renderRecordsHubContent();
+      });
+    });
+  }
+
+  function renderDateDetailBody(cat, dateKey) {
+    var p = state.currentBirth ? getProfile(state.currentBirth) : null;
+    var html = "";
+    if (p && cat === "reflection") {
+      var byDate = groupReflectionsByDate(p.notes || {});
+      (byDate[dateKey] || []).sort(function (a, b) { return b.updatedAt - a.updatedAt; }).forEach(function (e) {
+        html += '<div class="record-detail-card" data-vkey="' + escapeHtml2(e.vKey) + '">' +
+          '<div class="record-detail-ref">' + escapeHtml2(verseKeyToRefLabel(e.vKey)) + '</div>' +
+          '<div class="record-detail-body">' + escapeHtml2(e.text) + '</div>' +
+        '</div>';
+      });
+    } else if (p && cat === "sermon") {
+      var list = (p.sermonNotes || {})[dateKey] || [];
+      list.forEach(function (entry) {
+        var e = parseSermonEntry(entry);
+        var ref = e.label || ((META.books[e.bno] ? META.books[e.bno].name : e.bno) + " " + e.ch + ":" + e.vs);
+        html += '<div class="record-detail-card" data-bno="' + escapeHtml2(e.bno) + '" data-ch="' + escapeHtml2(e.ch) + '" data-vs="' + escapeHtml2(e.vs) + '">' +
+          '<div class="record-detail-ref">' + escapeHtml2(ref) + '</div>' +
+          '<div class="record-detail-section"><div class="record-detail-section-title">💡 깨달은 점</div><div class="record-detail-body">' + escapeHtml2(e.insight || e.text || "-") + '</div></div>' +
+          '<div class="record-detail-section"><div class="record-detail-section-title">🌱 적용할 점</div><div class="record-detail-body">' + escapeHtml2(e.application || "-") + '</div></div>' +
+          '<div class="record-detail-section"><div class="record-detail-section-title">🙏 기도</div><div class="record-detail-body">' + escapeHtml2(e.prayer || "-") + '</div></div>' +
+        '</div>';
+      });
+    } else if (p && cat === "gratitude") {
+      var rec = normalizeGratitudeRecord((p.gratitudePrayer || {})[dateKey], dateKey);
+      if (rec) {
+        html += '<div class="record-detail-card">';
+        [rec.gratitude1, rec.gratitude2, rec.gratitude3].forEach(function (t, i) {
+          if (!t) return;
+          html += '<div class="record-detail-section"><div class="record-detail-section-title">감사 ' + (i + 1) + '</div><div class="record-detail-body">' + escapeHtml2(t) + '</div></div>';
+        });
+        if (rec.prayer) {
+          html += '<div class="record-detail-section"><div class="record-detail-section-title">🙏 기도</div><div class="record-detail-body">' + escapeHtml2(rec.prayer) + '</div></div>';
+        }
+        html += '</div>';
+      }
+    }
+    els.recordsHubContentBody.innerHTML = html || '<p class="records-hub-content-empty">내용이 없어요.</p>';
+    if (cat === "reflection") {
+      els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
+        card.addEventListener("click", function () { goToVerseFromRecords(card.getAttribute("data-vkey")); });
+      });
+    } else if (cat === "sermon") {
+      els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
+        card.addEventListener("click", function () {
+          goToVerseByParts(card.getAttribute("data-bno"), card.getAttribute("data-ch"), card.getAttribute("data-vs"));
+        });
+      });
+    }
+  }
+
+  function renderHighlightsBody() {
+    var p = state.currentBirth ? getProfile(state.currentBirth) : null;
+    var map = p ? (p.highlights || {}) : {};
+    var times = p ? (p.highlightTimes || {}) : {};
+    var keys = Object.keys(map);
+
+    var chipKeys = ["all"].concat(Object.keys(HIGHLIGHT_COLOR_LABEL));
+    var chipsHtml = '<div class="records-color-chips">' + chipKeys.map(function (key) {
+      var active = recordsHubHighlightFilter === key;
+      var hex = HIGHLIGHT_COLOR_HEX[key];
+      var label = key === "all" ? "전체" : HIGHLIGHT_COLOR_LABEL[key];
+      return '<button type="button" class="records-color-chip' + (active ? ' active' : '') + '" data-color="' + key + '">' +
+        (hex ? '<span class="records-color-chip-dot" style="background:' + hex + '"></span>' : '') + escapeHtml2(label) + '</button>';
+    }).join('') + '</div>';
+
+    var filtered = keys.filter(function (k) { return recordsHubHighlightFilter === "all" || map[k] === recordsHubHighlightFilter; });
+    filtered.sort(function (a, b) { return (Number(times[b]) || 0) - (Number(times[a]) || 0); });
+
+    var listHtml;
+    if (!filtered.length) {
+      listHtml = '<p class="records-hub-content-empty">' + (keys.length ? "이 색으로 칠한 구절이 없어요." : "아직 형광펜으로 칠한 구절이 없어요.") + '</p>';
+    } else {
+      listHtml = '<div class="records-list">' + filtered.map(function (vKey) {
+        var color = map[vKey];
+        return '<button type="button" class="record-item-row" data-vkey="' + escapeHtml2(vKey) + '">' +
+          '<span class="record-item-dot" style="background:' + (HIGHLIGHT_COLOR_HEX[color] || "#eee") + '"></span>' +
+          '<span class="record-item-body">' +
+            '<span class="record-item-ref">' + escapeHtml2(verseKeyToRefLabel(vKey)) + '</span>' +
+            '<span class="record-item-text">' + escapeHtml2(verseKeyToText(vKey)) + '</span>' +
+          '</span>' +
+        '</button>';
+      }).join('') + '</div>';
+    }
+
+    els.recordsHubContentBody.innerHTML = chipsHtml + listHtml;
+    els.recordsHubContentBody.querySelectorAll(".records-color-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        recordsHubHighlightFilter = chip.getAttribute("data-color");
+        renderHighlightsBody();
+      });
+    });
+    els.recordsHubContentBody.querySelectorAll(".record-item-row").forEach(function (row) {
+      row.addEventListener("click", function () { goToVerseFromRecords(row.getAttribute("data-vkey")); });
+    });
+  }
+
+  function renderWriteProgressBody() {
+    var rows = localProfilesAsRows();
+    var births = Object.keys(rows);
+    if (!births.length) {
+      els.recordsHubContentBody.innerHTML = '<p class="records-hub-content-empty">아직 필사 기록이 없어요.</p>';
+      return;
+    }
+    births.sort(function (a, b) { return rows[b].count - rows[a].count; });
+    var html = births.map(function (birth) {
+      var r = rows[birth];
+      var pct = Math.min(100, (r.count / TOTAL_VERSES) * 100);
+      var remaining = Math.max(0, TOTAL_VERSES - r.count);
+      return '<div class="record-progress-card">' +
+        '<div class="record-progress-top"><span class="record-progress-name">' + escapeHtml2(r.name) + '</span><span class="record-progress-pct">' + pct.toFixed(1) + '%</span></div>' +
+        '<div class="record-progress-detail">' + r.count.toLocaleString() + '절 필사 · ' + remaining.toLocaleString() + '절 남음</div>' +
+        '<div class="record-progress-track"><div class="record-progress-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+    }).join('');
+    els.recordsHubContentBody.innerHTML = html;
+  }
+
+  function renderRecordsHubNav() {
+    if (!els.recordsHubNav) return;
+    els.recordsHubNav.querySelectorAll(".records-hub-nav-item").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-records-cat") === recordsHubCat);
+    });
+  }
+
+  function renderRecordsHubNavCounts() {
+    var p = state.currentBirth ? getProfile(state.currentBirth) : null;
+    var hlCount = p ? Object.keys(p.highlights || {}).length : 0;
+    var noteCount = p ? Object.keys(p.notes || {}).length : 0;
+    var sermonCount = 0;
+    if (p && p.sermonNotes) {
+      Object.keys(p.sermonNotes).forEach(function (d) { sermonCount += (p.sermonNotes[d] || []).length; });
+    }
+    var gratitudeCount = p && p.gratitudePrayer ? Object.keys(p.gratitudePrayer).length : 0;
+    if (els.recordsHubHighlightCount) els.recordsHubHighlightCount.textContent = hlCount ? (hlCount + "개") : "";
+    if (els.recordsHubReflectionCount) els.recordsHubReflectionCount.textContent = noteCount ? (noteCount + "개") : "";
+    if (els.recordsHubSermonCount) els.recordsHubSermonCount.textContent = sermonCount ? (sermonCount + "건") : "";
+    if (els.recordsHubGratitudeCount) els.recordsHubGratitudeCount.textContent = gratitudeCount ? (gratitudeCount + "개") : "";
+  }
+
+  function renderRecordsHubContent() {
+    if (!els.recordsHubContentBody) return;
+    if (els.recordsHubBackBtn) els.recordsHubBackBtn.classList.toggle("hidden", !recordsHubCat);
+    if (!recordsHubCat) {
+      if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = "";
+      els.recordsHubContentBody.innerHTML = '<p class="records-hub-content-empty">왼쪽에서 항목을 선택해주세요.</p>';
+      return;
+    }
+    if (recordsHubDrillDate && (recordsHubCat === "reflection" || recordsHubCat === "sermon" || recordsHubCat === "gratitude")) {
+      if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = formatRecordDateShort(recordsHubDrillDate);
+      renderDateDetailBody(recordsHubCat, recordsHubDrillDate);
+      return;
+    }
+    if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = RECORDS_CAT_LABEL[recordsHubCat] || "";
+    if (recordsHubCat === "highlight") renderHighlightsBody();
+    else if (recordsHubCat === "write") renderWriteProgressBody();
+    else renderDateListBody(recordsHubCat);
+  }
+
+  function selectRecordsCategory(cat) {
+    recordsHubCat = cat;
+    recordsHubDrillDate = null;
+    if (cat === "highlight") recordsHubHighlightFilter = "all";
+    renderRecordsHubNav();
+    renderRecordsHubContent();
+    if (els.recordsHubShell) {
+      els.recordsHubShell.classList.remove("rh-mode-list");
+      els.recordsHubShell.classList.add("rh-mode-content");
+    }
+  }
+
+  function recordsHubGoBack() {
+    if (recordsHubDrillDate) {
+      recordsHubDrillDate = null;
+      renderRecordsHubContent();
+      return;
+    }
+    recordsHubCat = null;
+    renderRecordsHubNav();
+    if (els.recordsHubShell) {
+      els.recordsHubShell.classList.remove("rh-mode-content");
+      els.recordsHubShell.classList.add("rh-mode-list");
+    }
+  }
+
+  function openRecordsHub() {
+    if (!isLoggedIn()) { showNameScreen("recordsHub"); return; }
+    recordsHubCat = null;
+    recordsHubDrillDate = null;
+    recordsHubHighlightFilter = "all";
+    renderRecordsHubNavCounts();
+    renderRecordsHubNav();
+    renderRecordsHubContent();
+    if (els.recordsHubShell) {
+      els.recordsHubShell.classList.remove("rh-mode-content");
+      els.recordsHubShell.classList.add("rh-mode-list");
+    }
+    if (els.recordsHubScreen) els.recordsHubScreen.classList.remove("hidden");
+  }
+  function closeRecordsHub() {
+    if (els.recordsHubScreen) els.recordsHubScreen.classList.add("hidden");
+  }
+
   /* ---------------- 이어쓰기 목록 (장/절 단위) ---------------- */
   function renderBookmarks() {
     els.bookmarksList.innerHTML = "";
@@ -3728,6 +4130,22 @@
   });
   if (els.backChristianQuoteCategoriesBtn) els.backChristianQuoteCategoriesBtn.addEventListener("click", closeChristianQuoteDetail);
   els.readBtn.addEventListener("click", showReadScreen);
+  if (els.recordsHubBtn) els.recordsHubBtn.addEventListener("click", openRecordsHub);
+  if (els.closeRecordsHubBtn) els.closeRecordsHubBtn.addEventListener("click", closeRecordsHub);
+  if (els.recordsHubContentCloseBtn) els.recordsHubContentCloseBtn.addEventListener("click", closeRecordsHub);
+  if (els.recordsHubBackBtn) els.recordsHubBackBtn.addEventListener("click", recordsHubGoBack);
+  if (els.recordsHubScreen) els.recordsHubScreen.addEventListener("click", function (e) {
+    if (e.target === els.recordsHubScreen) closeRecordsHub();
+  });
+  if (els.recordsHubNav) {
+    var recordsHubNavItems = els.recordsHubNav.querySelectorAll(".records-hub-nav-item");
+    for (var rhi = 0; rhi < recordsHubNavItems.length; rhi++) {
+      recordsHubNavItems[rhi].addEventListener("click", function (e) {
+        var cat = e.currentTarget.getAttribute("data-records-cat");
+        if (cat) selectRecordsCategory(cat);
+      });
+    }
+  }
   els.hymnBtn.addEventListener("click", showHymnScreen);
   els.closeHymnBtn.addEventListener("click", function () {
     els.hymnScreen.classList.add("hidden");
@@ -4247,7 +4665,19 @@
   });
 
   els.birthInput.addEventListener("input", function () {
-    els.birthInput.value = els.birthInput.value.replace(/[^0-9]/g, "").slice(0, 6);
+    var el = els.birthInput;
+    var sanitized = el.value.replace(/[^0-9]/g, "").slice(0, 6);
+    /* 값이 이미 정상(숫자만 6자리 이하)이면 value를 다시 쓰지 않는다.
+       애플펜슬 스크리블/필기 입력, IME 조합 중에 매 입력마다 .value를 강제로
+       덮어쓰면 입력기가 다음 글자를 조합하는 타이밍과 충돌해 이상한 문자로
+       바뀌는 문제가 있었다. 실제로 고칠 게 있을 때만, 커서 위치를 보존하며 고친다. */
+    if (sanitized === el.value) return;
+    var pos = el.selectionStart;
+    el.value = sanitized;
+    try {
+      var newPos = Math.min(pos, sanitized.length);
+      el.setSelectionRange(newPos, newPos);
+    } catch (e) {}
   });
 
 
@@ -4259,7 +4689,7 @@
     try {
       var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
       var merged = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, saved || {});
-      var legacyMap = { default: "nanumRound", gothic: "notoSansKR", myeongjo: "notoSerifKR", soft: "gowunDodum" };
+      var legacyMap = { default: "nanumRound", gothic: "notoSansKR", myeongjo: "notoSerifKR", soft: "gowunDodum", nanumPen: "nanumRound", nanumBrush: "nanumRound", eastSeaDokdo: "nanumRound" };
       if (legacyMap[merged.fontFamily]) merged.fontFamily = legacyMap[merged.fontFamily];
       return merged;
     } catch (e) {
@@ -4301,14 +4731,40 @@
     }
   }
 
+  function isActivelyEditingText() {
+    var el = document.activeElement;
+    if (!el) return false;
+    var tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+
+  function runGeneralFontScaleIfSafe() {
+    /* 아이패드 펜슬(스크리블), 삼성 S펜, 손글씨 입력이나 IME 조합 중에
+       화면 전체를 훑어 글씨 크기를 다시 계산/적용하면(무거운 동기 작업) 그
+       타이밍과 충돌해서 이상한 문자로 바뀌는 문제가 있었다. 입력 필드에
+       포커스가 있는 동안은 재계산을 미루고, 입력이 끝나면(blur) 그때 적용한다. */
+    if (isActivelyEditingText()) {
+      generalFontObserver._pending = true;
+      return;
+    }
+    generalFontObserver._pending = false;
+    var current = loadDisplaySettings();
+    var generalMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
+    applyGeneralFontScale(generalMap[current.generalFontSize] || 1);
+  }
+
   var generalFontObserver = new MutationObserver(function() {
     clearTimeout(generalFontObserver._timer);
-    generalFontObserver._timer = setTimeout(function() {
-      var current = loadDisplaySettings();
-      var generalMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
-      applyGeneralFontScale(generalMap[current.generalFontSize] || 1);
-    }, 30);
+    generalFontObserver._timer = setTimeout(runGeneralFontScaleIfSafe, 30);
   });
+
+  document.addEventListener("focusout", function (e) {
+    var tag = e.target && e.target.tagName;
+    if (tag !== "INPUT" && tag !== "TEXTAREA" && !(e.target && e.target.isContentEditable)) return;
+    if (!generalFontObserver._pending) return;
+    clearTimeout(generalFontObserver._timer);
+    generalFontObserver._timer = setTimeout(runGeneralFontScaleIfSafe, 30);
+  }, true);
 
   function startGeneralFontObserver() {
     if (!document.body) return;
@@ -4320,8 +4776,6 @@
     var generalSizeMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
     var familyMap = {
       nanumRound: '"NanumSquareRoundB", sans-serif',
-      nanumPen: '"Nanum Pen Script", cursive',
-      nanumBrush: '"Nanum Brush Script", cursive',
       baeminJua: '"BM JUA", sans-serif',
       baeminDohyeon: '"BM DOHYEON", sans-serif',
       hakgyoansim: '"Hakgyoansim Dunggeunmiso", sans-serif',
@@ -4330,7 +4784,6 @@
       notoSansKR: '"Noto Sans KR", sans-serif',
       notoSerifKR: '"Noto Serif KR", serif',
       songMyung: '"Song Myung", serif',
-      eastSeaDokdo: '"East Sea Dokdo", cursive',
       blackHanSans: '"Black Han Sans", sans-serif',
       jua: '"Jua", sans-serif',
       doHyeon: '"Do Hyeon", sans-serif'

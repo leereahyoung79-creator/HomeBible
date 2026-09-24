@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="우리집 성경책">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&family=Gamja+Flower&family=Song+Myung&family=East+Sea+Dokdo&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang&family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&family=Gamja+Flower&family=Song+Myung&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -59,8 +59,10 @@
           <img class="grid-icon" src="icons/buttons/성경필사.png" alt="">
           <span class="grid-label">성경필사</span>
         </button>
+        <button id="recordsHubBtn" type="button" class="grid-card card-mint" aria-label="기록보기 열기">
+          <span class="grid-label">기록보기</span>
+        </button>
         <button id="settingsBtn" type="button" class="grid-card card-neutral" aria-label="설정 열기">
-          <span class="settings-home-emoji" aria-hidden="true">⚙️</span>
           <span class="grid-label">설정</span>
         </button>
       </div>
@@ -269,6 +271,55 @@
       <div id="bibleBookSearchResults" class="bible-book-search-results"></div>
       <div class="compare-bottom-close">
         <button id="bibleBookSearchBottomCloseBtn" type="button" class="ghost-button">닫기</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 기록보기 허브 화면 -->
+<section id="recordsHubScreen" class="stats-screen hidden">
+  <div class="stats-card records-hub-card">
+    <div id="recordsHubShell" class="records-hub-shell">
+      <div class="records-hub-sidebar">
+        <div class="records-hub-sidebar-head">
+          <h2>기록보기</h2>
+          <button id="closeRecordsHubBtn" class="icon-btn" title="닫기">✕</button>
+        </div>
+        <div id="recordsHubNav" class="records-hub-nav">
+          <button type="button" class="records-hub-nav-item" data-records-cat="highlight">
+            <span class="rh-nav-label">칠모아</span>
+            <span class="rh-nav-count" id="recordsHubHighlightCount"></span>
+            <span class="rh-nav-arrow">›</span>
+          </button>
+          <button type="button" class="records-hub-nav-item" data-records-cat="reflection">
+            <span class="rh-nav-label">묵상모아</span>
+            <span class="rh-nav-count" id="recordsHubReflectionCount"></span>
+            <span class="rh-nav-arrow">›</span>
+          </button>
+          <button type="button" class="records-hub-nav-item" data-records-cat="sermon">
+            <span class="rh-nav-label">노트모아</span>
+            <span class="rh-nav-count" id="recordsHubSermonCount"></span>
+            <span class="rh-nav-arrow">›</span>
+          </button>
+          <button type="button" class="records-hub-nav-item" data-records-cat="gratitude">
+            <span class="rh-nav-label">감·기모아</span>
+            <span class="rh-nav-count" id="recordsHubGratitudeCount"></span>
+            <span class="rh-nav-arrow">›</span>
+          </button>
+          <button type="button" class="records-hub-nav-item" data-records-cat="write">
+            <span class="rh-nav-label">필사모아</span>
+            <span class="rh-nav-count"></span>
+            <span class="rh-nav-arrow">›</span>
+          </button>
+        </div>
+      </div>
+      <div id="recordsHubContent" class="records-hub-content">
+        <div class="records-hub-content-head">
+          <button id="recordsHubBackBtn" type="button" class="records-hub-back icon-btn" aria-label="뒤로">←</button>
+          <span id="recordsHubContentTitle" class="records-hub-content-title"></span>
+          <button id="recordsHubContentCloseBtn" type="button" class="icon-btn" title="닫기">✕</button>
+        </div>
+        <div id="recordsHubContentBody" class="records-hub-content-body"></div>
       </div>
     </div>
   </div>
@@ -703,8 +754,6 @@
         <h3>글씨체 <span class="settings-help">전체 화면에 적용</span></h3>
         <div class="settings-options settings-font-options" id="fontFamilyOptions">
           <button type="button" data-font-family="nanumRound" class="selected">나눔스퀘어라운드</button>
-          <button type="button" data-font-family="nanumPen">나눔손글씨 펜</button>
-          <button type="button" data-font-family="nanumBrush">나눔손글씨 붓</button>
           <button type="button" data-font-family="baeminJua">배민 주아체</button>
           <button type="button" data-font-family="baeminDohyeon">배민 도현체</button>
           <button type="button" data-font-family="hakgyoansim">학교안심 둥근미소체</button>
@@ -713,7 +762,6 @@
           <button type="button" data-font-family="notoSansKR">본고딕</button>
           <button type="button" data-font-family="notoSerifKR">본명조</button>
           <button type="button" data-font-family="songMyung">송명체</button>
-          <button type="button" data-font-family="eastSeaDokdo">이스트씨 독도체</button>
           <button type="button" data-font-family="blackHanSans">블랙 한 산스</button>
           <button type="button" data-font-family="jua">주아체 (구글판)</button>
           <button type="button" data-font-family="doHyeon">도현체 (구글판)</button>
