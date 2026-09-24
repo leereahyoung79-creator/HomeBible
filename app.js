@@ -55,6 +55,39 @@
     settingsBtn: document.getElementById("settingsBtn"),
     recordsHubBtn: document.getElementById("recordsHubBtn"),
     recordsHubScreen: document.getElementById("recordsHubScreen"),
+    bibleplanBtn: document.getElementById("bibleplanBtn"),
+    bibleplanScreen: document.getElementById("bibleplanScreen"),
+    bibleplanBackBtn: document.getElementById("bibleplanBackBtn"),
+    bibleplanHeadTitle: document.getElementById("bibleplanHeadTitle"),
+    bibleplanSwitchBtn: document.getElementById("bibleplanSwitchBtn"),
+    bibleplanCloseBtn: document.getElementById("bibleplanCloseBtn"),
+    bibleplanBody: document.getElementById("bibleplanBody"),
+    bibleplanModeView: document.getElementById("bibleplanModeView"),
+    bibleplanTodayView: document.getElementById("bibleplanTodayView"),
+    bibleplanCompleteView: document.getElementById("bibleplanCompleteView"),
+    bibleplanPickOrderBtn: document.getElementById("bibleplanPickOrderBtn"),
+    bibleplanOrderBadge: document.getElementById("bibleplanOrderBadge"),
+    bibleplanPickHistoricalBtn: document.getElementById("bibleplanPickHistoricalBtn"),
+    bibleplanHistoricalBadge: document.getElementById("bibleplanHistoricalBadge"),
+    bibleplanRoundLabel: document.getElementById("bibleplanRoundLabel"),
+    bibleplanDateRange: document.getElementById("bibleplanDateRange"),
+    bibleplanProgressPct: document.getElementById("bibleplanProgressPct"),
+    bibleplanProgressDetail: document.getElementById("bibleplanProgressDetail"),
+    bibleplanProgressFill: document.getElementById("bibleplanProgressFill"),
+    bibleplanTodayLabel: document.getElementById("bibleplanTodayLabel"),
+    bibleplanTodayRange: document.getElementById("bibleplanTodayRange"),
+    bibleplanReadBtn: document.getElementById("bibleplanReadBtn"),
+    bibleplanChapterList: document.getElementById("bibleplanChapterList"),
+    bibleplanEmptyNote: document.getElementById("bibleplanEmptyNote"),
+    bibleplanMissingNote: document.getElementById("bibleplanMissingNote"),
+    bibleplanCompleteTitle: document.getElementById("bibleplanCompleteTitle"),
+    bibleplanCompleteSub: document.getElementById("bibleplanCompleteSub"),
+    bibleplanCompleteStart: document.getElementById("bibleplanCompleteStart"),
+    bibleplanCompleteTarget: document.getElementById("bibleplanCompleteTarget"),
+    bibleplanCompleteActual: document.getElementById("bibleplanCompleteActual"),
+    bibleplanCompleteDiff: document.getElementById("bibleplanCompleteDiff"),
+    bibleplanCompleteCloseBtn: document.getElementById("bibleplanCompleteCloseBtn"),
+    bibleplanCompleteRestartBtn: document.getElementById("bibleplanCompleteRestartBtn"),
     recordsHubShell: document.getElementById("recordsHubShell"),
     closeRecordsHubBtn: document.getElementById("closeRecordsHubBtn"),
     recordsHubNav: document.getElementById("recordsHubNav"),
@@ -617,8 +650,26 @@
   function blankProfile(name) {
     return {
       name: name, completed: {}, totalCorrectChars: 0, lastActive: null, bookTouch: {}, notes: {},
-      highlights: {}, highlightTimes: {}, readBookmarks: [null, null, null, null, null], sermonNotes: {}, gratitudePrayer: {}, lastReadPosition: null, lastWritePosition: null
+      highlights: {}, highlightTimes: {}, readBookmarks: [null, null, null, null, null], sermonNotes: {}, gratitudePrayer: {}, lastReadPosition: null, lastWritePosition: null,
+      bibleplan: null
     };
+  }
+  function ensureBiblePlan(p) {
+    if (!p.bibleplan || typeof p.bibleplan !== "object") {
+      p.bibleplan = { activeMethod: null, activeSavedAt: 0, methods: {} };
+    }
+    if (p.bibleplan.activeSavedAt === undefined) p.bibleplan.activeSavedAt = 0;
+    if (!p.bibleplan.methods || typeof p.bibleplan.methods !== "object") p.bibleplan.methods = {};
+    ["order", "historical"].forEach(function (m) {
+      if (!p.bibleplan.methods[m] || typeof p.bibleplan.methods[m] !== "object") {
+        p.bibleplan.methods[m] = { started: false, startDate: null, targetDate: null, round: 1, completed: {}, doneRounds: [] };
+      }
+      var ms = p.bibleplan.methods[m];
+      if (!ms.completed) ms.completed = {};
+      if (!ms.doneRounds) ms.doneRounds = [];
+      if (!ms.round) ms.round = 1;
+    });
+    return p.bibleplan;
   }
   function getProfile(birth) {
     var profiles = loadProfiles();
@@ -634,6 +685,7 @@
     if (!p.gratitudePrayer || typeof p.gratitudePrayer !== "object") p.gratitudePrayer = {};
     if (p.lastReadPosition === undefined) p.lastReadPosition = null;
     if (p.lastWritePosition === undefined) p.lastWritePosition = null;
+    ensureBiblePlan(p);
     if (repairProfileVerseKeys(p)) saveProfiles(profiles);
     return p;
   }
@@ -656,6 +708,7 @@
     if (!p.gratitudePrayer || typeof p.gratitudePrayer !== "object") p.gratitudePrayer = {};
     if (p.lastReadPosition === undefined) p.lastReadPosition = null;
     if (p.lastWritePosition === undefined) p.lastWritePosition = null;
+    ensureBiblePlan(p);
     repairProfileVerseKeys(p);
     mutateFn(p);
     saveProfiles(profiles);
@@ -779,6 +832,8 @@
       openGratitudePrayer();
     } else if (state.loginDestination === "recordsHub") {
       openRecordsHub();
+    } else if (state.loginDestination === "bibleplan") {
+      openBiblePlan();
     } else {
       els.appScreen.classList.remove("hidden");
       startAppForUser(birth);
@@ -1072,6 +1127,345 @@
     els.gratitudePrayerScreen.classList.add("hidden");
     els.cover.classList.remove("hidden");
     if (els.gratitudeFontSizeMenu) els.gratitudeFontSizeMenu.classList.add("hidden");
+  }
+
+  /* ---------------- 성경일독 ---------------- */
+  var biblePlanCurrentMethod = null;
+  var biblePlanCurrentReadTarget = null;
+  var biblePlanHistIndex = null;
+  var biblePlanTotalsCache = {};
+
+  function bpTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  function bpKeyToDate(key) {
+    var parts = String(key).split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+  function bpAddDaysKey(key, days) {
+    var d = bpKeyToDate(key);
+    d.setDate(d.getDate() + days);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  function bpDiffDays(targetKey, actualKey) {
+    if (!targetKey || !actualKey) return 0;
+    return Math.round((bpKeyToDate(targetKey) - bpKeyToDate(actualKey)) / 86400000);
+  }
+  function bpFormatKey(key) {
+    if (!key) return "";
+    var parts = String(key).split("-");
+    return parts[0] + "." + parts[1] + "." + parts[2];
+  }
+
+  function biblePlanGetDay(method, dayNum) {
+    if (method === "order") {
+      var raw = (window.BIBLE_PLAN_ORDER || [])[dayNum - 1];
+      if (!raw) return null;
+      return { day: dayNum, title: null, chapters: raw };
+    }
+    if (!biblePlanHistIndex) {
+      biblePlanHistIndex = {};
+      (window.BIBLE_PLAN_HISTORICAL || []).forEach(function (e) { biblePlanHistIndex[e.day] = e; });
+    }
+    return biblePlanHistIndex[dayNum] || null;
+  }
+  function biblePlanTotalDays(method) {
+    return method === "order" ? (window.BIBLE_PLAN_ORDER || []).length : 364;
+  }
+  function biblePlanTotalChapters(method) {
+    if (biblePlanTotalsCache[method] != null) return biblePlanTotalsCache[method];
+    var total = 0;
+    if (method === "order") {
+      (window.BIBLE_PLAN_ORDER || []).forEach(function (day) { total += day.length; });
+    } else {
+      (window.BIBLE_PLAN_HISTORICAL || []).forEach(function (e) { total += e.chapters.length; });
+    }
+    biblePlanTotalsCache[method] = total;
+    return total;
+  }
+  function biblePlanProgress(p, method) {
+    var bp = ensureBiblePlan(p);
+    var ms = bp.methods[method];
+    var total = biblePlanTotalChapters(method);
+    var done = 0;
+    Object.keys(ms.completed).forEach(function (k) { if (ms.completed[k]) done++; });
+    return { done: done, total: total, pct: total ? Math.round((done / total) * 100) : 0 };
+  }
+  function biblePlanFindToday(p, method) {
+    var bp = ensureBiblePlan(p);
+    var ms = bp.methods[method];
+    var totalDays = biblePlanTotalDays(method);
+    for (var d = 1; d <= totalDays; d++) {
+      var entry = biblePlanGetDay(method, d);
+      if (!entry || !entry.chapters.length) continue;
+      var allDone = entry.chapters.every(function (c) { return ms.completed[c[0] + "-" + c[1]]; });
+      if (!allDone) return entry;
+    }
+    return null;
+  }
+  function biblePlanRangeLabel(chapters) {
+    var parts = [];
+    var i = 0;
+    while (i < chapters.length) {
+      var bno = chapters[i][0], a = chapters[i][1], b = a;
+      var j = i + 1;
+      while (j < chapters.length && chapters[j][0] === bno && chapters[j][1] === b + 1) { b = chapters[j][1]; j++; }
+      var name = META.books[bno] ? META.books[bno].name : bno;
+      parts.push(name + " " + a + "장" + (b !== a ? " ~ " + b + "장" : ""));
+      i = j;
+    }
+    return parts.join(" · ");
+  }
+  function syncBiblePlanToServer(method) {
+    if (!getSyncUrl() || !state.currentBirth || !method) return;
+    var p = getProfile(state.currentBirth);
+    var bp = ensureBiblePlan(p);
+    var ms = bp.methods[method];
+    if (!ms) return;
+    syncPost("bibleplan", {
+      birth: state.currentBirth,
+      method: method,
+      started: !!ms.started,
+      startDate: ms.startDate || "",
+      targetDate: ms.targetDate || "",
+      round: ms.round || 1,
+      completedJson: JSON.stringify(ms.completed || {}),
+      doneRoundsJson: JSON.stringify(ms.doneRounds || []),
+      activeMethod: bp.activeMethod || "",
+      activeSavedAt: bp.activeSavedAt || nowStamp()
+    });
+  }
+
+  /* 서버(구글시트)에서 받아온 성경일독 진행 상황을 로컬과 병합합니다.
+     - 회차(round)가 더 앞선 쪽을 기준으로 채택 (더 진행된 상태가 우선)
+     - 같은 회차라면 체크된 장은 합집합으로 병합 (둘 중 하나라도 체크했으면 체크된 것)
+     - 활성 방법은 더 최근에 저장된 쪽을 채택 */
+  function mergeBiblePlan(p, remoteBP) {
+    if (!remoteBP || typeof remoteBP !== "object") return;
+    var bp = ensureBiblePlan(p);
+    ["order", "historical"].forEach(function (m) {
+      var remoteMs = remoteBP.methods && remoteBP.methods[m];
+      if (!remoteMs) return;
+      var localMs = bp.methods[m];
+      var remoteRound = Number(remoteMs.round) || 1;
+      var localRound = Number(localMs.round) || 1;
+      if (remoteRound > localRound) {
+        localMs.round = remoteRound;
+        localMs.started = !!remoteMs.started;
+        localMs.startDate = remoteMs.startDate || null;
+        localMs.targetDate = remoteMs.targetDate || null;
+        localMs.completed = Object.assign({}, remoteMs.completed || {});
+      } else if (remoteRound === localRound) {
+        Object.keys(remoteMs.completed || {}).forEach(function (k) {
+          if (remoteMs.completed[k]) localMs.completed[k] = true;
+        });
+        if (!localMs.startDate && remoteMs.startDate) localMs.startDate = remoteMs.startDate;
+        if (!localMs.targetDate && remoteMs.targetDate) localMs.targetDate = remoteMs.targetDate;
+        if (remoteMs.started) localMs.started = true;
+      }
+      var seen = {};
+      (localMs.doneRounds || []).forEach(function (r) { seen[r.round] = r; });
+      (remoteMs.doneRounds || []).forEach(function (r) { if (!seen[r.round]) seen[r.round] = r; });
+      localMs.doneRounds = Object.keys(seen).map(function (k) { return seen[k]; }).sort(function (a, b) { return a.round - b.round; });
+    });
+    var remoteActiveSavedAt = Number(remoteBP.activeSavedAt) || 0;
+    if (remoteBP.activeMethod && remoteActiveSavedAt >= (bp.activeSavedAt || 0)) {
+      bp.activeMethod = remoteBP.activeMethod;
+      bp.activeSavedAt = remoteActiveSavedAt;
+    }
+  }
+
+  function openBiblePlan() {
+    if (!isLoggedIn()) { showNameScreen("bibleplan"); return; }
+    els.cover.classList.add("hidden");
+    els.nameScreen.classList.add("hidden");
+    els.appScreen.classList.add("hidden");
+    els.readScreen.classList.add("hidden");
+    els.hymnScreen.classList.add("hidden");
+    els.bibleplanScreen.classList.remove("hidden");
+    var p = getProfile(state.currentBirth);
+    var bp = ensureBiblePlan(p);
+    if (bp.activeMethod && bp.methods[bp.activeMethod] && bp.methods[bp.activeMethod].started) {
+      biblePlanCurrentMethod = bp.activeMethod;
+      renderBiblePlanToday();
+      showBiblePlanView("today");
+    } else {
+      renderBiblePlanMode();
+      showBiblePlanView("mode");
+    }
+
+    // 로그인한 사용자의 최신 성경일독 진행 상황을 서버에서 다시 받아와 병합합니다.
+    if (getSyncUrl() && state.currentBirth) {
+      syncGet({ action: "profile", birth: state.currentBirth }).then(function (remote) {
+        if (remote && remote.found && remote.bibleplan) {
+          updateProfile(state.currentBirth, function (p2) { mergeBiblePlan(p2, remote.bibleplan); });
+          var p3 = getProfile(state.currentBirth);
+          var bp3 = ensureBiblePlan(p3);
+          if (!biblePlanCurrentMethod && bp3.activeMethod && bp3.methods[bp3.activeMethod].started) {
+            biblePlanCurrentMethod = bp3.activeMethod;
+          }
+          if (biblePlanCurrentMethod && !els.bibleplanTodayView.classList.contains("hidden")) {
+            renderBiblePlanToday();
+          } else if (!els.bibleplanModeView.classList.contains("hidden")) {
+            renderBiblePlanMode();
+          }
+        }
+      });
+    }
+  }
+  function closeBiblePlan() {
+    els.bibleplanScreen.classList.add("hidden");
+    els.cover.classList.remove("hidden");
+  }
+  function showBiblePlanView(name) {
+    els.bibleplanModeView.classList.toggle("hidden", name !== "mode");
+    els.bibleplanTodayView.classList.toggle("hidden", name !== "today");
+    els.bibleplanCompleteView.classList.toggle("hidden", name !== "complete");
+    var p = getProfile(state.currentBirth);
+    var bp = p && ensureBiblePlan(p);
+    var returnable = !!(bp && bp.activeMethod && bp.methods[bp.activeMethod] && bp.methods[bp.activeMethod].started);
+    els.bibleplanBackBtn.classList.toggle("hidden", !(name === "today" || (name === "mode" && returnable)));
+    els.bibleplanSwitchBtn.classList.toggle("hidden", name !== "today");
+    if (name === "today") {
+      els.bibleplanHeadTitle.textContent = "성경일독 · " + (biblePlanCurrentMethod === "order" ? "순서대로 읽기" : "역사 흐름대로");
+    } else {
+      els.bibleplanHeadTitle.textContent = "성경일독";
+    }
+  }
+  function bibleplanBackAction() {
+    var p = getProfile(state.currentBirth);
+    var bp = p && ensureBiblePlan(p);
+    if (bp && bp.activeMethod && bp.methods[bp.activeMethod] && bp.methods[bp.activeMethod].started && !els.bibleplanModeView.classList.contains("hidden")) {
+      biblePlanCurrentMethod = bp.activeMethod;
+      renderBiblePlanToday();
+      showBiblePlanView("today");
+    } else {
+      closeBiblePlan();
+    }
+  }
+  function renderBiblePlanMode() {
+    var p = getProfile(state.currentBirth);
+    var bp = ensureBiblePlan(p);
+    [["order", els.bibleplanPickOrderBtn, els.bibleplanOrderBadge], ["historical", els.bibleplanPickHistoricalBtn, els.bibleplanHistoricalBadge]].forEach(function (row) {
+      var m = row[0], cardEl = row[1], badgeEl = row[2];
+      var ms = bp.methods[m];
+      if (ms.started) {
+        var prog = biblePlanProgress(p, m);
+        badgeEl.textContent = "진행중 · " + prog.pct + "%";
+      } else {
+        badgeEl.textContent = "아직 시작 전";
+      }
+      cardEl.classList.toggle("active", bp.activeMethod === m);
+    });
+  }
+  function selectBiblePlanMethod(method) {
+    updateProfile(state.currentBirth, function (p) {
+      var bp = ensureBiblePlan(p);
+      var ms = bp.methods[method];
+      if (!ms.started) {
+        ms.started = true;
+        ms.startDate = bpTodayKey();
+        ms.targetDate = bpAddDaysKey(ms.startDate, 365);
+      }
+      bp.activeMethod = method;
+      bp.activeSavedAt = nowStamp();
+    });
+    biblePlanCurrentMethod = method;
+    renderBiblePlanToday();
+    showBiblePlanView("today");
+    syncBiblePlanToServer(method);
+  }
+  function toggleBiblePlanChapter(method, bno, ch) {
+    var key = bno + "-" + ch;
+    updateProfile(state.currentBirth, function (p) {
+      var bp = ensureBiblePlan(p);
+      var ms = bp.methods[method];
+      if (ms.completed[key]) delete ms.completed[key]; else ms.completed[key] = true;
+    });
+    renderBiblePlanToday();
+    syncBiblePlanToServer(method);
+  }
+  function renderBiblePlanToday() {
+    var method = biblePlanCurrentMethod;
+    if (!method) return;
+    var p = getProfile(state.currentBirth);
+    var bp = ensureBiblePlan(p);
+    var ms = bp.methods[method];
+    var prog = biblePlanProgress(p, method);
+    els.bibleplanRoundLabel.textContent = ms.round + "회차";
+    els.bibleplanDateRange.textContent = (ms.startDate ? bpFormatKey(ms.startDate) + " 시작" : "") + (ms.targetDate ? " · 목표 " + bpFormatKey(ms.targetDate) : "");
+    els.bibleplanProgressPct.innerHTML = prog.pct + '<span style="font-size:15px;font-weight:700;">%</span>';
+    els.bibleplanProgressDetail.textContent = "진행 · " + prog.done + " / " + prog.total + "장";
+    els.bibleplanProgressFill.style.width = prog.pct + "%";
+
+    els.bibleplanMissingNote.classList.add("hidden");
+    var todayEntry = biblePlanFindToday(p, method);
+    if (!todayEntry) {
+      biblePlanCompleteRound(method);
+      return;
+    }
+    els.bibleplanTodayLabel.textContent = todayEntry.day + "일차" + (todayEntry.title ? " · " + todayEntry.title : "");
+    els.bibleplanTodayRange.textContent = biblePlanRangeLabel(todayEntry.chapters);
+
+    els.bibleplanChapterList.innerHTML = "";
+    todayEntry.chapters.forEach(function (c) {
+      var key = c[0] + "-" + c[1];
+      var done = !!ms.completed[key];
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "bibleplan-chapter-row" + (done ? " done" : "");
+      var bookName = META.books[c[0]] ? META.books[c[0]].name : c[0];
+      row.innerHTML = '<span class="bibleplan-chapter-check">' + (done ? "✓" : "") + '</span><span class="bibleplan-chapter-label">' + bookName + " " + c[1] + "장</span>";
+      row.addEventListener("click", function () { toggleBiblePlanChapter(method, c[0], c[1]); });
+      els.bibleplanChapterList.appendChild(row);
+    });
+
+    if (method === "historical" && window.BIBLE_PLAN_HISTORICAL_MISSING) {
+      var gapStart = window.BIBLE_PLAN_HISTORICAL_MISSING[0];
+      var gapEnd = window.BIBLE_PLAN_HISTORICAL_MISSING[1];
+      if (todayEntry.day >= gapStart - 5 && todayEntry.day <= gapEnd + 3) {
+        els.bibleplanMissingNote.textContent = gapStart + "~" + gapEnd + "일차(신약 복음서 구간) 데이터는 아직 준비 중이에요. 자료가 오면 이어서 채워질게요.";
+        els.bibleplanMissingNote.classList.remove("hidden");
+      }
+    }
+
+    biblePlanCurrentReadTarget = todayEntry.chapters.filter(function (c) { return !ms.completed[c[0] + "-" + c[1]]; })[0] || todayEntry.chapters[0];
+  }
+  function biblePlanCompleteRound(method) {
+    var p = getProfile(state.currentBirth);
+    var bp = ensureBiblePlan(p);
+    var ms = bp.methods[method];
+    var actualKey = bpTodayKey();
+    var record = {
+      round: ms.round, startDate: ms.startDate, targetDate: ms.targetDate,
+      actualDate: actualKey, diffDays: bpDiffDays(ms.targetDate, actualKey)
+    };
+    updateProfile(state.currentBirth, function (p2) {
+      var bp2 = ensureBiblePlan(p2);
+      var ms2 = bp2.methods[method];
+      ms2.doneRounds.push(record);
+      ms2.completed = {};
+      ms2.round = (ms2.round || 1) + 1;
+      ms2.started = false;
+      ms2.startDate = null;
+      ms2.targetDate = null;
+    });
+    renderBiblePlanComplete(method, record);
+    showBiblePlanView("complete");
+    syncBiblePlanToServer(method);
+  }
+  function renderBiblePlanComplete(method, record) {
+    var methodLabel = method === "order" ? "순서대로 읽기" : "역사 흐름대로 읽기";
+    els.bibleplanCompleteTitle.textContent = record.round + "회차 성경일독 완주!";
+    els.bibleplanCompleteSub.textContent = methodLabel + " · 총 " + biblePlanTotalChapters(method) + "장을 다 읽었어요.";
+    els.bibleplanCompleteStart.textContent = bpFormatKey(record.startDate);
+    els.bibleplanCompleteTarget.textContent = bpFormatKey(record.targetDate);
+    els.bibleplanCompleteActual.textContent = bpFormatKey(record.actualDate);
+    var diff = record.diffDays;
+    var diffText = diff > 0 ? ("목표보다 " + diff + "일 일찍 완독했어요") : diff < 0 ? ("목표보다 " + (-diff) + "일 늦게 완독했어요") : "목표일에 정확히 완독했어요";
+    els.bibleplanCompleteDiff.textContent = diffText;
+    biblePlanCurrentMethod = method;
   }
 
   /* ---------------- 오늘의 말씀 ---------------- */
@@ -4131,6 +4525,29 @@
   if (els.backChristianQuoteCategoriesBtn) els.backChristianQuoteCategoriesBtn.addEventListener("click", closeChristianQuoteDetail);
   els.readBtn.addEventListener("click", showReadScreen);
   if (els.recordsHubBtn) els.recordsHubBtn.addEventListener("click", openRecordsHub);
+  if (els.bibleplanBtn) els.bibleplanBtn.addEventListener("click", openBiblePlan);
+  if (els.bibleplanCloseBtn) els.bibleplanCloseBtn.addEventListener("click", closeBiblePlan);
+  if (els.bibleplanBackBtn) els.bibleplanBackBtn.addEventListener("click", bibleplanBackAction);
+  if (els.bibleplanSwitchBtn) els.bibleplanSwitchBtn.addEventListener("click", function () {
+    renderBiblePlanMode();
+    showBiblePlanView("mode");
+  });
+  if (els.bibleplanPickOrderBtn) els.bibleplanPickOrderBtn.addEventListener("click", function () { selectBiblePlanMethod("order"); });
+  if (els.bibleplanPickHistoricalBtn) els.bibleplanPickHistoricalBtn.addEventListener("click", function () { selectBiblePlanMethod("historical"); });
+  if (els.bibleplanReadBtn) els.bibleplanReadBtn.addEventListener("click", function () {
+    if (!biblePlanCurrentReadTarget) return;
+    var target = biblePlanCurrentReadTarget;
+    closeBiblePlan();
+    enterReadScreen();
+    readGoTo(target[0], String(target[1]));
+  });
+  if (els.bibleplanCompleteCloseBtn) els.bibleplanCompleteCloseBtn.addEventListener("click", closeBiblePlan);
+  if (els.bibleplanCompleteRestartBtn) els.bibleplanCompleteRestartBtn.addEventListener("click", function () {
+    if (biblePlanCurrentMethod) selectBiblePlanMethod(biblePlanCurrentMethod);
+  });
+  if (els.bibleplanScreen) els.bibleplanScreen.addEventListener("click", function (e) {
+    if (e.target === els.bibleplanScreen) closeBiblePlan();
+  });
   if (els.closeRecordsHubBtn) els.closeRecordsHubBtn.addEventListener("click", closeRecordsHub);
   if (els.recordsHubContentCloseBtn) els.recordsHubContentCloseBtn.addEventListener("click", closeRecordsHub);
   if (els.recordsHubBackBtn) els.recordsHubBackBtn.addEventListener("click", recordsHubGoBack);

@@ -59,6 +59,9 @@
           <img class="grid-icon" src="icons/buttons/성경필사.png" alt="">
           <span class="grid-label">성경필사</span>
         </button>
+        <button id="bibleplanBtn" type="button" class="grid-card card-gold-outline" aria-label="성경일독 열기">
+          <span class="grid-label">성경일독</span>
+        </button>
         <button id="recordsHubBtn" type="button" class="grid-card card-mint" aria-label="기록보기 열기">
           <span class="grid-label">기록보기</span>
         </button>
@@ -321,6 +324,88 @@
         </div>
         <div id="recordsHubContentBody" class="records-hub-content-body"></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- 성경일독 -->
+<section id="bibleplanScreen" class="stats-screen hidden">
+  <div class="stats-card bibleplan-card">
+    <div class="bibleplan-head">
+      <button id="bibleplanBackBtn" type="button" class="icon-btn hidden" aria-label="뒤로">←</button>
+      <span id="bibleplanHeadTitle" class="bibleplan-head-title">성경일독</span>
+      <button id="bibleplanSwitchBtn" type="button" class="text-link bibleplan-switch-link hidden">일독변경</button>
+      <button id="bibleplanCloseBtn" type="button" class="icon-btn" title="닫기">✕</button>
+    </div>
+    <div id="bibleplanBody" class="bibleplan-body">
+
+      <!-- 방법 선택 / 변경 -->
+      <div id="bibleplanModeView" class="bibleplan-view hidden">
+        <div class="bibleplan-mode-intro">
+          <div class="bibleplan-mode-title">어떤 방법으로 읽을까요?</div>
+          <div class="bibleplan-mode-sub">하루 이틀 못 읽어도 괜찮아요. 읽은 만큼만 진도가 쌓여요.</div>
+        </div>
+        <button id="bibleplanPickOrderBtn" type="button" class="bibleplan-method-card" data-method="order">
+          <div class="bibleplan-method-top">
+            <span class="bibleplan-method-name">① 순서대로 읽기</span>
+            <span id="bibleplanOrderBadge" class="bibleplan-method-badge"></span>
+          </div>
+          <div class="bibleplan-method-desc">창세기부터 요한계시록까지, 성경에 실린 순서 그대로 읽어요.</div>
+        </button>
+        <button id="bibleplanPickHistoricalBtn" type="button" class="bibleplan-method-card" data-method="historical">
+          <div class="bibleplan-method-top">
+            <span class="bibleplan-method-name">② 역사 흐름대로 읽기</span>
+            <span id="bibleplanHistoricalBadge" class="bibleplan-method-badge"></span>
+          </div>
+          <div class="bibleplan-method-desc">사건이 실제로 일어난 시대 순서로 읽어요.</div>
+        </button>
+        <div class="bibleplan-mode-note">방법을 바꿔도 이전 방법의 진행 기록은 그대로 남아있어요.</div>
+      </div>
+
+      <!-- 오늘의 읽기 -->
+      <div id="bibleplanTodayView" class="bibleplan-view hidden">
+        <div class="bibleplan-progress-card">
+          <div class="bibleplan-progress-top">
+            <span id="bibleplanRoundLabel" class="bibleplan-round-label"></span>
+            <span id="bibleplanDateRange" class="bibleplan-date-range"></span>
+          </div>
+          <div class="bibleplan-progress-num-row">
+            <span id="bibleplanProgressPct" class="bibleplan-progress-pct"></span>
+            <span id="bibleplanProgressDetail" class="bibleplan-progress-detail"></span>
+          </div>
+          <div class="bibleplan-progress-track"><div id="bibleplanProgressFill" class="bibleplan-progress-fill"></div></div>
+        </div>
+
+        <div id="bibleplanTodayCard" class="bibleplan-today-card">
+          <div id="bibleplanTodayLabel" class="bibleplan-today-label"></div>
+          <div id="bibleplanTodayRange" class="bibleplan-today-range"></div>
+          <button id="bibleplanReadBtn" type="button" class="primary-button bibleplan-read-btn">오늘 읽기</button>
+        </div>
+
+        <div class="bibleplan-checklist-head">오늘 읽을 장 체크</div>
+        <div id="bibleplanChapterList" class="bibleplan-chapter-list"></div>
+
+        <div id="bibleplanEmptyNote" class="bibleplan-empty-note hidden">며칠 못 읽어도 괜찮아요. 체크된 장만 진행률에 반영돼요.</div>
+        <div id="bibleplanMissingNote" class="bibleplan-missing-note hidden"></div>
+      </div>
+
+      <!-- 완독 -->
+      <div id="bibleplanCompleteView" class="bibleplan-view hidden">
+        <div class="bibleplan-complete-badge">✓</div>
+        <div id="bibleplanCompleteTitle" class="bibleplan-complete-title"></div>
+        <div id="bibleplanCompleteSub" class="bibleplan-complete-sub"></div>
+        <div class="bibleplan-complete-stats">
+          <div class="bibleplan-complete-row"><span>시작일</span><span id="bibleplanCompleteStart"></span></div>
+          <div class="bibleplan-complete-row"><span>목표 완료일</span><span id="bibleplanCompleteTarget"></span></div>
+          <div class="bibleplan-complete-row"><span>실제 완료일</span><span id="bibleplanCompleteActual"></span></div>
+          <div class="bibleplan-complete-diff-wrap"><span id="bibleplanCompleteDiff" class="bibleplan-complete-diff"></span></div>
+        </div>
+        <div class="bibleplan-complete-actions">
+          <button id="bibleplanCompleteCloseBtn" type="button" class="ghost-button">닫기</button>
+          <button id="bibleplanCompleteRestartBtn" type="button" class="primary-button">다음 회차 시작</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -797,6 +882,7 @@
 <script src="bible-data-gae.js"></script>
 <script src="commentary-data.js"></script>
 <script src="christian-quotes.js"></script>
+<script src="bibleplan-data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="app.js"></script></body>
 </html>

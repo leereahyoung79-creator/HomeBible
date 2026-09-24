@@ -170,6 +170,8 @@ select{font-family:inherit;}
 .card-mint .grid-label{color:#5C8F5B;}
 .card-gold{background:#FBEBD2;}
 .card-gold .grid-label{color:#B98A3E;}
+.card-gold-outline{background:#FFF1DA;border:1.5px solid var(--gold);}
+.card-gold-outline .grid-label{color:#9A6B22;font-weight:800;}
 .card-lavender{background:#E9E1F5;}
 .card-lavender .grid-label{color:#7C5FA6;}
 .wide-cta{
@@ -2385,6 +2387,80 @@ textarea::placeholder {
 .record-progress-detail{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
 .record-progress-track{height:8px;border-radius:999px;background:var(--paper-line);overflow:hidden;}
 .record-progress-fill{height:100%;border-radius:999px;background:var(--accent);}
+
+/* ===================== 성경일독 ===================== */
+.bibleplan-card{max-width:440px;width:100%;padding:0;}
+.bibleplan-head{
+  flex:none;display:flex;align-items:center;gap:10px;
+  padding:16px 16px;border-bottom:1px solid var(--border);
+}
+.bibleplan-head-title{flex:1;font-size:16px;font-weight:800;color:var(--ink);}
+.bibleplan-switch-link{font-size:12px;color:var(--ink-soft);}
+.bibleplan-body{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px 22px;}
+.bibleplan-view.hidden{display:none;}
+
+.bibleplan-mode-intro{margin-bottom:16px;}
+.bibleplan-mode-title{font-size:17px;font-weight:800;color:var(--ink);}
+.bibleplan-mode-sub{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.6;}
+.bibleplan-method-card{
+  display:block;width:100%;text-align:left;border:1px solid var(--border);border-radius:18px;
+  background:var(--card);padding:18px;margin-bottom:12px;
+}
+.bibleplan-method-card.active{border-color:var(--accent);background:var(--accent-soft);}
+.bibleplan-method-top{display:flex;align-items:center;gap:8px;}
+.bibleplan-method-name{flex:1;font-size:15px;font-weight:800;color:var(--ink);}
+.bibleplan-method-badge{font-size:11px;font-weight:800;color:var(--ink-faint);background:var(--paper);border-radius:999px;padding:4px 10px;}
+.bibleplan-method-card.active .bibleplan-method-badge{background:var(--card);color:var(--accent);}
+.bibleplan-method-desc{font-size:12.5px;color:var(--ink-soft);margin-top:8px;line-height:1.6;}
+.bibleplan-mode-note{font-size:11px;color:var(--ink-faint);text-align:center;margin-top:6px;}
+
+.bibleplan-progress-card{border:1px solid var(--border);border-radius:18px;background:var(--card);padding:16px 18px;margin-bottom:14px;}
+.bibleplan-progress-top{display:flex;justify-content:space-between;align-items:baseline;}
+.bibleplan-round-label{font-size:13px;font-weight:800;color:var(--accent);}
+.bibleplan-date-range{font-size:11px;color:var(--ink-faint);}
+.bibleplan-progress-num-row{display:flex;align-items:baseline;gap:6px;margin-top:10px;}
+.bibleplan-progress-pct{font-size:26px;font-weight:800;color:var(--ink);}
+.bibleplan-progress-detail{font-size:11.5px;color:var(--ink-soft);}
+.bibleplan-progress-track{height:8px;border-radius:999px;background:var(--border);overflow:hidden;margin-top:8px;}
+.bibleplan-progress-fill{height:100%;border-radius:999px;background:var(--accent);}
+
+.bibleplan-today-card{border:1px solid var(--border);border-radius:18px;background:var(--accent-soft);padding:18px;margin-bottom:16px;}
+.bibleplan-today-label{font-size:11.5px;font-weight:800;color:var(--accent);}
+.bibleplan-today-range{font-size:18px;font-weight:800;color:var(--ink);margin-top:6px;}
+.bibleplan-read-btn{margin-top:14px;width:100%;}
+
+.bibleplan-checklist-head{font-size:12.5px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;}
+.bibleplan-chapter-list{display:flex;flex-direction:column;gap:8px;}
+.bibleplan-chapter-row{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  border:1px solid var(--border);border-radius:12px;background:var(--card);
+  padding:12px 14px;
+}
+.bibleplan-chapter-row.done{border-color:var(--correct);background:#EEF7F0;}
+.bibleplan-chapter-check{
+  width:20px;height:20px;border-radius:6px;flex:none;
+  border:1.5px solid var(--ink-faint);display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:#fff;
+}
+.bibleplan-chapter-row.done .bibleplan-chapter-check{border-color:var(--correct);background:var(--correct);}
+.bibleplan-chapter-label{font-size:13.5px;font-weight:700;color:var(--ink);flex:1;}
+.bibleplan-empty-note,.bibleplan-missing-note{border:1px dashed var(--border);border-radius:14px;padding:12px 14px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;margin-top:14px;}
+.bibleplan-missing-note{border-style:solid;border-color:var(--gold);color:#9A6B22;background:#FFF8EC;}
+
+.bibleplan-complete-badge{
+  width:64px;height:64px;border-radius:999px;background:var(--accent-soft);
+  display:flex;align-items:center;justify-content:center;margin:6px auto 16px;
+  font-size:28px;color:var(--accent);font-weight:800;
+}
+.bibleplan-complete-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
+.bibleplan-complete-sub{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.6;}
+.bibleplan-complete-stats{border:1px solid var(--border);border-radius:16px;background:var(--paper);padding:16px 18px;margin-top:20px;}
+.bibleplan-complete-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);padding:5px 0;}
+.bibleplan-complete-row span:last-child{font-weight:700;color:var(--ink);}
+.bibleplan-complete-diff-wrap{display:flex;justify-content:center;border-top:1px dashed var(--border);margin-top:8px;padding-top:12px;}
+.bibleplan-complete-diff{background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:800;padding:7px 16px;border-radius:999px;}
+.bibleplan-complete-actions{display:flex;gap:10px;margin-top:20px;}
+.bibleplan-complete-actions button{flex:1;}
 
 /* 여러 절을 하나의 예배노트로 선택 */
 .sermon-selection-status{
