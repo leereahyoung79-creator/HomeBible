@@ -676,11 +676,13 @@ select{font-family:inherit;}
   scroll-margin-top:20px;
   cursor:pointer;
 }
-.read-verse.hl-yellow{background:#fdf0b8;}
-.read-verse.hl-pink{background:#fbdfe6;}
-.read-verse.hl-green{background:#dcefd8;}
-.read-verse.hl-blue{background:#d9e8f5;}
-.read-verse.hl-purple{background:#e6d9f5;}
+/* 형광펜 색은 항상 밝은 파스텔이라, 배경색 테마와 무관하게 글씨는 항상 짙은 색으로 고정합니다
+   (다크 테마에서 밝은 글씨색이 그대로 오면 형광펜 위에서 안 보이는 문제가 있었음). */
+.read-verse.hl-yellow{background:#fdf0b8;color:#3A2F26;}
+.read-verse.hl-pink{background:#fbdfe6;color:#3A2F26;}
+.read-verse.hl-green{background:#dcefd8;color:#3A2F26;}
+.read-verse.hl-blue{background:#d9e8f5;color:#3A2F26;}
+.read-verse.hl-purple{background:#e6d9f5;color:#3A2F26;}
 .read-verse.jump-flash{
   animation:jumpFlash 1.6s ease;
 }
@@ -3075,11 +3077,17 @@ body{font-size:16px;color:var(--ink);}
   }
 }
 
-/* Christian quote topic tabs: names only, unique pastel colors are assigned by app.js */
+/* Christian quote topic tabs: names only, unique pastel colors are assigned by app.js.
+   이 파스텔 색은 배경색 테마와 무관하게 항상 밝은 색이라, 글씨색도 테마를 따라가지 않고
+   항상 짙은 갈색으로 고정해야 다크 테마에서도 글씨가 보입니다. */
 .christian-quote-category-card {
   min-height: 82px;
   background: var(--paper);
-  color: var(--ink);
+  color: #4A3B32;
+}
+.christian-quote-category-card .christian-quote-cat-name,
+.christian-quote-category-card.text-only .christian-quote-cat-name {
+  color: #4A3B32 !important;
 }
 .christian-quote-category-card small {
   display: none !important;
@@ -3324,7 +3332,7 @@ html, body {
   border: 1px solid #EBCFBE;
   border-radius: 14px;
   background: #FFF8F2;
-  color: var(--ink);
+  color: #4A3B32; /* 배경이 항상 밝은 크림색이라 배경색 테마와 무관하게 글씨색을 고정합니다 */
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -3332,6 +3340,7 @@ html, body {
 .settings-options button.selected {
   background: #F8DCD4;
   border-color: #E98B7D;
+  color: #4A3B32;
   box-shadow: 0 0 0 2px rgba(233,139,125,.16);
 }
 .settings-font-options {
@@ -3398,7 +3407,7 @@ html[data-bg-theme="cream"]{--paper:#FFF6EF;--paper-line:#F3E1D2;--card:#ffffff;
 html[data-bg-theme="white"]{--paper:#FDFCF9;--paper-line:#EDEAE3;--card:#ffffff;--border:#E7E2D8;--ink:#34271F;--ink-soft:#6F5A4B;--ink-faint:#8A7565;}
 html[data-bg-theme="sage"]{--paper:#EEF3EA;--paper-line:#DCE6D6;--card:#ffffff;--border:#D3E0CB;--ink:#33422E;--ink-soft:#66795D;--ink-faint:#95A88B;}
 html[data-bg-theme="lavender"]{--paper:#EFEDF6;--paper-line:#DDD9EC;--card:#ffffff;--border:#D8D3EA;--ink:#332F4A;--ink-soft:#655D82;--ink-faint:#9992B3;}
-html[data-bg-theme="dark"]{--paper:#2E241D;--paper-line:#4A3D31;--card:#3A2F26;--border:#4A3D31;--ink:#EFE4D6;--ink-soft:#C4B4A2;--ink-faint:#8F7C6A;}
+html[data-bg-theme="dark"]{--paper:#2E241D;--paper-line:#4A3D31;--card:#3A2F26;--border:#4A3D31;--ink:#EFE4D6;--ink-soft:#C4B4A2;--ink-faint:#8F7C6A;--accent-soft:rgba(233,139,125,0.22);}
 html[data-bg-theme="cream"], html[data-bg-theme="cream"] body{background:#FFF6EF !important;}
 html[data-bg-theme="white"], html[data-bg-theme="white"] body{background:#FDFCF9 !important;}
 html[data-bg-theme="sage"], html[data-bg-theme="sage"] body{background:#EEF3EA !important;}
