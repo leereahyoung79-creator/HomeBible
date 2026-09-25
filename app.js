@@ -114,6 +114,14 @@
     closeSettingsBtn: document.getElementById("closeSettingsBtn"),
     resetSettingsBtn: document.getElementById("resetSettingsBtn"),
     saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+    brightnessSlider: document.getElementById("brightnessSlider"),
+    brightnessValue: document.getElementById("brightnessValue"),
+    brightnessOverlay: document.getElementById("brightnessOverlay"),
+    bgThemeOptions: document.getElementById("bgThemeOptions"),
+    fontSizeSlider: document.getElementById("fontSizeSlider"),
+    fontSizeSliderValue: document.getElementById("fontSizeSliderValue"),
+    generalFontSizeSlider: document.getElementById("generalFontSizeSlider"),
+    generalFontSizeSliderValue: document.getElementById("generalFontSizeSliderValue"),
     christianQuotesScreen: document.getElementById("christianQuotesScreen"),
     closeChristianQuotesBtn: document.getElementById("closeChristianQuotesBtn"),
     christianQuoteCategories: document.getElementById("christianQuoteCategories"),
@@ -2896,19 +2904,23 @@
     if (els.readBookPickerStatus) els.readBookPickerStatus.classList.add("hidden");
     els.readBookPickerList.innerHTML = "";
     ["OT", "NT"].forEach(function(testament) {
+      var books = META.order.filter(function(bno){ return testamentOfBook(bno) === testament; });
       var heading = document.createElement("div");
       heading.className = "read-picker-testament-title";
-      heading.textContent = testament === "NT" ? "신약" : "구약";
+      heading.textContent = (testament === "NT" ? "신약" : "구약") + " · " + books.length + "권";
       els.readBookPickerList.appendChild(heading);
-      META.order.filter(function(bno){ return testamentOfBook(bno) === testament; }).forEach(function(bno) {
+      var grid = document.createElement("div");
+      grid.className = "read-book-picker-grid";
+      books.forEach(function(bno) {
         var book = META.books[bno] || {};
         var btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "read-book-picker-item" + (String(bno) === String(pickerCurrentBookNo()) ? " active" : "");
-        btn.innerHTML = '<b>' + escapeHtml2(book.name || bno) + '</b><span>' + escapeHtml2(book.abbr || "") + '</span>';
+        btn.className = "read-book-picker-tile" + (String(bno) === String(pickerCurrentBookNo()) ? " active" : "");
+        btn.textContent = book.name || bno;
         btn.addEventListener("click", function(){ showReadChapterPicker(bno); });
-        els.readBookPickerList.appendChild(btn);
+        grid.appendChild(btn);
       });
+      els.readBookPickerList.appendChild(grid);
     });
   }
 
@@ -4062,6 +4074,7 @@
     }
     recordsHubCat = null;
     renderRecordsHubNav();
+    renderRecordsHubContent();
     if (els.recordsHubShell) {
       els.recordsHubShell.classList.remove("rh-mode-content");
       els.recordsHubShell.classList.add("rh-mode-list");
@@ -4761,17 +4774,16 @@
   });
 
   function updateReadFontSizeValue(size) {
-    var map = { small: "90%", normal: "100%", large: "116%", xlarge: "134%" };
-    if (els.readFontSizeValue) els.readFontSizeValue.textContent = map[size] || "100%";
+    if (els.readFontSizeValue) els.readFontSizeValue.textContent = Math.round(bibleScaleFromSlider(size) * 100) + "%";
   }
 
+  /* 읽기 화면의 -/+ 버튼은 예전 4단계(작게/보통/크게/아주 크게)와 같은 체감으로
+     움직이도록, 0~100 값 중 그 4단계에 해당하는 지점 사이를 이동합니다. */
   function stepReadFontSize(direction) {
-    var order = ["small", "normal", "large", "xlarge"];
     var settings = loadDisplaySettings();
-    var idx = order.indexOf(settings.fontSize);
-    if (idx < 0) idx = 1;
-    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
-    settings.fontSize = order[idx];
+    var idx = nearestCheckpointIndex(settings.fontSize, BIBLE_FONT_CHECKPOINTS);
+    idx = Math.max(0, Math.min(BIBLE_FONT_CHECKPOINTS.length - 1, idx + direction));
+    settings.fontSize = BIBLE_FONT_CHECKPOINTS[idx];
     applyDisplaySettings(settings);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     updateReadFontSizeValue(settings.fontSize);
@@ -4782,17 +4794,14 @@
 
   /* ---------------- 감사&기도 / 기독교명언 / 성경필사 글씨크기 (공통) ---------------- */
   function updateGeneralFontSizeValueEl(el, size) {
-    var map = { small: "92%", normal: "100%", large: "114%", xlarge: "128%" };
-    if (el) el.textContent = map[size] || "100%";
+    if (el) el.textContent = Math.round(generalScaleFromSlider(size) * 100) + "%";
   }
 
   function stepGeneralFontSize(direction, valueEl) {
-    var order = ["small", "normal", "large", "xlarge"];
     var settings = loadDisplaySettings();
-    var idx = order.indexOf(settings.generalFontSize || "normal");
-    if (idx < 0) idx = 1;
-    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
-    settings.generalFontSize = order[idx];
+    var idx = nearestCheckpointIndex(settings.generalFontSize, GENERAL_FONT_CHECKPOINTS);
+    idx = Math.max(0, Math.min(GENERAL_FONT_CHECKPOINTS.length - 1, idx + direction));
+    settings.generalFontSize = GENERAL_FONT_CHECKPOINTS[idx];
     applyDisplaySettings(settings);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     updateGeneralFontSizeValueEl(valueEl, settings.generalFontSize);
@@ -4815,17 +4824,14 @@
   if (els.quotesFontSizeMenu) els.quotesFontSizeMenu.addEventListener("click", function(e){ e.stopPropagation(); });
 
   function updateWriteFontSizeValue(size) {
-    var map = { small: "90%", normal: "100%", large: "116%", xlarge: "134%" };
-    if (els.writeFontSizeValue) els.writeFontSizeValue.textContent = map[size] || "100%";
+    if (els.writeFontSizeValue) els.writeFontSizeValue.textContent = Math.round(bibleScaleFromSlider(size) * 100) + "%";
   }
 
   function stepWriteFontSize(direction) {
-    var order = ["small", "normal", "large", "xlarge"];
     var settings = loadDisplaySettings();
-    var idx = order.indexOf(settings.fontSize);
-    if (idx < 0) idx = 1;
-    idx = Math.max(0, Math.min(order.length - 1, idx + direction));
-    settings.fontSize = order[idx];
+    var idx = nearestCheckpointIndex(settings.fontSize, BIBLE_FONT_CHECKPOINTS);
+    idx = Math.max(0, Math.min(BIBLE_FONT_CHECKPOINTS.length - 1, idx + direction));
+    settings.fontSize = BIBLE_FONT_CHECKPOINTS[idx];
     applyDisplaySettings(settings);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     updateWriteFontSizeValue(settings.fontSize);
@@ -5189,9 +5195,55 @@
   });
 
 
-  /* ---------------- 설정: 글씨 크기·글씨체 ---------------- */
+  /* ---------------- 설정: 화면 밝기·글씨 크기·글씨체 ---------------- */
   var SETTINGS_KEY = "ourBibleDisplaySettings";
-  var DEFAULT_DISPLAY_SETTINGS = { fontSize: "normal", generalFontSize: "normal", fontFamily: "nanumRound" };
+  var DEFAULT_DISPLAY_SETTINGS = { fontSize: 50, generalFontSize: 50, fontFamily: "nanumRound", brightness: 100, bgTheme: "cream" };
+  var BG_THEMES = ["cream", "white", "sage", "lavender", "dark"];
+
+  /* 글씨 크기는 예전엔 4단계(작게/보통/크게/아주 크게) 문자열이었지만,
+     이제는 0~100 슬라이더 값입니다. 두 크기가 각각 다른 배율 범위를
+     쓰기 때문에(성경 본문용/일반용) 체크포인트도 따로 둡니다. */
+  var BIBLE_FONT_CHECKPOINTS = [0, 50, 74, 100];   // 작게·보통·크게·아주 크게에 해당하던 지점
+  var GENERAL_FONT_CHECKPOINTS = [0, 50, 75, 100];
+
+  function clampSlider(value, fallback) {
+    var n = Number(value);
+    if (!isFinite(n)) n = (fallback == null ? 50 : fallback);
+    return Math.max(0, Math.min(100, n));
+  }
+
+  function bibleScaleFromSlider(value) {
+    var v = clampSlider(value, 50);
+    return v <= 50 ? (0.90 + (v / 50) * 0.10) : (1.0 + ((v - 50) / 50) * 0.34);
+  }
+
+  function generalScaleFromSlider(value) {
+    var v = clampSlider(value, 50);
+    return v <= 50 ? (0.92 + (v / 50) * 0.08) : (1.0 + ((v - 50) / 50) * 0.28);
+  }
+
+  function generalFontSizeBucket(scale) {
+    if (scale >= 1.20) return "xlarge";
+    if (scale >= 1.08) return "large";
+    if (scale <= 0.95) return "small";
+    return "normal";
+  }
+
+  function nearestCheckpointIndex(value, checkpoints) {
+    var v = clampSlider(value, checkpoints[1]);
+    var bestIdx = 0, bestDiff = Infinity;
+    for (var i = 0; i < checkpoints.length; i++) {
+      var d = Math.abs(checkpoints[i] - v);
+      if (d < bestDiff) { bestDiff = d; bestIdx = i; }
+    }
+    return bestIdx;
+  }
+
+  function migrateLegacyFontSize(value, checkpoints) {
+    var legacy = { small: checkpoints[0], normal: checkpoints[1], large: checkpoints[2], xlarge: checkpoints[3] };
+    if (typeof value === "string" && Object.prototype.hasOwnProperty.call(legacy, value)) return legacy[value];
+    return clampSlider(value, checkpoints[1]);
+  }
 
   function loadDisplaySettings() {
     try {
@@ -5199,17 +5251,38 @@
       var merged = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, saved || {});
       var legacyMap = { default: "nanumRound", gothic: "notoSansKR", myeongjo: "notoSerifKR", soft: "gowunDodum", nanumPen: "nanumRound", nanumBrush: "nanumRound", eastSeaDokdo: "nanumRound" };
       if (legacyMap[merged.fontFamily]) merged.fontFamily = legacyMap[merged.fontFamily];
+      merged.fontSize = migrateLegacyFontSize(merged.fontSize, BIBLE_FONT_CHECKPOINTS);
+      merged.generalFontSize = migrateLegacyFontSize(merged.generalFontSize, GENERAL_FONT_CHECKPOINTS);
+      merged.brightness = clampSlider(merged.brightness, 100);
+      if (BG_THEMES.indexOf(merged.bgTheme) < 0) merged.bgTheme = "cream";
       return merged;
     } catch (e) {
       return Object.assign({}, DEFAULT_DISPLAY_SETTINGS);
     }
   }
 
+  function applyBrightness(value) {
+    var v = clampSlider(value, 100);
+    var overlay = els.brightnessOverlay || document.getElementById("brightnessOverlay");
+    if (!overlay) return;
+    var dim = ((100 - v) / 100) * 0.65; /* 완전히 검게 만들진 않고 최대 65%까지만 어둡게 */
+    overlay.style.opacity = String(dim);
+  }
+
+  function debounce(fn, wait) {
+    var timer;
+    return function () {
+      var args = arguments, ctx = this;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(ctx, args); }, wait);
+    };
+  }
+
   var generalFontBaseSizes = new WeakMap();
 
   function isBibleTextElement(el) {
     if (!el || !el.closest) return false;
-    return !!el.closest('#readScreen .read-verse-text, #appScreen .verse-guide, #appScreen .write-overlay, #appScreen .write-input, #compareScreen .compare-translation-text, #settingsScreen .settings-preview p');
+    return !!el.closest('#readScreen .read-verse-text, #appScreen .verse-guide, #appScreen .write-overlay, #appScreen .write-input, #compareScreen .compare-translation-text, #settingsScreen .settings-preview p, .read-book-picker-list, .read-chapter-picker-area');
   }
 
   function hasDirectText(el) {
@@ -5226,7 +5299,7 @@
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
     var el;
     while ((el = walker.nextNode())) {
-      if (isBibleTextElement(el) || el.closest('#fontSizeOptions, #generalFontSizeOptions, #fontFamilyOptions, #settingsScreen .settings-actions')) continue;
+      if (isBibleTextElement(el) || el.closest('#settingsScreen .settings-slider-row, #fontFamilyOptions, #settingsScreen .settings-actions')) continue;
       if (!hasDirectText(el)) continue;
       if (!generalFontBaseSizes.has(el)) {
         var computed = parseFloat(window.getComputedStyle(el).fontSize);
@@ -5238,6 +5311,12 @@
       el.style.lineHeight = '';
     }
   }
+
+  /* 슬라이더를 드래그하는 동안 매 tick마다 body 전체를 훑는 건 무겁기 때문에
+     실제 재계산은 살짝 늦춰서(디바운스) 적용합니다. */
+  var applyGeneralFontScaleDebounced = debounce(function (scale) {
+    applyGeneralFontScale(scale);
+  }, 60);
 
   function isActivelyEditingText() {
     var el = document.activeElement;
@@ -5257,8 +5336,7 @@
     }
     generalFontObserver._pending = false;
     var current = loadDisplaySettings();
-    var generalMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
-    applyGeneralFontScale(generalMap[current.generalFontSize] || 1);
+    applyGeneralFontScale(generalScaleFromSlider(current.generalFontSize));
   }
 
   var generalFontObserver = new MutationObserver(function() {
@@ -5279,9 +5357,15 @@
     try { generalFontObserver.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
   }
 
+  function syncSettingsSliderUI(inputEl, valueEl, value) {
+    if (inputEl) {
+      inputEl.value = value;
+      inputEl.style.setProperty("--pct", value + "%");
+    }
+    if (valueEl) valueEl.textContent = String(Math.round(value));
+  }
+
   function applyDisplaySettings(settings) {
-    var sizeMap = { small: 0.90, normal: 1, large: 1.16, xlarge: 1.34 };
-    var generalSizeMap = { small: 0.92, normal: 1, large: 1.14, xlarge: 1.28 };
     var familyMap = {
       nanumRound: '"NanumSquareRoundB", sans-serif',
       baeminJua: '"BM JUA", sans-serif',
@@ -5296,21 +5380,29 @@
       jua: '"Jua", sans-serif',
       doHyeon: '"Do Hyeon", sans-serif'
     };
+    var bibleScale = bibleScaleFromSlider(settings.fontSize);
+    var generalScale = generalScaleFromSlider(settings.generalFontSize);
     var root = document.documentElement;
-    root.style.setProperty("--bible-font-scale", sizeMap[settings.fontSize] || 1);
+    root.style.setProperty("--bible-font-scale", bibleScale);
     root.style.setProperty("--user-font-family", familyMap[settings.fontFamily] || familyMap.nanumRound);
-    applyGeneralFontScale(generalSizeMap[settings.generalFontSize] || 1);
-    root.setAttribute("data-font-size", settings.fontSize || "normal");
-    root.setAttribute("data-general-font-size", settings.generalFontSize || "normal");
+    applyGeneralFontScale(generalScale);
+    applyBrightness(settings.brightness);
+    root.setAttribute("data-font-size", settings.fontSize);
+    root.setAttribute("data-general-font-size", settings.generalFontSize);
+    root.setAttribute("data-general-font-size-bucket", generalFontSizeBucket(generalScale));
     root.setAttribute("data-font-family", settings.fontFamily || "default");
+    root.setAttribute("data-bg-theme", settings.bgTheme || "cream");
     updateReadFontSizeValue(settings.fontSize);
+    updateWriteFontSizeValue(settings.fontSize);
 
-    document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
-      btn.classList.toggle("selected", btn.getAttribute("data-font-size") === settings.fontSize);
+    syncSettingsSliderUI(els.fontSizeSlider, els.fontSizeSliderValue, settings.fontSize);
+    syncSettingsSliderUI(els.generalFontSizeSlider, els.generalFontSizeSliderValue, settings.generalFontSize);
+    syncSettingsSliderUI(els.brightnessSlider, els.brightnessValue, settings.brightness);
+
+    document.querySelectorAll("#bgThemeOptions .bg-theme-swatch").forEach(function(btn) {
+      btn.classList.toggle("selected", btn.getAttribute("data-bg-theme") === (settings.bgTheme || "cream"));
     });
-    document.querySelectorAll("#generalFontSizeOptions button").forEach(function(btn) {
-      btn.classList.toggle("selected", btn.getAttribute("data-general-font-size") === (settings.generalFontSize || "normal"));
-    });
+
     document.querySelectorAll("[data-font-family]").forEach(function(btn) {
       if (btn.closest("#fontFamilyOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-family") === settings.fontFamily);
     });
@@ -5351,23 +5443,49 @@
     applyDisplaySettings(DEFAULT_DISPLAY_SETTINGS);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_DISPLAY_SETTINGS)); } catch (e) {}
   });
-  document.querySelectorAll("#generalFontSizeOptions button").forEach(function(btn) {
+  if (els.brightnessSlider) els.brightnessSlider.addEventListener("input", function() {
+    var v = clampSlider(els.brightnessSlider.value, 100);
+    els.brightnessSlider.style.setProperty("--pct", v + "%");
+    if (els.brightnessValue) els.brightnessValue.textContent = String(v);
+    applyBrightness(v);
+    var settings = loadDisplaySettings();
+    settings.brightness = v;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  });
+
+  if (els.fontSizeSlider) els.fontSizeSlider.addEventListener("input", function() {
+    var v = clampSlider(els.fontSizeSlider.value, 50);
+    els.fontSizeSlider.style.setProperty("--pct", v + "%");
+    if (els.fontSizeSliderValue) els.fontSizeSliderValue.textContent = String(v);
+    document.documentElement.style.setProperty("--bible-font-scale", bibleScaleFromSlider(v));
+    updateReadFontSizeValue(v);
+    updateWriteFontSizeValue(v);
+    var settings = loadDisplaySettings();
+    settings.fontSize = v;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  });
+
+  if (els.generalFontSizeSlider) els.generalFontSizeSlider.addEventListener("input", function() {
+    var v = clampSlider(els.generalFontSizeSlider.value, 50);
+    els.generalFontSizeSlider.style.setProperty("--pct", v + "%");
+    if (els.generalFontSizeSliderValue) els.generalFontSizeSliderValue.textContent = String(v);
+    var scale = generalScaleFromSlider(v);
+    document.documentElement.setAttribute("data-general-font-size", v);
+    document.documentElement.setAttribute("data-general-font-size-bucket", generalFontSizeBucket(scale));
+    applyGeneralFontScaleDebounced(scale);
+    var settings = loadDisplaySettings();
+    settings.generalFontSize = v;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  });
+  document.querySelectorAll("#bgThemeOptions .bg-theme-swatch").forEach(function(btn) {
     btn.addEventListener("click", function() {
       var settings = loadDisplaySettings();
-      settings.generalFontSize = btn.getAttribute("data-general-font-size");
+      settings.bgTheme = btn.getAttribute("data-bg-theme");
       applyDisplaySettings(settings);
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     });
   });
 
-  document.querySelectorAll("#fontSizeOptions button").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      var settings = loadDisplaySettings();
-      settings.fontSize = btn.getAttribute("data-font-size");
-      applyDisplaySettings(settings);
-      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
-    });
-  });
   document.querySelectorAll("#fontFamilyOptions button").forEach(function(btn) {
     btn.addEventListener("click", function() {
       var settings = loadDisplaySettings();
