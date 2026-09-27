@@ -118,6 +118,9 @@
     brightnessValue: document.getElementById("brightnessValue"),
     brightnessOverlay: document.getElementById("brightnessOverlay"),
     bgThemeOptions: document.getElementById("bgThemeOptions"),
+    swipeChapterToggle: document.getElementById("swipeChapterToggle"),
+    swipeSensitivityRow: document.getElementById("swipeSensitivityRow"),
+    swipeSensitivityOptions: document.getElementById("swipeSensitivityOptions"),
     fontSizeSlider: document.getElementById("fontSizeSlider"),
     fontSizeSliderValue: document.getElementById("fontSizeSliderValue"),
     generalFontSizeSlider: document.getElementById("generalFontSizeSlider"),
@@ -272,8 +275,6 @@
     compareScreen: document.getElementById("compareScreen"),
     closeCompareBtn: document.getElementById("closeCompareBtn"),
     compareBottomCloseBtn: document.getElementById("compareBottomCloseBtn"),
-    comparePrevVerseBtn: document.getElementById("comparePrevVerseBtn"),
-    compareNextVerseBtn: document.getElementById("compareNextVerseBtn"),
     compareRef: document.getElementById("compareRef"),
     compareCards: document.getElementById("compareCards"),
 
@@ -356,8 +357,43 @@
 
     bookmarksScreen: document.getElementById("bookmarksScreen"),
     bookmarksList: document.getElementById("bookmarksList"),
-    closeBookmarksBtn: document.getElementById("closeBookmarksBtn")
+    closeBookmarksBtn: document.getElementById("closeBookmarksBtn"),
+
+    appAlertOverlay: document.getElementById("appAlertOverlay"),
+    appAlertMessage: document.getElementById("appAlertMessage"),
+    appAlertOkBtn: document.getElementById("appAlertOkBtn")
   };
+
+  /* ---------------- 앱 스타일 알림창 (alert() 대체) ---------------- */
+  var appAlertQueue = [];
+  var appAlertShowing = false;
+  function appAlertShowNext() {
+    if (appAlertShowing || !appAlertQueue.length) return;
+    if (!els.appAlertOverlay || !els.appAlertMessage) {
+      // fallback: 요소가 없으면 기존 방식대로
+      var item = appAlertQueue.shift();
+      window.alert(item.message);
+      if (item.callback) item.callback();
+      appAlertShowNext();
+      return;
+    }
+    appAlertShowing = true;
+    var current = appAlertQueue[0];
+    els.appAlertMessage.textContent = current.message;
+    els.appAlertOverlay.classList.remove("hidden");
+  }
+  function appAlertClose() {
+    if (!appAlertShowing) return;
+    var current = appAlertQueue.shift();
+    els.appAlertOverlay.classList.add("hidden");
+    appAlertShowing = false;
+    if (current && current.callback) current.callback();
+    appAlertShowNext();
+  }
+  function appAlert(message, callback) {
+    appAlertQueue.push({ message: message, callback: callback });
+    appAlertShowNext();
+  }
 
   var state = {
     bookNo: null,
@@ -756,17 +792,17 @@
     if (!savedPin) {
       var newPin = prompt("관리자 비밀번호가 아직 없어요.\n" + actionLabel + "을(를) 하려면 새 관리자 비밀번호를 만들어주세요 (4자리 이상).");
       if (!newPin || newPin.trim().length < 4) {
-        alert("비밀번호는 4자리 이상이어야 해요.");
+        appAlert("비밀번호는 4자리 이상이어야 해요.");
         return false;
       }
       try { localStorage.setItem(ADMIN_PIN_KEY, newPin.trim()); } catch (e) {}
-      alert("관리자 비밀번호가 설정되었어요. 이 번호를 꼭 기억해두세요.");
+      appAlert("관리자 비밀번호가 설정되었어요. 이 번호를 꼭 기억해두세요.");
       return true;
     }
     var entered = prompt("관리자 비밀번호를 입력하세요.");
     if (entered === null) return false;
     if (entered !== savedPin) {
-      alert("비밀번호가 올바르지 않아요.");
+      appAlert("비밀번호가 올바르지 않아요.");
       return false;
     }
     return true;
@@ -795,7 +831,7 @@
   function submitBirth(birth) {
     birth = (birth || "").replace(/[^0-9]/g, "");
     if (birth.length !== 6) {
-      alert("생년월일 6자리를 입력해주세요. (예: YYMMDD 형식의 숫자 6자리)");
+      appAlert("생년월일 6자리를 입력해주세요. (예: YYMMDD 형식의 숫자 6자리)");
       return;
     }
     state.pendingBirth = birth;
@@ -1198,7 +1234,7 @@
     return biblePlanHistIndex[dayNum] || null;
   }
   function biblePlanTotalDays(method) {
-    return method === "order" ? (window.BIBLE_PLAN_ORDER || []).length : 364;
+    return method === "order" ? (window.BIBLE_PLAN_ORDER || []).length : (window.BIBLE_PLAN_HISTORICAL || []).length;
   }
   function biblePlanTotalChapters(method) {
     if (biblePlanTotalsCache[method] != null) return biblePlanTotalsCache[method];
@@ -2405,24 +2441,33 @@
 
     var keys = verseKeysSorted(DATA[item.bno].chapters[String(item.ch)]);
     var idx = keys.indexOf(String(item.vs));
-    els.comparePrevVerseBtn.disabled = false;
-    els.compareNextVerseBtn.disabled = false;
+    compareAtFirstVerse = false;
+    compareAtLastVerse = false;
 
     if (idx <= 0) {
       var bpos = META.order.indexOf(item.bno);
       var chNums = chapterNumsSorted(item.bno);
       var chPos = chNums.indexOf(Number(item.ch));
-      if (chPos <= 0 && bpos <= 0) els.comparePrevVerseBtn.disabled = true;
+      if (chPos <= 0 && bpos <= 0) compareAtFirstVerse = true;
     }
     if (idx >= keys.length - 1) {
       var bpos2 = META.order.indexOf(item.bno);
       var chNums2 = chapterNumsSorted(item.bno);
       var chPos2 = chNums2.indexOf(Number(item.ch));
-      if (chPos2 >= chNums2.length - 1 && bpos2 >= META.order.length - 1) els.compareNextVerseBtn.disabled = true;
+      if (chPos2 >= chNums2.length - 1 && bpos2 >= META.order.length - 1) compareAtLastVerse = true;
     }
+  }
 
-    els.comparePrevVerseBtn.dataset.vkey = item.bno + "-" + item.ch + "-" + item.vs;
-    els.compareNextVerseBtn.dataset.vkey = item.bno + "-" + item.ch + "-" + item.vs;
+  /* 성경 맨 처음/맨 끝 절 여부(스와이프로 더 이상 이동할 수 없을 때 살짝 흔드는 효과에 사용) */
+  var compareAtFirstVerse = false;
+  var compareAtLastVerse = false;
+
+  function shakeCompareCards() {
+    if (!els.compareCards) return;
+    els.compareCards.classList.remove("edge-shake");
+    /* 같은 클래스를 연속으로 다시 추가해도 애니메이션이 재생되도록 리플로우를 강제합니다. */
+    void els.compareCards.offsetWidth;
+    els.compareCards.classList.add("edge-shake");
   }
 
   function getAdjacentReadVerse(delta) {
@@ -2500,7 +2545,7 @@
   function openCompare() {
     var item = currentReadVerse();
     if (!item) {
-      alert("먼저 비교할 구절을 선택해주세요.");
+      appAlert("먼저 비교할 구절을 선택해주세요.");
       return;
     }
     renderCompareVerse(item);
@@ -2531,7 +2576,7 @@
   function openCommentaryForVerse(item) {
     if (!item) item = currentReadVerse();
     if (!item) {
-      alert("먼저 주석을 볼 구절을 선택해주세요.");
+      appAlert("먼저 주석을 볼 구절을 선택해주세요.");
       return;
     }
 
@@ -2799,22 +2844,23 @@
 
   function copySelectedVerses() {
     var text = getSelectedCopyText();
-    if (!text) { alert("복사할 말씀을 먼저 선택해주세요."); return; }
+    if (!text) { appAlert("복사할 말씀을 먼저 선택해주세요."); return; }
     var done = function () {
-      alert("선택한 말씀을 복사했습니다.\n카카오톡, 문자, 메신저 등에 붙여넣어 보내세요.");
-      copyMode = false;
-      clearCopyVerseSelection();
-      updateCopyToolbar();
+      appAlert("선택한 말씀을 복사했습니다.\n카카오톡, 문자, 메신저 등에 붙여넣어 보내세요.", function () {
+        copyMode = false;
+        clearCopyVerseSelection();
+        updateCopyToolbar();
+      });
     };
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(done).catch(function () {
         if (fallbackCopyText(text)) done();
-        else alert("복사하지 못했습니다. 말씀을 다시 선택해 주세요.");
+        else appAlert("복사하지 못했습니다. 말씀을 다시 선택해 주세요.");
       });
     } else if (fallbackCopyText(text)) {
       done();
     } else {
-      alert("복사하지 못했습니다. 말씀을 다시 선택해 주세요.");
+      appAlert("복사하지 못했습니다. 말씀을 다시 선택해 주세요.");
     }
   }
 
@@ -2863,6 +2909,11 @@
   }
 
   /* ---------------- 성경 읽기 상단 선택창 ---------------- */
+  /* 메뉴만 숨기고 형광펜 모드(highlightColor) 자체는 건드리지 않습니다.
+     스크롤할 때도 이 함수가 불리는데, 스크롤 중에 형광펜 모드까지 꺼지면
+     "형광펜 켜고 스크롤하면서 여러 절 칠하기"가 안 되기 때문입니다.
+     형광펜 모드를 실제로 꺼야 하는 곳(다른 도구로 전환하는 지점)에서는
+     이 함수와 별도로 exitPaintMode()를 호출합니다. */
   function closeReadToolsMenus() {
     if (els.readToolsMenu) els.readToolsMenu.classList.add("hidden");
     if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
@@ -2896,6 +2947,7 @@
   function openReadBookPicker() {
     if (!els.readBookPickerScreen) return;
     closeReadToolsMenus();
+    exitPaintMode();
     els.readBookPickerScreen.classList.remove("hidden");
     els.readBookPickerList.classList.remove("hidden");
     els.readChapterPickerArea.classList.add("hidden");
@@ -2995,6 +3047,7 @@
   function openReadTranslationPicker() {
     if (!els.readTranslationPickerScreen) return;
     closeReadToolsMenus();
+    exitPaintMode();
     els.readTranslationPickerList.innerHTML = "";
     getTranslationList().forEach(function(t){
       var btn = document.createElement("button");
@@ -4688,6 +4741,7 @@
 
   if (els.readHomeBtn) els.readHomeBtn.addEventListener("click", function () {
     closeReadToolsMenus();
+    exitPaintMode();
     closeReadBookPicker();
     closeReadTranslationPicker();
     closeReadBookmarkPanel();
@@ -4705,19 +4759,22 @@
 
   if (els.readTopSearchBtn) els.readTopSearchBtn.addEventListener("click", function(){
     closeReadToolsMenus();
+    exitPaintMode();
     openBibleSearch();
   });
   if (els.readTopCompareBtn) els.readTopCompareBtn.addEventListener("click", function(){
     closeReadToolsMenus();
+    exitPaintMode();
     openCompare();
   });
   if (els.readTopFontSizeBtn) els.readTopFontSizeBtn.addEventListener("click", function(){
     if (els.readFontSizeMenu) els.readFontSizeMenu.classList.toggle("hidden");
-    if (els.readHighlightMenu) els.readHighlightMenu.classList.add("hidden");
+    exitPaintMode();
     updateReadFontSizeValue(loadDisplaySettings().fontSize);
   });
   if (els.readTopCloseBtn) els.readTopCloseBtn.addEventListener("click", function(){
     closeReadToolsMenus();
+    exitPaintMode();
     closeReadBookPicker();
     closeReadTranslationPicker();
     closeReadBookmarkPanel();
@@ -4726,6 +4783,16 @@
   });
 
   if (els.readBottomHighlightBtn) els.readBottomHighlightBtn.addEventListener("click", function(){
+    /* 형광펜 메뉴가 이미 열려 있는 상태에서 다시 누르면, 메뉴만 닫히고
+       highlightColor(형광펜 모드)는 그대로 남아있어서 메뉴가 닫힌 뒤에도
+       절을 탭하면 계속 형광펜이 칠해지는 문제가 있었습니다.
+       메뉴가 열려 있었는지를 먼저 확인해서, 열려 있었다면 exitPaintMode()로
+       메뉴와 형광펜 모드를 함께 끕니다. */
+    var menuWasOpen = !!(els.readHighlightMenu && !els.readHighlightMenu.classList.contains("hidden"));
+    if (menuWasOpen) {
+      exitPaintMode();
+      return;
+    }
     /* 형광펜을 켤 때는 복사/예배노트 선택 모드가 남아있지 않도록 먼저 꺼줍니다. */
     exitCopyMode();
     exitSermonSelectionMode();
@@ -4734,9 +4801,9 @@
       highlightColor = HL_COLORS[0].key;
     }
     renderHighlightSwatches();
-    if (els.readHighlightMenu) els.readHighlightMenu.classList.toggle("hidden");
+    if (els.readHighlightMenu) els.readHighlightMenu.classList.remove("hidden");
     if (els.readFontSizeMenu) els.readFontSizeMenu.classList.add("hidden");
-    els.readVerseList.classList.toggle("paint-mode", !!highlightColor);
+    els.readVerseList.classList.add("paint-mode");
   });
 
   if (els.readBottomReflectionBtn) els.readBottomReflectionBtn.addEventListener("click", function(){
@@ -4749,17 +4816,18 @@
       var keys = selectedEls.map(function (el) { return el.getAttribute("data-vkey"); });
       var text = getSelectedCopyText(keys);
       var done = function () {
-        alert((selectedEls.length > 1 ? "선택한 말씀을 복사했습니다." : "말씀을 복사했습니다.") + "\n카카오톡, 문자, 메신저 등에 붙여넣어 보내세요.");
-        clearVerseSelection();
+        appAlert((selectedEls.length > 1 ? "선택한 말씀을 복사했습니다." : "말씀을 복사했습니다.") + "\n카카오톡, 문자, 메신저 등에 붙여넣어 보내세요.", function () {
+          clearVerseSelection();
+        });
       };
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(done).catch(function () {
-          if (fallbackCopyText(text)) done(); else alert("복사하지 못했습니다. 다시 시도해 주세요.");
+          if (fallbackCopyText(text)) done(); else appAlert("복사하지 못했습니다. 다시 시도해 주세요.");
         });
       } else if (fallbackCopyText(text)) {
         done();
       } else {
-        alert("복사하지 못했습니다. 다시 시도해 주세요.");
+        appAlert("복사하지 못했습니다. 다시 시도해 주세요.");
       }
       return;
     }
@@ -4770,7 +4838,7 @@
     copyMode = !copyMode;
     if (!copyMode) clearCopyVerseSelection();
     updateCopyToolbar();
-    if (copyMode) alert("복사할 말씀을 선택한 뒤 '복사하기'를 눌러주세요.");
+    if (copyMode) appAlert("복사할 말씀을 선택한 뒤 '복사하기'를 눌러주세요.");
   });
 
   function updateReadFontSizeValue(size) {
@@ -4860,8 +4928,12 @@
 
   if (els.readHighlightMenu) els.readHighlightMenu.addEventListener("click", function(e){ e.stopPropagation(); });
   document.addEventListener("click", function(e){
-    if (!e.target.closest || (!e.target.closest("#readScreen .read-top-nav") && !e.target.closest("#readScreen .read-bottom-nav") && !e.target.closest("#readFontSizeMenu") && !e.target.closest("#readHighlightMenu"))) {
+    /* #readVerseList(절 본문)는 제외합니다 — 형광펜 모드에서 절을 연달아 탭해서
+       칠하는 중에, 이 "바깥 클릭" 처리가 절 탭을 "메뉴 바깥 클릭"으로 오인해서
+       한 절만 칠하면 바로 형광펜 모드가 꺼져버리는 문제가 있었습니다. */
+    if (!e.target.closest || (!e.target.closest("#readScreen .read-top-nav") && !e.target.closest("#readScreen .read-bottom-nav") && !e.target.closest("#readFontSizeMenu") && !e.target.closest("#readHighlightMenu") && !e.target.closest("#readVerseList"))) {
       closeReadToolsMenus();
+      exitPaintMode();
     }
   });
 
@@ -4902,7 +4974,7 @@
   function openReflectionFromReadScreen() {
     var item = currentReadVerse();
     if (!item) {
-      alert("먼저 묵상할 말씀을 선택해주세요.");
+      appAlert("먼저 묵상할 말씀을 선택해주세요.");
       return;
     }
     els.readScreen.classList.add("hidden");
@@ -4979,6 +5051,75 @@
   if (els.readPrevChTopBtn) els.readPrevChTopBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   if (els.readNextChTopBtn) els.readNextChTopBtn.addEventListener("click", function () { readAdjacentChapter(1); });
 
+  /* ---------------- 성경책보기: 손동작(스와이프)으로 장 넘기기 ----------------
+     장 이동 버튼이 작아서 절을 잘못 누르는 문제가 있어, 말씀 목록 위에서
+     좌우로 손가락을 크게 움직이면(스와이프) 장이 넘어가도록 추가합니다.
+     세로 스크롤이나 절 선택(탭)과 헷갈리지 않도록, 움직임이 뚜렷하게
+     "가로" 방향일 때만(세로 움직임의 1.6배 이상) 스와이프로 인정합니다. */
+  (function () {
+    var swipe = { active: false, startX: 0, startY: 0, startTime: 0, axis: null };
+    var MAX_DURATION = 700;
+    var DECIDE_THRESHOLD = 12;
+    var AXIS_RATIO = 1.6;
+
+    function currentMinDistance() {
+      var settings = loadDisplaySettings();
+      return SWIPE_MIN_DISTANCE_MAP[settings.swipeSensitivity] || SWIPE_MIN_DISTANCE_MAP.normal;
+    }
+
+    function onTouchStart(e) {
+      if (!loadDisplaySettings().swipeEnabled) { swipe.active = false; return; }
+      if (!e.touches || e.touches.length !== 1) { swipe.active = false; return; }
+      var t = e.touches[0];
+      swipe.active = true;
+      swipe.startX = t.clientX;
+      swipe.startY = t.clientY;
+      swipe.startTime = Date.now();
+      swipe.axis = null;
+    }
+
+    function onTouchMove(e) {
+      if (!swipe.active || !e.touches || e.touches.length !== 1) return;
+      var t = e.touches[0];
+      var dx = t.clientX - swipe.startX;
+      var dy = t.clientY - swipe.startY;
+      if (!swipe.axis) {
+        if (Math.abs(dx) > DECIDE_THRESHOLD || Math.abs(dy) > DECIDE_THRESHOLD) {
+          swipe.axis = (Math.abs(dx) > Math.abs(dy) * AXIS_RATIO) ? "horizontal" : "vertical";
+        }
+      }
+      if (swipe.axis === "horizontal") {
+        /* 가로 스와이프로 확정되면, 세로 스크롤/절 탭(클릭)으로 이어지지 않도록 기본 동작을 막습니다. */
+        e.preventDefault();
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (!swipe.active) return;
+      swipe.active = false;
+      var axis = swipe.axis;
+      var touch = (e.changedTouches && e.changedTouches[0]) || null;
+      if (axis !== "horizontal" || !touch) return;
+      var dx = touch.clientX - swipe.startX;
+      var elapsed = Date.now() - swipe.startTime;
+      if (elapsed > MAX_DURATION || Math.abs(dx) < currentMinDistance()) return;
+      if (dx < 0) {
+        readAdjacentChapter(1);  // 왼쪽으로 스와이프 → 다음 장
+      } else {
+        readAdjacentChapter(-1); // 오른쪽으로 스와이프 → 이전 장
+      }
+    }
+
+    function onTouchCancel() { swipe.active = false; }
+
+    if (els.readVerseList) {
+      els.readVerseList.addEventListener("touchstart", onTouchStart, { passive: true });
+      els.readVerseList.addEventListener("touchmove", onTouchMove, { passive: false });
+      els.readVerseList.addEventListener("touchend", onTouchEnd);
+      els.readVerseList.addEventListener("touchcancel", onTouchCancel);
+    }
+  })();
+
   els.readVerseSelect.addEventListener("change", function () {
     scrollToReadVerse(els.readVerseSelect.value);
     var el = document.getElementById("rv-" + readState.bookNo + "-" + readState.chapter + "-" + els.readVerseSelect.value);
@@ -5032,8 +5173,75 @@
   if (els.compareBtn) els.compareBtn.addEventListener("click", openCompare);
   els.closeCompareBtn.addEventListener("click", closeCompare);
   els.compareBottomCloseBtn.addEventListener("click", closeCompare);
-  els.comparePrevVerseBtn.addEventListener("click", function () { moveCompareVerse(-1); });
-  els.compareNextVerseBtn.addEventListener("click", function () { moveCompareVerse(1); });
+
+  /* ---------------- 구절비교: 손동작(스와이프)으로 이전/다음 절 넘기기 ----------------
+     장 넘기기와 같은 원리로, 세로 스크롤(번역본 카드들)과 헷갈리지 않도록
+     뚜렷하게 "가로" 방향일 때만 스와이프로 인정합니다. 성경 맨 처음/맨 끝
+     절에서는 더 이상 이동하지 않고 살짝 흔들리는 효과로 알려줍니다. */
+  (function () {
+    var swipe = { active: false, startX: 0, startY: 0, startTime: 0, axis: null };
+    var MAX_DURATION = 700;
+    var DECIDE_THRESHOLD = 12;
+    var AXIS_RATIO = 1.6;
+
+    function currentMinDistance() {
+      var settings = loadDisplaySettings();
+      return SWIPE_MIN_DISTANCE_MAP[settings.swipeSensitivity] || SWIPE_MIN_DISTANCE_MAP.normal;
+    }
+
+    function onTouchStart(e) {
+      if (!loadDisplaySettings().swipeEnabled) { swipe.active = false; return; }
+      if (!e.touches || e.touches.length !== 1) { swipe.active = false; return; }
+      var t = e.touches[0];
+      swipe.active = true;
+      swipe.startX = t.clientX;
+      swipe.startY = t.clientY;
+      swipe.startTime = Date.now();
+      swipe.axis = null;
+    }
+
+    function onTouchMove(e) {
+      if (!swipe.active || !e.touches || e.touches.length !== 1) return;
+      var t = e.touches[0];
+      var dx = t.clientX - swipe.startX;
+      var dy = t.clientY - swipe.startY;
+      if (!swipe.axis) {
+        if (Math.abs(dx) > DECIDE_THRESHOLD || Math.abs(dy) > DECIDE_THRESHOLD) {
+          swipe.axis = (Math.abs(dx) > Math.abs(dy) * AXIS_RATIO) ? "horizontal" : "vertical";
+        }
+      }
+      if (swipe.axis === "horizontal") {
+        e.preventDefault();
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (!swipe.active) return;
+      swipe.active = false;
+      var axis = swipe.axis;
+      var touch = (e.changedTouches && e.changedTouches[0]) || null;
+      if (axis !== "horizontal" || !touch) return;
+      var dx = touch.clientX - swipe.startX;
+      var elapsed = Date.now() - swipe.startTime;
+      if (elapsed > MAX_DURATION || Math.abs(dx) < currentMinDistance()) return;
+      if (dx < 0) {
+        /* 왼쪽으로 스와이프 → 다음 절 */
+        if (compareAtLastVerse) shakeCompareCards(); else moveCompareVerse(1);
+      } else {
+        /* 오른쪽으로 스와이프 → 이전 절 */
+        if (compareAtFirstVerse) shakeCompareCards(); else moveCompareVerse(-1);
+      }
+    }
+
+    function onTouchCancel() { swipe.active = false; }
+
+    if (els.compareCards) {
+      els.compareCards.addEventListener("touchstart", onTouchStart, { passive: true });
+      els.compareCards.addEventListener("touchmove", onTouchMove, { passive: false });
+      els.compareCards.addEventListener("touchend", onTouchEnd);
+      els.compareCards.addEventListener("touchcancel", onTouchCancel);
+    }
+  })();
   els.compareScreen.addEventListener("click", function (e) {
     if (e.target === els.compareScreen) closeCompare();
   });
@@ -5086,6 +5294,11 @@
   els.closeStatsBtn.addEventListener("click", closeStats);
   els.statsScreen.addEventListener("click", function (e) {
     if (e.target === els.statsScreen) closeStats();
+  });
+
+  if (els.appAlertOkBtn) els.appAlertOkBtn.addEventListener("click", appAlertClose);
+  if (els.appAlertOverlay) els.appAlertOverlay.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === "Escape") appAlertClose();
   });
 
   els.bookmarksBtn.addEventListener("click", openBookmarks);
@@ -5197,8 +5410,10 @@
 
   /* ---------------- 설정: 화면 밝기·글씨 크기·글씨체 ---------------- */
   var SETTINGS_KEY = "ourBibleDisplaySettings";
-  var DEFAULT_DISPLAY_SETTINGS = { fontSize: 50, generalFontSize: 50, fontFamily: "nanumRound", brightness: 100, bgTheme: "cream" };
+  var DEFAULT_DISPLAY_SETTINGS = { fontSize: 50, generalFontSize: 50, fontFamily: "nanumRound", brightness: 100, bgTheme: "cream", swipeEnabled: true, swipeSensitivity: "normal" };
   var BG_THEMES = ["cream", "white", "sage", "lavender", "dark"];
+  var SWIPE_SENSITIVITIES = ["soft", "normal", "strong"];
+  var SWIPE_MIN_DISTANCE_MAP = { soft: 40, normal: 60, strong: 90 };
 
   /* 글씨 크기는 예전엔 4단계(작게/보통/크게/아주 크게) 문자열이었지만,
      이제는 0~100 슬라이더 값입니다. 두 크기가 각각 다른 배율 범위를
@@ -5255,6 +5470,8 @@
       merged.generalFontSize = migrateLegacyFontSize(merged.generalFontSize, GENERAL_FONT_CHECKPOINTS);
       merged.brightness = clampSlider(merged.brightness, 100);
       if (BG_THEMES.indexOf(merged.bgTheme) < 0) merged.bgTheme = "cream";
+      merged.swipeEnabled = (merged.swipeEnabled !== false);
+      if (SWIPE_SENSITIVITIES.indexOf(merged.swipeSensitivity) < 0) merged.swipeSensitivity = "normal";
       return merged;
     } catch (e) {
       return Object.assign({}, DEFAULT_DISPLAY_SETTINGS);
@@ -5403,6 +5620,12 @@
       btn.classList.toggle("selected", btn.getAttribute("data-bg-theme") === (settings.bgTheme || "cream"));
     });
 
+    if (els.swipeChapterToggle) els.swipeChapterToggle.checked = !!settings.swipeEnabled;
+    if (els.swipeSensitivityRow) els.swipeSensitivityRow.classList.toggle("disabled", !settings.swipeEnabled);
+    document.querySelectorAll("#swipeSensitivityOptions button").forEach(function(btn) {
+      btn.classList.toggle("selected", btn.getAttribute("data-swipe-sensitivity") === (settings.swipeSensitivity || "normal"));
+    });
+
     document.querySelectorAll("[data-font-family]").forEach(function(btn) {
       if (btn.closest("#fontFamilyOptions")) btn.classList.toggle("selected", btn.getAttribute("data-font-family") === settings.fontFamily);
     });
@@ -5481,6 +5704,22 @@
     btn.addEventListener("click", function() {
       var settings = loadDisplaySettings();
       settings.bgTheme = btn.getAttribute("data-bg-theme");
+      applyDisplaySettings(settings);
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    });
+  });
+
+  if (els.swipeChapterToggle) els.swipeChapterToggle.addEventListener("change", function() {
+    var settings = loadDisplaySettings();
+    settings.swipeEnabled = !!els.swipeChapterToggle.checked;
+    applyDisplaySettings(settings);
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  });
+
+  document.querySelectorAll("#swipeSensitivityOptions button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var settings = loadDisplaySettings();
+      settings.swipeSensitivity = btn.getAttribute("data-swipe-sensitivity");
       applyDisplaySettings(settings);
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
     });
