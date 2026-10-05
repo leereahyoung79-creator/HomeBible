@@ -204,6 +204,16 @@
     readTranslationSelect: document.getElementById("readTranslationSelect"),
     readBookName: document.getElementById("readBookName"),
     readChapterLabel: document.getElementById("readChapterLabel"),
+    readChapterNumberStrip: document.getElementById("readChapterNumberStrip"),
+    readPrevChapterNumber: document.getElementById("readPrevChapterNumber"),
+    readCurrentChapterNumber: document.getElementById("readCurrentChapterNumber"),
+    readNextChapterNumber: document.getElementById("readNextChapterNumber"),
+    readLocationHeading: document.getElementById("readLocationHeading"),
+    readLocationPill: document.getElementById("readLocationPill"),
+    readChapterToast: document.getElementById("readChapterToast"),
+    readChapterToastDir: document.getElementById("readChapterToastDir"),
+    readChapterToastText: document.getElementById("readChapterToastText"),
+    readLocationPillText: document.getElementById("readLocationPillText"),
     readVerseList: document.getElementById("readVerseList"),
     selectedVerseActions: document.getElementById("selectedVerseActions"),
     selectedVerseActionsTitle: document.getElementById("selectedVerseActionsTitle"),
@@ -283,9 +293,12 @@
     sermonEditor: document.getElementById("sermonEditor"),
     sermonSelectedRef: document.getElementById("sermonSelectedRef"),
     sermonSelectedVerses: document.getElementById("sermonSelectedVerses"),
-    sermonInsightInput: document.getElementById("sermonInsightInput"),
-    sermonApplicationInput: document.getElementById("sermonApplicationInput"),
-    sermonPrayerInput: document.getElementById("sermonPrayerInput"),
+    sermonSelectedVersesWrap: document.getElementById("sermonSelectedVersesWrap"),
+    sermonPassageToggle: document.getElementById("sermonPassageToggle"),
+    sermonPassageChevron: document.getElementById("sermonPassageChevron"),
+    sermonPassageToggleText: document.getElementById("sermonPassageToggleText"),
+    sermonTitleInput: document.getElementById("sermonTitleInput"),
+    sermonNoteInput: document.getElementById("sermonNoteInput"),
     sermonEditorSaveBtn: document.getElementById("sermonEditorSaveBtn"),
     sermonEditorDeleteBtn: document.getElementById("sermonEditorDeleteBtn"),
     sermonEditorSaved: document.getElementById("sermonEditorSaved"),
@@ -361,7 +374,11 @@
 
     appAlertOverlay: document.getElementById("appAlertOverlay"),
     appAlertMessage: document.getElementById("appAlertMessage"),
-    appAlertOkBtn: document.getElementById("appAlertOkBtn")
+    appAlertOkBtn: document.getElementById("appAlertOkBtn"),
+    appConfirmOverlay: document.getElementById("appConfirmOverlay"),
+    appConfirmMessage: document.getElementById("appConfirmMessage"),
+    appConfirmOkBtn: document.getElementById("appConfirmOkBtn"),
+    appConfirmCancelBtn: document.getElementById("appConfirmCancelBtn")
   };
 
   /* ---------------- 앱 스타일 알림창 (alert() 대체) ---------------- */
@@ -393,6 +410,29 @@
   function appAlert(message, callback) {
     appAlertQueue.push({ message: message, callback: callback });
     appAlertShowNext();
+  }
+
+  /* ---------------- 앱 스타일 확인창 (confirm() 대체) ----------------
+     "취소 / 확인(삭제)" 두 버튼. 확인을 눌렀을 때만 onYes가 실행됩니다.
+     (시스템 confirm()은 코드를 멈추고 기다리지만 이 창은 기다리지 않으므로,
+      확인 후에 할 일은 onYes 안에 넣어야 합니다.) */
+  var appConfirmOnYes = null;
+  function appConfirm(message, onYes, okLabel) {
+    if (!els.appConfirmOverlay || !els.appConfirmMessage) {
+      if (window.confirm(message) && onYes) onYes();
+      return;
+    }
+    appConfirmOnYes = onYes || null;
+    els.appConfirmMessage.textContent = message;
+    if (els.appConfirmOkBtn) els.appConfirmOkBtn.textContent = okLabel || "삭제";
+    els.appConfirmOverlay.classList.remove("hidden");
+  }
+  function appConfirmClose(accepted) {
+    if (!els.appConfirmOverlay) return;
+    els.appConfirmOverlay.classList.add("hidden");
+    var cb = appConfirmOnYes;
+    appConfirmOnYes = null;
+    if (accepted && cb) cb();
   }
 
   var state = {
@@ -1088,8 +1128,9 @@
         e.stopPropagation();
         var date = btn.getAttribute("data-delete-date");
         if (!date) return;
-        if (!confirm(formatGratitudeDateLong(date) + " 기록을 삭제할까요?")) return;
-        deleteGratitudeRecord(date);
+        appConfirm(formatGratitudeDateLong(date) + " 기록을 삭제할까요?", function () {
+          deleteGratitudeRecord(date);
+        });
       });
     });
     els.gratitudeHistoryList.querySelectorAll(".gratitude-history-edit-btn").forEach(function (btn) {
@@ -1993,22 +2034,22 @@
 
       row.querySelector(".note-row-delete").addEventListener("click", function (ev) {
         ev.stopPropagation();
-        if (!confirm(bookName + " " + ch + "장 " + vs + "절의 묵상 노트를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.")) return;
+        appConfirm(bookName + " " + ch + "장 " + vs + "절의 묵상 노트를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.", function () {
+          updateProfile(state.currentBirth, function (profile) {
+            delete profile.notes[key];
+          });
 
-        updateProfile(state.currentBirth, function (profile) {
-          delete profile.notes[key];
+          var pName = getProfile(state.currentBirth).name || "";
+          syncPost("deleteNote", {
+            birth: state.currentBirth,
+            name: pName,
+            bookNo: bno,
+            chapter: ch,
+            verse: vs
+          });
+
+          renderNotesList();
         });
-
-        var pName = getProfile(state.currentBirth).name || "";
-        syncPost("deleteNote", {
-          birth: state.currentBirth,
-          name: pName,
-          bookNo: bno,
-          chapter: ch,
-          verse: vs
-        });
-
-        renderNotesList();
       });
       els.notesList.appendChild(row);
     });
@@ -2232,7 +2273,7 @@
     });
   }
 
-  function openSavedSermonEntry(entry) {
+  function openSavedSermonEntry(entry, dateKey, index) {
     var e = parseSermonEntry(entry);
     var nums = verseNumbersFromEntry(e);
     if (!nums.length || !DATA[e.bno] || !DATA[e.bno].chapters[e.ch]) return;
@@ -2241,16 +2282,20 @@
       return verse ? { bno:String(e.bno), ch:String(e.ch), vs:String(vs), verse:verse } : null;
     }).filter(Boolean);
     if (!sermonEditorSelection.length) return;
-    if (els.sermonNoteDate) els.sermonNoteDate.textContent = "오늘의 예배노트 · " + todayString().replace(/-/g, ".");
+    var date = dateKey || todayString();
+    sermonEditorEntryDate = date;
+    sermonEditorEntryIndex = (typeof index === "number") ? index : -1;
+    updateSermonEditorHeader(date, entry);
+    updateSermonSaveButtonLabel(true);
     if (els.sermonSelectedRef) els.sermonSelectedRef.textContent = e.label || buildSermonSelectionLabel(sermonEditorSelection);
     if (els.sermonSelectedVerses) {
       els.sermonSelectedVerses.innerHTML = sermonEditorSelection.map(function(item){
         return '<div class="sermon-selected-verse"><b>' + escapeHtml2(item.vs + "절") + '</b><span>' + escapeHtml2(item.verse.t) + '</span></div>';
       }).join('');
     }
-    if (els.sermonInsightInput) els.sermonInsightInput.value = e.insight || "";
-    if (els.sermonApplicationInput) els.sermonApplicationInput.value = e.application || "";
-    if (els.sermonPrayerInput) els.sermonPrayerInput.value = e.prayer || "";
+    setSermonPassageExpanded(true);
+    if (els.sermonTitleInput) els.sermonTitleInput.value = e.title || "";
+    if (els.sermonNoteInput) els.sermonNoteInput.value = e.note || "";
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = false;
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "저장된 예배노트";
     if (els.sermonEditor) els.sermonEditor.classList.remove("hidden");
@@ -2262,6 +2307,8 @@
     var bno = readState.bookNo, ch = readState.chapter;
     els.readBookName.textContent = META.books[bno].name;
     els.readChapterLabel.textContent = ch + "장";
+    renderReadChapterNumberStrip(bno, ch);
+    if (pendingChapterAnim) { playChapterTurnEffect(pendingChapterAnim, bno, ch); pendingChapterAnim = 0; }
 
     var versesObj = DATA[bno].chapters[ch];
     var keys = verseKeysSorted(versesObj);
@@ -2335,7 +2382,7 @@
         var entryIndex = Number(parts[2]);
         var rawEntries = ((loadSermonNotes() || {})[todayString()] || []);
         var found = rawEntries[entryIndex] ? parseSermonEntry(rawEntries[entryIndex]) : null;
-        if (found) openSavedSermonEntry(found);
+        if (found) openSavedSermonEntry(found, todayString(), entryIndex);
       });
     });
     updateCopyToolbar();
@@ -3346,6 +3393,33 @@
   var selectedSermonVerses = {};
   var gratitudeHistoryScrollY = 0;
   var sermonEditorSelection = [];
+  var sermonEditorEntryDate = null;  /* 지금 편집 중인 노트가 속한 날짜(YYYY-MM-DD) */
+  var sermonEditorEntryIndex = -1;   /* 그 날짜의 노트 배열에서 몇 번째 항목인지 (-1이면 아직 저장 안 된 새 노트) */
+
+  function setSermonPassageExpanded(expanded) {
+    if (!els.sermonSelectedVersesWrap || !els.sermonPassageToggle) return;
+    els.sermonSelectedVersesWrap.classList.toggle("collapsed", !expanded);
+    els.sermonPassageToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+    if (els.sermonPassageToggleText) els.sermonPassageToggleText.textContent = expanded ? "본문 접기" : "본문 펼치기";
+  }
+
+  /* 편집 화면 상단에 날짜/시간을 보여줍니다. 이미 저장된 노트를 열었을 때는
+     그 노트가 작성/수정된 시간까지 같이 보여주고, 아직 저장 전인 새 노트는
+     시간 없이 날짜만 보여줍니다. */
+  function updateSermonEditorHeader(dateKey, rawEntry) {
+    if (!els.sermonNoteDate) return;
+    if (rawEntry) {
+      els.sermonNoteDate.textContent = formatSermonDateTime(dateKey, [rawEntry]);
+    } else {
+      els.sermonNoteDate.textContent = formatSermonDateKey(dateKey) + " 예배노트";
+    }
+  }
+
+  /* 저장 버튼 문구: 새 노트는 "저장하기", 이미 있는 노트를 고치는 중이면 "수정 저장" */
+  function updateSermonSaveButtonLabel(isExisting) {
+    if (!els.sermonEditorSaveBtn) return;
+    els.sermonEditorSaveBtn.textContent = isExisting ? "수정 저장" : "저장하기";
+  }
 
   function loadSermonNotes() {
     var p = getProfile(state.currentBirth);
@@ -3362,6 +3436,17 @@
     copy.ch = String(copy.ch || "");
     copy.vs = String(copy.vs || "");
     copy.updatedAt = Number(copy.updatedAt) || 0;
+    /* 구글시트(서버)에서 받아온 노트는 title/note가 따로 오지 않고, 저장했던 JSON 글이
+       text 안에 그대로 들어 있습니다(서버는 text를 그대로 보관/반환). 그래서 여기서 꺼냅니다. */
+    if (!copy.title && !copy.note && typeof copy.text === "string") {
+      try {
+        var tobj = JSON.parse(copy.text);
+        if (tobj && typeof tobj === "object" && (tobj.title !== undefined || tobj.note !== undefined)) {
+          copy.title = String(tobj.title || "");
+          copy.note = String(tobj.note || "");
+        }
+      } catch (e) {}
+    }
     if (!copy.insight && !copy.application && !copy.prayer && typeof copy.text === "string") {
       try {
         var obj = JSON.parse(copy.text);
@@ -3375,6 +3460,19 @@
     if (copy.insight === undefined) copy.insight = "";
     if (copy.application === undefined) copy.application = "";
     if (copy.prayer === undefined) copy.prayer = "";
+    if (copy.title === undefined) copy.title = "";
+    /* 이전 형식(깨달은 점/적용/기도 3칸)으로 저장된 노트를 새 형식(제목+말씀 노트)에서도
+       내용이 사라지지 않게, note가 비어있고 옛 3칸 중 하나라도 내용이 있으면
+       하나의 노트 글로 자동으로 합쳐서 보여줍니다. 실제 저장 데이터는 사용자가
+       다시 저장하기 전까지는 그대로 두어 원본을 보존합니다. */
+    if (!copy.note && (copy.insight || copy.application || copy.prayer)) {
+      var parts = [];
+      if (copy.insight) parts.push("💡 깨달은 점\n" + copy.insight);
+      if (copy.application) parts.push("🌱 적용\n" + copy.application);
+      if (copy.prayer) parts.push("🙏 기도\n" + copy.prayer);
+      copy.note = parts.join("\n\n");
+    }
+    if (copy.note === undefined) copy.note = "";
     return copy;
   }
 
@@ -3479,39 +3577,42 @@
     if (!items.length) return;
     sermonEditorSelection = items;
     var refLabel = buildSermonSelectionLabel(items);
-    if (els.sermonNoteDate) els.sermonNoteDate.textContent = "오늘의 예배노트 · " + todayString().replace(/-/g, ".");
+    var today = todayString();
+    sermonEditorEntryDate = today;
+    sermonEditorEntryIndex = -1;
     if (els.sermonSelectedRef) els.sermonSelectedRef.textContent = refLabel;
     if (els.sermonSelectedVerses) {
       els.sermonSelectedVerses.innerHTML = items.map(function(item){
         return '<div class="sermon-selected-verse"><b>' + escapeHtml2(item.vs + "절") + '</b><span>' + escapeHtml2(item.verse.t) + '</span></div>';
       }).join('');
     }
+    setSermonPassageExpanded(true);
 
     var notes = loadSermonNotes();
-    var today = todayString();
     var existing = null;
-    (notes[today] || []).forEach(function(entry){
+    (notes[today] || []).forEach(function(entry, idx){
       var parsed = parseSermonEntry(entry);
       var entryKeys = verseNumbersFromEntry(parsed).join(",");
       var currentKeys = items.map(function(i){return Number(i.vs);}).sort(function(a,b){return a-b;}).join(",");
-      if (parsed.bno === items[0].bno && parsed.ch === items[0].ch && entryKeys === currentKeys) existing = parsed;
+      if (parsed.bno === items[0].bno && parsed.ch === items[0].ch && entryKeys === currentKeys) { existing = parsed; sermonEditorEntryIndex = idx; }
     });
-    if (els.sermonInsightInput) els.sermonInsightInput.value = existing ? existing.insight : "";
-    if (els.sermonApplicationInput) els.sermonApplicationInput.value = existing ? existing.application : "";
-    if (els.sermonPrayerInput) els.sermonPrayerInput.value = existing ? existing.prayer : "";
+    updateSermonEditorHeader(today, existing);
+    updateSermonSaveButtonLabel(!!existing);
+    if (els.sermonTitleInput) els.sermonTitleInput.value = existing ? existing.title : "";
+    if (els.sermonNoteInput) els.sermonNoteInput.value = existing ? existing.note : "";
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = !existing;
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "";
     if (els.sermonEditor) els.sermonEditor.classList.remove("hidden");
     if (els.sermonHistory) els.sermonHistory.classList.add("hidden");
     if (els.sermonNoteScreen) els.sermonNoteScreen.classList.remove("hidden");
     clearSermonSelection();
-    setTimeout(function(){ if (els.sermonInsightInput) els.sermonInsightInput.focus(); }, 80);
+    setTimeout(function(){ if (els.sermonTitleInput) els.sermonTitleInput.focus(); }, 80);
   }
 
   function saveSermonEditor() {
     if (!state.currentBirth || !sermonEditorSelection.length) return;
     var items = sermonEditorSelection;
-    var today = todayString();
+    var date = sermonEditorEntryDate || todayString();
     var verses = items.map(function(i){return Number(i.vs);}).sort(function(a,b){return a-b;});
     var verseLabel = (function(){
       var start=verses[0], prev=verses[0], ranges=[];
@@ -3523,22 +3624,26 @@
       ch: items[0].ch,
       vs: verseLabel,
       label: buildSermonSelectionLabel(items),
-      insight: els.sermonInsightInput ? els.sermonInsightInput.value.trim() : "",
-      application: els.sermonApplicationInput ? els.sermonApplicationInput.value.trim() : "",
-      prayer: els.sermonPrayerInput ? els.sermonPrayerInput.value.trim() : "",
+      title: els.sermonTitleInput ? els.sermonTitleInput.value.trim() : "",
+      note: els.sermonNoteInput ? els.sermonNoteInput.value.trim() : "",
       updatedAt: nowStamp()
     };
-    obj.text = JSON.stringify({ insight: obj.insight, application: obj.application, prayer: obj.prayer });
 
     var notes = loadSermonNotes();
-    if (!notes[today]) notes[today] = [];
-    var idx = -1;
-    for (var i=0;i<notes[today].length;i++) {
-      var e = parseSermonEntry(notes[today][i]);
-      if (e.bno === obj.bno && e.ch === obj.ch && verseNumbersFromEntry(e).join(",") === verses.join(",")) { idx=i; break; }
+    if (!notes[date]) notes[date] = [];
+    var idx = (sermonEditorEntryIndex >= 0 && sermonEditorEntryIndex < notes[date].length) ? sermonEditorEntryIndex : -1;
+    if (idx < 0) {
+      /* 인덱스를 모르면(예: 절 구성이 같은 기존 노트) 절 구성으로 한 번 더 찾아봅니다. */
+      for (var i=0;i<notes[date].length;i++) {
+        var e = parseSermonEntry(notes[date][i]);
+        if (e.bno === obj.bno && e.ch === obj.ch && verseNumbersFromEntry(e).join(",") === verses.join(",")) { idx=i; break; }
+      }
     }
-    if (idx >= 0) notes[today][idx] = obj; else notes[today].push(obj);
+    if (idx >= 0) notes[date][idx] = obj; else { notes[date].push(obj); idx = notes[date].length - 1; }
+    sermonEditorEntryIndex = idx;
     saveSermonNotes(notes);
+    updateSermonEditorHeader(date, obj);
+    updateSermonSaveButtonLabel(true);
     if (els.sermonHistory && !els.sermonHistory.classList.contains("hidden")) renderSermonHistoryList();
     if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
 
@@ -3546,12 +3651,12 @@
     syncPost("sermonNote", {
       birth: state.currentBirth,
       name: p ? p.name : "",
-      date: today,
+      date: date,
       bookNo: obj.bno,
       bookName: META.books[obj.bno].name,
       chapter: obj.ch,
       verse: obj.vs,
-      text: obj.text
+      text: JSON.stringify({ title: obj.title, note: obj.note })
     });
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = false;
     if (els.sermonEditorSaved) {
@@ -3575,16 +3680,18 @@
   function deleteCurrentSermonNote() {
     if (!state.currentBirth || !sermonEditorSelection.length) return;
     var items = sermonEditorSelection;
-    var today = todayString();
+    var date = sermonEditorEntryDate || todayString();
     var verses = items.map(function(i){ return Number(i.vs); }).sort(function(a,b){return a-b;});
     var notes = loadSermonNotes();
-    var list = notes[today] || [];
+    var list = notes[date] || [];
     var removed = null;
     var kept = [];
-    list.forEach(function(raw){
+    list.forEach(function(raw, idx){
       var e = parseSermonEntry(raw);
       var nums = verseNumbersFromEntry(e).join(",");
-      if (!removed && String(e.bno) === String(items[0].bno) && String(e.ch) === String(items[0].ch) && nums === verses.join(",")) {
+      var isTarget = (sermonEditorEntryIndex >= 0) ? (idx === sermonEditorEntryIndex)
+        : (String(e.bno) === String(items[0].bno) && String(e.ch) === String(items[0].ch) && nums === verses.join(","));
+      if (!removed && isTarget) {
         removed = e;
       } else {
         kept.push(raw);
@@ -3594,16 +3701,18 @@
       if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "삭제할 저장 기록이 없습니다.";
       return;
     }
-    notes[today] = kept;
-    if (!kept.length) delete notes[today];
+    notes[date] = kept;
+    if (!kept.length) delete notes[date];
     saveSermonNotes(notes);
     if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
-    deleteSermonRemote({bno:removed.bno, ch:removed.ch, vs:removed.vs, date:today});
+    if (els.sermonHistory && !els.sermonHistory.classList.contains("hidden")) renderSermonHistoryList();
+    deleteSermonRemote({bno:removed.bno, ch:removed.ch, vs:removed.vs, date:date});
     sermonEditorSelection = [];
+    sermonEditorEntryDate = null;
+    sermonEditorEntryIndex = -1;
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = true;
-    if (els.sermonInsightInput) els.sermonInsightInput.value = "";
-    if (els.sermonApplicationInput) els.sermonApplicationInput.value = "";
-    if (els.sermonPrayerInput) els.sermonPrayerInput.value = "";
+    if (els.sermonTitleInput) els.sermonTitleInput.value = "";
+    if (els.sermonNoteInput) els.sermonNoteInput.value = "";
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "삭제되었습니다.";
     setTimeout(function(){ closeSermonNote(); }, 500);
   }
@@ -3630,51 +3739,86 @@
       els.sermonHistory.innerHTML = '<p class="stats-empty">오늘 이전 기록이 아직 없어요.</p>';
       return;
     }
+    /* 날짜별로 묶지 않고, 노트 한 건 한 건을 각각 한 줄로 보여줍니다.
+       (날짜 + 작성/수정 시간 + 말씀 제목) — 눌러서 바로 편집 화면으로 들어갑니다. */
     dates.forEach(function (d) {
-      var count = notes[d].length;
-      var row = document.createElement("button");
-      row.type = "button";
-      row.className = "sermon-history-row";
-      row.innerHTML = '<span class="sermon-history-date">' + escapeHtml2(formatSermonDateTime(d, notes[d])) + '</span><span class="sermon-history-snippet">예배말씀 ' + count + '건</span>';
-      row.addEventListener("click", function () { renderSermonDateDetail(d); });
-      els.sermonHistory.appendChild(row);
+      notes[d].forEach(function (raw, idx) {
+        var e = parseSermonEntry(raw);
+        var timeLabel = formatSermonDateTime(d, [raw]);
+        var titleText = e.title || sermonHistorySnippet(e.note);
+        var row = document.createElement("button");
+        row.type = "button";
+        row.className = "sermon-history-row";
+        row.innerHTML =
+          '<span class="sermon-history-date">' + escapeHtml2(timeLabel) + ' · ' + escapeHtml2(e.label || sermonRangeLabel(e.bno, e.ch, verseNumbersFromEntry(e))) + '</span>' +
+          '<span class="sermon-history-snippet' + (e.title ? '' : ' sermon-history-notitle') + '">' + escapeHtml2(titleText) + '</span>';
+        row.addEventListener("click", function () { openSavedSermonEntry(raw, d, idx); });
+        els.sermonHistory.appendChild(row);
+      });
     });
   }
 
-  function renderSermonDateDetail(date) {
-    els.sermonNoteDate.textContent = formatSermonDateTime(date, loadSermonNotes()[date] || []);
-    var entries = loadSermonNotes()[date] || [];
-    els.sermonHistory.innerHTML = "";
-    var backBtn = document.createElement("button");
-    backBtn.type = "button";
-    backBtn.className = "text-link";
-    backBtn.textContent = "← 날짜 목록으로";
-    backBtn.addEventListener("click", renderSermonHistoryList);
-    els.sermonHistory.appendChild(backBtn);
+  /* 제목이 비어있는(옛 형식에서 자동 변환된) 노트를 목록에서 구분할 수 있도록,
+     노트 본문의 첫 줄을 짧게 잘라 미리보기로 보여줍니다. */
+  function sermonHistorySnippet(note) {
+    var firstLine = String(note || "").split("\n").map(function(s){return s.trim();}).filter(Boolean)[0] || "";
+    if (!firstLine) return "제목 없음";
+    return firstLine.length > 24 ? firstLine.slice(0, 24) + "…" : firstLine;
+  }
 
-    entries.forEach(function(entry, idx){
-      var e = parseSermonEntry(entry);
-      var card = document.createElement("div");
-      card.className = "sermon-entry";
-      card.innerHTML =
-        '<div class="sermon-entry-head"><span class="sermon-entry-ref">' + escapeHtml2(e.label || ((META.books[e.bno] ? META.books[e.bno].name : e.bno) + " " + e.ch + ":" + e.vs)) + '</span><button type="button" class="sermon-entry-delete">삭제</button></div>' +
-        '<div class="sermon-history-section"><div class="sermon-history-title">💡 깨달은 점</div><div class="sermon-history-text">' + escapeHtml2(e.insight || e.text || "-").replace(/\n/g,"<br>") + '</div></div>' +
-        '<div class="sermon-history-section"><div class="sermon-history-title">🌱 적용할 점</div><div class="sermon-history-text">' + escapeHtml2(e.application || "-").replace(/\n/g,"<br>") + '</div></div>' +
-        '<div class="sermon-history-section"><div class="sermon-history-title">🙏 기도</div><div class="sermon-history-text">' + escapeHtml2(e.prayer || "-").replace(/\n/g,"<br>") + '</div></div>';
-      card.querySelector(".sermon-entry-delete").addEventListener("click", function(){
-        if(!confirm("이 예배노트를 삭제할까요?")) return;
-        var notes=loadSermonNotes();
-        notes[date].splice(idx,1);
-        if(!notes[date].length) delete notes[date];
-        saveSermonNotes(notes);
-        deleteSermonRemote({bno:e.bno, ch:e.ch, vs:e.vs, date:date});
-        renderSermonDateDetail(date);
-      });
-      els.sermonHistory.appendChild(card);
+  /* 이전/현재/다음 장 번호 줄. 책이 바뀌는 경계(예: 창세기 50장 → 출애굽기 1장)에서는
+     헷갈리지 않게 옆 책의 약칭을 붙여 "창 50"처럼 보여줍니다. */
+  function adjacentChapterRef(bno, ch, delta) {
+    var chNums = chapterNumsSorted(bno);
+    var pos = chNums.indexOf(Number(ch)) + delta;
+    if (pos >= 0 && pos < chNums.length) return { bno: bno, ch: chNums[pos], otherBook: false };
+    var bPos = META.order.indexOf(bno) + delta;
+    if (bPos < 0 || bPos >= META.order.length) return null;
+    var nb = META.order[bPos];
+    var nNums = chapterNumsSorted(nb);
+    return { bno: nb, ch: delta < 0 ? nNums[nNums.length - 1] : nNums[0], otherBook: true };
+  }
+  function renderReadChapterNumberStrip(bno, ch) {
+    if (!els.readCurrentChapterNumber) return;
+    els.readCurrentChapterNumber.textContent = String(ch);
+    [["readPrevChapterNumber", -1], ["readNextChapterNumber", 1]].forEach(function (pair) {
+      var btn = els[pair[0]];
+      if (!btn) return;
+      var ref = adjacentChapterRef(bno, ch, pair[1]);
+      if (!ref) { btn.textContent = ""; btn.disabled = true; btn.classList.add("empty"); return; }
+      btn.disabled = false;
+      btn.classList.remove("empty");
+      btn.textContent = (ref.otherBook ? (META.books[ref.bno].abbr || "") + " " : "") + ref.ch;
     });
+    if (els.readLocationPillText) els.readLocationPillText.textContent = META.books[bno].name + " " + ch + "장";
+  }
+
+  var pendingChapterAnim = 0;
+  var pendingChapterFrom = null;
+  var chapterTurnTimer = null;
+  /* 장이 바뀔 때: 본문이 넘어간 방향으로 슬라이드해 들어오고, < > 버튼 자리가 잠깐
+     세로 알약으로 바뀌어 이동한 장("2장")을 알려줍니다. 책이 바뀌면 책 이름만("출애굽기") 보여줍니다. */
+  function playChapterTurnEffect(delta, bno, ch) {
+    var list = els.readVerseList;
+    if (list) {
+      list.classList.remove("turn-next", "turn-prev");
+      void list.offsetWidth;
+      list.classList.add(delta > 0 ? "turn-next" : "turn-prev");
+      setTimeout(function () { list.classList.remove("turn-next", "turn-prev"); }, 420);
+    }
+    var pill = document.getElementById(delta > 0 ? "readTurnPillNext" : "readTurnPillPrev");
+    var other = document.getElementById(delta > 0 ? "readTurnPillPrev" : "readTurnPillNext");
+    if (!pill) return;
+    pill.textContent = (pendingChapterFrom && pendingChapterFrom !== bno) ? META.books[bno].name : (ch + "장");
+    if (other) other.classList.remove("show");
+    pill.classList.add("show");
+    if (chapterTurnTimer) clearTimeout(chapterTurnTimer);
+    chapterTurnTimer = setTimeout(function () { pill.classList.remove("show"); }, 1200);
   }
 
   function readAdjacentChapter(delta) {
+    pendingChapterAnim = delta;
+    pendingChapterFrom = readState.bookNo;
     var chNums = chapterNumsSorted(readState.bookNo);
     var pos = chNums.indexOf(Number(readState.chapter)) + delta;
     if (pos < 0) {
@@ -3791,11 +3935,11 @@
         var profs = loadProfiles();
         var targetName = profs[birth] ? profs[birth].name : (profiles[birth] ? profiles[birth].name : birth);
         if (!requireAdmin("기록 삭제")) return;
-        if (confirm(targetName + "님의 필사 기록을 정말 삭제할까요? (이 기기에 저장된 기록만 삭제돼요. 구글시트에 남은 기록은 별도로 지워야 해요.)")) {
+        appConfirm(targetName + "님의 필사 기록을 정말 삭제할까요?\n(이 기기에 저장된 기록만 삭제돼요. 구글시트에 남은 기록은 별도로 지워야 해요.)", function () {
           deleteProfile(birth);
           openStats();
           if (birth === state.currentBirth) renderChapterDots();
-        }
+        });
       });
     });
   }
@@ -3902,7 +4046,7 @@
       return Object.keys(notes).filter(function (d) { return notes[d] && notes[d].length; }).sort().reverse().map(function (d) {
         var entries = notes[d];
         var first = parseSermonEntry(entries[0]);
-        return { date: d, count: entries.length, preview: first.insight || first.text || "" };
+        return { date: d, count: entries.length, preview: first.title || sermonHistorySnippet(first.note) };
       });
     }
     if (cat === "gratitude") {
@@ -3965,10 +4109,8 @@
         var e = parseSermonEntry(entry);
         var ref = e.label || ((META.books[e.bno] ? META.books[e.bno].name : e.bno) + " " + e.ch + ":" + e.vs);
         html += '<div class="record-detail-card" data-bno="' + escapeHtml2(e.bno) + '" data-ch="' + escapeHtml2(e.ch) + '" data-vs="' + escapeHtml2(e.vs) + '">' +
-          '<div class="record-detail-ref">' + escapeHtml2(ref) + '</div>' +
-          '<div class="record-detail-section"><div class="record-detail-section-title">💡 깨달은 점</div><div class="record-detail-body">' + escapeHtml2(e.insight || e.text || "-") + '</div></div>' +
-          '<div class="record-detail-section"><div class="record-detail-section-title">🌱 적용할 점</div><div class="record-detail-body">' + escapeHtml2(e.application || "-") + '</div></div>' +
-          '<div class="record-detail-section"><div class="record-detail-section-title">🙏 기도</div><div class="record-detail-body">' + escapeHtml2(e.prayer || "-") + '</div></div>' +
+          '<div class="record-detail-ref">' + escapeHtml2(ref) + (e.title ? ' · ' + escapeHtml2(e.title) : '') + '</div>' +
+          '<div class="record-detail-section"><div class="record-detail-body">' + escapeHtml2(e.note || "-").replace(/\n/g, "<br>") + '</div></div>' +
         '</div>';
       });
     } else if (p && cat === "gratitude") {
@@ -5045,6 +5187,8 @@
   els.readChapterSelect.addEventListener("change", function () {
     readGoTo(readState.bookNo, els.readChapterSelect.value);
   });
+  if (els.readPrevChapterNumber) els.readPrevChapterNumber.addEventListener("click", function () { readAdjacentChapter(-1); });
+  if (els.readNextChapterNumber) els.readNextChapterNumber.addEventListener("click", function () { readAdjacentChapter(1); });
   els.readPrevChBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   els.readNextChBtn.addEventListener("click", function () { readAdjacentChapter(1); });
   if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.addEventListener("click", function(e){ e.stopPropagation(); });
@@ -5120,6 +5264,14 @@
     }
   })();
 
+  (function () {
+    if (!els.readLocationHeading || !els.readLocationPill || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver(function (entries) {
+      var visible = entries[0].isIntersecting;
+      els.readLocationPill.classList.toggle("show", !visible);
+    }, { threshold: 0 }).observe(els.readLocationHeading);
+  })();
+
   els.readVerseSelect.addEventListener("change", function () {
     scrollToReadVerse(els.readVerseSelect.value);
     var el = document.getElementById("rv-" + readState.bookNo + "-" + readState.chapter + "-" + els.readVerseSelect.value);
@@ -5136,11 +5288,14 @@
     if (Object.keys(selectedSermonVerses).length) openSermonEditor();
     else { sermonSelectionMode = false; clearSermonSelection(); }
   });
+  if (els.sermonPassageToggle) els.sermonPassageToggle.addEventListener("click", function () {
+    var expanded = !(els.sermonSelectedVersesWrap && els.sermonSelectedVersesWrap.classList.contains("collapsed"));
+    setSermonPassageExpanded(!expanded);
+  });
   if (els.sermonEditorSaveBtn) els.sermonEditorSaveBtn.addEventListener("click", saveSermonEditor);
   if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.addEventListener("click", function(){
     if (els.sermonEditorDeleteBtn.disabled) return;
-    if (!confirm("이 예배노트를 삭제할까요?")) return;
-    deleteCurrentSermonNote();
+    appConfirm("이 예배노트를 삭제할까요?", function () { deleteCurrentSermonNote(); });
   });
   if (els.gratitudeHistoryCloseBtn) els.gratitudeHistoryCloseBtn.addEventListener("click", closeGratitudeHistory);
   els.closeSermonNoteBtn.addEventListener("click", closeSermonNote);
@@ -5297,6 +5452,11 @@
   });
 
   if (els.appAlertOkBtn) els.appAlertOkBtn.addEventListener("click", appAlertClose);
+  if (els.appConfirmOkBtn) els.appConfirmOkBtn.addEventListener("click", function () { appConfirmClose(true); });
+  if (els.appConfirmCancelBtn) els.appConfirmCancelBtn.addEventListener("click", function () { appConfirmClose(false); });
+  if (els.appConfirmOverlay) els.appConfirmOverlay.addEventListener("click", function (e) {
+    if (e.target === els.appConfirmOverlay) appConfirmClose(false);
+  });
   if (els.appAlertOverlay) els.appAlertOverlay.addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === "Escape") appAlertClose();
   });

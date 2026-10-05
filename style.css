@@ -1029,8 +1029,17 @@ select{font-family:inherit;}
   margin-bottom:2px;
 }
 .sermon-history-snippet{
-  font-size:12px;
-  color:var(--ink-soft);
+  font-size:14px;
+  font-weight:700;
+  color:var(--ink);
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.sermon-history-snippet.sermon-history-notitle{
+  font-weight:500;
+  color:var(--ink-faint);
 }
 
 .chip-legend{
@@ -2566,19 +2575,46 @@ textarea::placeholder {
 .sermon-note-card{max-width:960px;}
 .sermon-editor{display:block;}
 .sermon-editor.hidden{display:none;}
-.sermon-selected-verse-box{
-  padding:16px;
+
+/* 예배 말씀: 눌러서 접고 펼 수 있는 박스 */
+.sermon-passage-box{
   margin-bottom:18px;
   border:1px solid var(--border);
   border-radius:14px;
   background:var(--paper);
+  overflow:hidden;
 }
-.sermon-editor-label{font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;}
-.sermon-selected-ref{font-size:20px;font-weight:800;color:var(--accent);margin-bottom:12px;}
-.sermon-selected-verses{display:grid;gap:8px;max-height:230px;overflow:auto;}
+.sermon-passage-head{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:14px 16px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+  font-family:inherit;
+}
+.sermon-passage-title{font-size:12px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.sermon-selected-ref{flex:1;font-size:16px;font-weight:800;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sermon-passage-toggle-label{display:flex;align-items:center;gap:3px;flex:none;font-size:12px;font-weight:700;color:var(--ink-faint);white-space:nowrap;}
+.sermon-passage-chevron{font-size:13px;transition:transform .2s ease;}
+.sermon-passage-head[aria-expanded="false"] .sermon-passage-chevron{transform:rotate(180deg);}
+.sermon-selected-verses-wrap{
+  display:grid;
+  grid-template-rows:1fr;
+  transition:grid-template-rows .25s ease, padding-bottom .25s ease;
+  padding:0 16px 14px;
+  overflow:hidden;
+}
+.sermon-selected-verses-wrap.collapsed{grid-template-rows:0fr;padding-bottom:0;}
+.sermon-selected-verses-wrap>.sermon-selected-verses{min-height:0;}
+.sermon-selected-verses{display:grid;gap:8px;max-height:230px;overflow-y:auto;}
 .sermon-selected-verse{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:9px;background:var(--card);line-height:1.65;font-size:13px;}
 .sermon-selected-verse b{min-width:34px;color:var(--accent);}
 .sermon-selected-verse span{flex:1;}
+
 .sermon-field{display:block;margin:0 0 16px;}
 .sermon-field>span{display:block;font-weight:800;font-size:14px;margin-bottom:7px;color:var(--ink);}
 .sermon-field textarea{
@@ -2586,6 +2622,12 @@ textarea::placeholder {
   font-family:var(--sans);font-size:14px;line-height:1.75;padding:12px 14px;resize:vertical;outline:none;
 }
 .sermon-field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,164,76,.08);}
+.sermon-title-field input{
+  width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--ink);
+  font-family:var(--sans);font-size:15px;font-weight:700;line-height:1.5;padding:12px 14px;outline:none;
+}
+.sermon-title-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,164,76,.08);}
+.sermon-note-field textarea{min-height:260px;}
 .sermon-editor-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px;padding-top:12px;border-top:1px solid var(--border);}
 .sermon-editor-saved{font-size:12px;color:var(--ink-faint);}
 .sermon-history-section{margin-top:14px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);}
@@ -4523,3 +4565,74 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
   cursor:pointer;
 }
 .app-alert-ok-btn:hover,.app-alert-ok-btn:focus-visible{filter:brightness(1.05);}
+
+/* ===================== 앱 스타일 확인창 (confirm 대체) ===================== */
+.app-confirm-buttons{
+  display:flex;
+  gap:10px;
+}
+.app-confirm-buttons button{
+  flex:1;
+  padding:13px;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.app-confirm-cancel-btn{
+  border:1px solid var(--border);
+  background:var(--paper);
+  color:var(--ink-soft);
+}
+.app-confirm-danger-btn{
+  background:var(--incorrect, #D9644F);
+}
+
+/* ===================== 장 번호 스트립 + 현재 위치 표시 ===================== */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.read-location-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.read-location-heading #readBookName{font-size:21px;font-weight:800;color:var(--ink);}
+.read-chapter-number-strip{display:flex;align-items:center;gap:6px;}
+.read-chapter-number{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:999px;font-weight:800;font-family:inherit;}
+.read-chapter-number.side{border:1px solid var(--border);background:var(--paper);color:var(--ink-faint);font-size:13px;cursor:pointer;}
+.read-chapter-number.side.empty{visibility:hidden;}
+.read-chapter-number.current{min-width:44px;height:40px;background:var(--accent);color:#fff;font-size:19px;box-shadow:0 4px 10px rgba(217,100,79,.25);}
+.read-chapter-number.current::after{content:"장";font-size:12px;margin-left:1px;}
+/* 스크롤해서 위쪽 제목이 사라지면 나타나는 "현재 위치" 알약 */
+.read-location-pill{
+  position:fixed;left:50%;top:10px;transform:translate(-50%,-14px);
+  z-index:240;padding:7px 16px;border-radius:999px;
+  background:rgba(74,59,50,.78);color:#fff;font-size:13px;font-weight:700;
+  opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;
+  backdrop-filter:blur(3px);
+}
+.read-location-pill.show{opacity:1;transform:translate(-50%,0);}
+#readScreen:not(.nav-hidden) ~ .read-location-pill, body:has(#readScreen:not(.hidden):not(.nav-hidden)) .read-location-pill{top:86px;}
+
+/* 장 넘김 효과: 본문 슬라이드 + 이동한 장 알약 */
+@keyframes turnNext{0%{opacity:0;transform:translateX(46px);}60%{opacity:.7;}100%{opacity:1;transform:translateX(0);}}
+@keyframes turnPrev{0%{opacity:0;transform:translateX(-46px);}60%{opacity:.7;}100%{opacity:1;transform:translateX(0);}}
+.read-verse-list.turn-next{animation:turnNext .38s ease-out;}
+.read-verse-list.turn-prev{animation:turnPrev .38s ease-out;}
+.read-chapter-toast{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+  z-index:260;display:flex;flex-direction:row;align-items:center;gap:8px;
+  writing-mode:vertical-rl;text-orientation:upright;
+  padding:18px 12px;border-radius:999px;
+  background:rgba(217,100,79,.92);color:#fff;font-size:17px;line-height:1;letter-spacing:2px;
+  box-shadow:0 12px 28px rgba(217,100,79,.38);
+  opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;white-space:nowrap;
+}
+.read-chapter-toast span{font-size:11px;font-weight:700;opacity:.85;letter-spacing:1px;}
+.read-chapter-toast b{font-weight:800;}
+.read-chapter-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+/* 스와이프로 장을 넘기므로 < > 버튼은 없애고, 넘어가는 순간에만 그 자리에 세로 알약이 잠깐 나타납니다. */
+.read-turn-pill{
+  display:flex;align-items:center;justify-content:center;
+  width:40px;min-height:40px;padding:16px 0;border-radius:999px;
+  background:rgba(217,100,79,.92);color:#fff;box-shadow:0 8px 20px rgba(217,100,79,.35);
+  writing-mode:vertical-rl;text-orientation:upright;font-weight:800;font-size:15px;letter-spacing:2px;line-height:1;white-space:nowrap;
+  opacity:0;transform:scale(.85);transition:opacity .2s ease,transform .2s ease;
+}
+.read-turn-pill.show{opacity:1;transform:scale(1);}
