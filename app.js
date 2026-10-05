@@ -3724,6 +3724,9 @@
     els.sermonNoteScreen.classList.remove("hidden");
   }
   function closeSermonNote() {
+    if (recordsHubCat === "sermon" && els.recordsHubShell && els.recordsHubContentBody) {
+      setTimeout(function () { renderRecordsHubNavCounts(); renderRecordsHubContent(); }, 0);
+    }
     els.sermonNoteScreen.classList.add("hidden");
     if (els.sermonEditor) els.sermonEditor.classList.add("hidden");
     if (els.sermonHistory) els.sermonHistory.classList.add("hidden");
@@ -3806,14 +3809,7 @@
       list.classList.add(delta > 0 ? "turn-next" : "turn-prev");
       setTimeout(function () { list.classList.remove("turn-next", "turn-prev"); }, 420);
     }
-    var pill = document.getElementById(delta > 0 ? "readTurnPillNext" : "readTurnPillPrev");
-    var other = document.getElementById(delta > 0 ? "readTurnPillPrev" : "readTurnPillNext");
-    if (!pill) return;
-    pill.textContent = (pendingChapterFrom && pendingChapterFrom !== bno) ? META.books[bno].name : (ch + "장");
-    if (other) other.classList.remove("show");
-    pill.classList.add("show");
-    if (chapterTurnTimer) clearTimeout(chapterTurnTimer);
-    chapterTurnTimer = setTimeout(function () { pill.classList.remove("show"); }, 1200);
+    pendingChapterFrom = null;
   }
 
   function readAdjacentChapter(delta) {
@@ -3981,6 +3977,7 @@
   var RECORDS_CAT_LABEL = { highlight: "칠모아", reflection: "묵상모아", sermon: "노트모아", gratitude: "감·기모아", write: "필사모아" };
 
   var recordsHubCat = null;          // null | "highlight" | "reflection" | "sermon" | "gratitude" | "write"
+  var recordsHubEdit = null;         // {cat, key} 기록 수정 화면
   var recordsHubDrillDate = null;    // 묵상/노트/감·기모아에서 날짜를 선택했을 때만 값이 있음
   var recordsHubHighlightFilter = "all";
 
@@ -4105,10 +4102,10 @@
       });
     } else if (p && cat === "sermon") {
       var list = (p.sermonNotes || {})[dateKey] || [];
-      list.forEach(function (entry) {
+      list.forEach(function (entry, entryIdx) {
         var e = parseSermonEntry(entry);
         var ref = e.label || ((META.books[e.bno] ? META.books[e.bno].name : e.bno) + " " + e.ch + ":" + e.vs);
-        html += '<div class="record-detail-card" data-bno="' + escapeHtml2(e.bno) + '" data-ch="' + escapeHtml2(e.ch) + '" data-vs="' + escapeHtml2(e.vs) + '">' +
+        html += '<div class="record-detail-card" data-idx="' + entryIdx + '" data-bno="' + escapeHtml2(e.bno) + '" data-ch="' + escapeHtml2(e.ch) + '" data-vs="' + escapeHtml2(e.vs) + '">' +
           '<div class="record-detail-ref">' + escapeHtml2(ref) + (e.title ? ' · ' + escapeHtml2(e.title) : '') + '</div>' +
           '<div class="record-detail-section"><div class="record-detail-body">' + escapeHtml2(e.note || "-").replace(/\n/g, "<br>") + '</div></div>' +
         '</div>';
@@ -4128,14 +4125,87 @@
       }
     }
     els.recordsHubContentBody.innerHTML = html || '<p class="records-hub-content-empty">내용이 없어요.</p>';
-    if (cat === "reflection") {
-      els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
-        card.addEventListener("click", function () { goToVerseFromRecords(card.getAttribute("data-vkey")); });
+    els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
+      var hint = document.createElement("div");
+      hint.className = "record-detail-edit-hint";
+      hint.textContent = "✏️ 눌러서 수정 · 삭제";
+      card.appendChild(hint);
+      card.addEventListener("click", function () {
+        if (cat === "reflection") {
+          recordsHubEdit = { cat: "reflection", key: card.getAttribute("data-vkey") };
+          renderRecordsHubContent();
+        } else if (cat === "gratitude") {
+          recordsHubEdit = { cat: "gratitude", key: dateKey };
+          renderRecordsHubContent();
+        } else if (cat === "sermon") {
+          var idx = Number(card.getAttribute("data-idx"));
+          var raw = ((getProfile(state.currentBirth).sermonNotes || {})[dateKey] || [])[idx];
+          if (raw) openSavedSermonEntry(raw, dateKey, idx);
+        }
       });
-    } else if (cat === "sermon") {
-      els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
-        card.addEventListener("click", function () {
-          goToVerseByParts(card.getAttribute("data-bno"), card.getAttribute("data-ch"), card.getAttribute("data-vs"));
+    });
+  }
+
+  /* 기록보기 안에서 묵상/감·기 기록을 바로 고치거나 지우는 화면 */
+  function renderRecordEditor() {
+    var ed = recordsHubEdit;
+    var p = getProfile(state.currentBirth);
+    var body = els.recordsHubContentBody;
+    if (ed.cat === "reflection") {
+      var note = (p.notes || {})[ed.key];
+      var parts = ed.key.split("-");
+      if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = verseKeyToRefLabel(ed.key);
+      body.innerHTML =
+        '<div class="rh-edit">' +
+        '<div class="rh-edit-verse"><div class="rh-edit-label">📖 말씀</div>' + escapeHtml2(verseKeyToText(ed.key)) + '</div>' +
+        '<label class="rh-edit-field"><span>💭 내 묵상</span><textarea id="rhEditText" rows="9"></textarea></label>' +
+        '<button type="button" id="rhEditGoto" class="rh-edit-link">📖 본문으로 이동</button>' +
+        '<div class="rh-edit-actions"><button type="button" id="rhEditDelete" class="rh-edit-delete">삭제</button>' +
+        '<button type="button" id="rhEditSave" class="rh-edit-save">수정 저장</button></div></div>';
+      document.getElementById("rhEditText").value = note ? note.text : "";
+      document.getElementById("rhEditGoto").addEventListener("click", function () { recordsHubEdit = null; goToVerseFromRecords(ed.key); });
+      document.getElementById("rhEditSave").addEventListener("click", function () {
+        var text = document.getElementById("rhEditText").value;
+        if (!text.trim()) { appAlert("묵상 내용을 입력해 주세요. 지우려면 삭제를 눌러 주세요."); return; }
+        updateProfile(state.currentBirth, function (pr) { pr.notes[ed.key] = { text: text, updatedAt: nowStamp() }; });
+        syncPost("note", { birth: state.currentBirth, name: getProfile(state.currentBirth).name || "", bookNo: parts[0], bookName: META.books[parts[0]].name, chapter: parts[1], verse: parts[2], note: text });
+        recordsHubEdit = null; recordsHubDrillDate = todayString(); /* 묵상은 수정한 날짜로 묶이므로 오늘 목록으로 */
+        renderRecordsHubNavCounts(); renderRecordsHubContent();
+      });
+      document.getElementById("rhEditDelete").addEventListener("click", function () {
+        appConfirm(verseKeyToRefLabel(ed.key) + " 묵상 노트를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.", function () {
+          updateProfile(state.currentBirth, function (pr) { delete pr.notes[ed.key]; });
+          syncPost("deleteNote", { birth: state.currentBirth, name: getProfile(state.currentBirth).name || "", bookNo: parts[0], chapter: parts[1], verse: parts[2] });
+          recordsHubEdit = null; recordsHubDrillDate = null;
+          renderRecordsHubNavCounts(); renderRecordsHubContent();
+        });
+      });
+    } else if (ed.cat === "gratitude") {
+      var rec = normalizeGratitudeRecord((p.gratitudePrayer || {})[ed.key], ed.key) || {};
+      if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = formatRecordDateShort(ed.key);
+      body.innerHTML =
+        '<div class="rh-edit">' +
+        ['1','2','3'].map(function (n) { return '<label class="rh-edit-field"><span>🌿 감사 ' + n + '</span><input id="rhG' + n + '" type="text"></label>'; }).join('') +
+        '<label class="rh-edit-field"><span>🙏 기도제목</span><textarea id="rhPrayer" rows="6"></textarea></label>' +
+        '<div class="rh-edit-actions"><button type="button" id="rhEditDelete" class="rh-edit-delete">삭제</button>' +
+        '<button type="button" id="rhEditSave" class="rh-edit-save">수정 저장</button></div></div>';
+      document.getElementById("rhG1").value = rec.gratitude1 || "";
+      document.getElementById("rhG2").value = rec.gratitude2 || "";
+      document.getElementById("rhG3").value = rec.gratitude3 || "";
+      document.getElementById("rhPrayer").value = rec.prayer || "";
+      document.getElementById("rhEditSave").addEventListener("click", function () {
+        var obj = { date: ed.key, gratitude1: document.getElementById("rhG1").value.trim(), gratitude2: document.getElementById("rhG2").value.trim(), gratitude3: document.getElementById("rhG3").value.trim(), prayer: document.getElementById("rhPrayer").value.trim(), updatedAt: nowStamp() };
+        var pr0 = getProfile(state.currentBirth);
+        updateProfile(state.currentBirth, function (pr) { pr.gratitudePrayer = pr.gratitudePrayer || {}; pr.gratitudePrayer[ed.key] = obj; });
+        syncPost("gratitudePrayer", { birth: state.currentBirth, name: (pr0 && pr0.name) || "", date: ed.key, gratitude1: obj.gratitude1, gratitude2: obj.gratitude2, gratitude3: obj.gratitude3, prayer: obj.prayer, updatedAt: obj.updatedAt });
+        recordsHubEdit = null;
+        renderRecordsHubContent();
+      });
+      document.getElementById("rhEditDelete").addEventListener("click", function () {
+        appConfirm(formatGratitudeDateLong(ed.key) + " 기록을 삭제할까요?", function () {
+          deleteGratitudeRecord(ed.key);
+          recordsHubEdit = null; recordsHubDrillDate = null;
+          renderRecordsHubNavCounts(); renderRecordsHubContent();
         });
       });
     }
@@ -4238,6 +4308,10 @@
       els.recordsHubContentBody.innerHTML = '<p class="records-hub-content-empty">왼쪽에서 항목을 선택해주세요.</p>';
       return;
     }
+    if (recordsHubEdit && recordsHubCat === recordsHubEdit.cat) {
+      renderRecordEditor();
+      return;
+    }
     if (recordsHubDrillDate && (recordsHubCat === "reflection" || recordsHubCat === "sermon" || recordsHubCat === "gratitude")) {
       if (els.recordsHubContentTitle) els.recordsHubContentTitle.textContent = formatRecordDateShort(recordsHubDrillDate);
       renderDateDetailBody(recordsHubCat, recordsHubDrillDate);
@@ -4250,6 +4324,7 @@
   }
 
   function selectRecordsCategory(cat) {
+    recordsHubEdit = null;
     recordsHubCat = cat;
     recordsHubDrillDate = null;
     if (cat === "highlight") recordsHubHighlightFilter = "all";
@@ -4262,6 +4337,11 @@
   }
 
   function recordsHubGoBack() {
+    if (recordsHubEdit) {
+      recordsHubEdit = null;
+      renderRecordsHubContent();
+      return;
+    }
     if (recordsHubDrillDate) {
       recordsHubDrillDate = null;
       renderRecordsHubContent();
@@ -4279,6 +4359,7 @@
   function openRecordsHub() {
     if (!isLoggedIn()) { showNameScreen("recordsHub"); return; }
     recordsHubCat = null;
+    recordsHubEdit = null;
     recordsHubDrillDate = null;
     recordsHubHighlightFilter = "all";
     renderRecordsHubNavCounts();

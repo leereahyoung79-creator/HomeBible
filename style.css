@@ -4636,3 +4636,19 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
   opacity:0;transform:scale(.85);transition:opacity .2s ease,transform .2s ease;
 }
 .read-turn-pill.show{opacity:1;transform:scale(1);}
+
+/* 기록보기 안의 수정 화면 */
+.record-detail-edit-hint{margin-top:10px;font-size:11px;font-weight:800;color:var(--accent);text-align:right;}
+.rh-edit{display:grid;gap:14px;}
+.rh-edit-verse{padding:12px 14px;border-radius:12px;background:var(--bg-soft,#faf6ee);border:1px solid var(--border);font-size:14px;line-height:1.6;color:var(--ink-soft);}
+.rh-edit-label{font-size:12px;font-weight:900;color:var(--ink-faint);margin-bottom:4px;}
+.rh-edit-field{display:grid;gap:6px;}
+.rh-edit-field>span{font-size:13px;font-weight:900;}
+.rh-edit-field input,.rh-edit-field textarea{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;font-size:15px;line-height:1.6;}
+.rh-edit-field textarea{resize:vertical;min-height:140px;}
+.rh-edit-field input:focus,.rh-edit-field textarea:focus{outline:none;border-color:var(--accent);}
+.rh-edit-link{justify-self:start;background:none;border:0;padding:4px 0;color:var(--accent);font-weight:800;font-size:13px;cursor:pointer;}
+.rh-edit-actions{display:flex;gap:10px;}
+.rh-edit-actions button{flex:1;padding:13px;border-radius:12px;font-weight:900;font-size:15px;cursor:pointer;border:0;}
+.rh-edit-save{background:var(--accent);color:#fff;flex:2;}
+.rh-edit-delete{background:transparent;color:var(--incorrect,#D9644F);border:1px solid var(--incorrect,#D9644F)!important;}
