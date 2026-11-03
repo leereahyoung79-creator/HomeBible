@@ -1886,7 +1886,7 @@ input::placeholder,
 textarea::placeholder {
   color: #4A3B32 !important;
   opacity: 1 !important;
-  font-size: 10px !important;
+  font-size: calc(10px * var(--general-font-scale, 1)) !important; /* 글씨 크기 설정을 따라감(보통일 땐 그대로 10px) */
 }
 
 /* 팝업/모달의 설명·안내 문구 */
@@ -4652,3 +4652,17 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
 .rh-edit-actions button{flex:1;padding:13px;border-radius:12px;font-weight:900;font-size:15px;cursor:pointer;border:0;}
 .rh-edit-save{background:var(--accent);color:#fff;flex:2;}
 .rh-edit-delete{background:transparent;color:var(--incorrect,#D9644F);border:1px solid var(--incorrect,#D9644F)!important;}
+
+/* 성경책 직접 찾기 */
+.read-book-search{margin:0 0 14px;}
+.read-book-search-field{display:flex;align-items:center;gap:8px;padding:0 12px;border:1.5px solid var(--border);border-radius:14px;background:var(--card);}
+.read-book-search-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,100,79,.10);}
+.read-book-search-field svg{width:20px;height:20px;flex:none;color:var(--ink-faint);}
+.read-book-search-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:13px 0;font-size:16px;color:var(--ink);font-family:inherit;}
+.read-book-search-clear{border:0;background:var(--border);color:var(--ink-soft);width:24px;height:24px;border-radius:50%;font-size:12px;cursor:pointer;flex:none;}
+.read-book-search-go{margin-top:10px;}
+.read-book-search-go-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 16px;border:0;border-radius:14px;background:var(--accent);color:#fff;font-size:16px;font-weight:800;cursor:pointer;}
+.read-book-search-go-btn b{font-size:13px;opacity:.92;}
+.read-book-search-note{margin:8px 2px 0;font-size:13px;color:var(--ink-soft);}
+.read-book-search-empty{margin:12px 2px 0;font-size:14px;color:var(--ink-soft);}
+.read-book-picker-tile.hidden,.read-picker-testament-title.hidden{display:none!important;}

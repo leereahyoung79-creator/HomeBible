@@ -2991,6 +2991,107 @@
     }
   }
 
+
+  /* ---------------- 성경책 직접 찾기 (타자로 검색) ----------------
+     책 이름·약칭·초성(ㅇㅎ)으로 목록을 걸러 주고, "요 3:16"처럼 장·절까지 치면 바로 가기 줄이 나옵니다. */
+  var CHOSEONG = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+  function choseongOf(str) {
+    return String(str || "").split("").map(function (ch) {
+      var c = ch.charCodeAt(0);
+      return (c >= 0xAC00 && c <= 0xD7A3) ? CHOSEONG[Math.floor((c - 0xAC00) / 588)] : ch;
+    }).join("");
+  }
+  function isChoseongOnly(q) { return /^[ㄱ-ㅎ]+$/.test(q); }
+
+  function bookMatchesQuery(bno, q) {
+    var b = META.books[bno] || {};
+    var name = String(b.name || ""), abbr = String(b.abbr || "");
+    if (!q) return true;
+    if (isChoseongOnly(q)) return choseongOf(name).indexOf(q) === 0 || choseongOf(abbr).indexOf(q) === 0;
+    return name.indexOf(q) >= 0 || abbr === q || abbr.indexOf(q) === 0;
+  }
+
+  /* "요한 3", "요 3:16", "창세기 1장 1절", "시편23" → { bno, ch, vs } 또는 null */
+  function parseBibleReference(text) {
+    var t = String(text || "").trim().replace(/\s+/g, " ");
+    var m = t.match(/^([^0-9]+?)\s*(\d+)\s*(?:장|:|\s)?\s*(?:(\d+)\s*절?)?$/);
+    if (!m) return null;
+    var q = m[1].trim(), ch = m[2], vs = m[3] || null;
+    var hits = META.order.filter(function (bno) { var b = META.books[bno]; return b && (b.abbr === q || b.name === q); });
+    if (!hits.length) hits = META.order.filter(function (bno) { return bookMatchesQuery(bno, q); });
+    if (hits.length !== 1) {
+      var exactAbbr = META.order.filter(function (bno) { return (META.books[bno] || {}).abbr === q; });
+      if (exactAbbr.length === 1) hits = exactAbbr; else return null;
+    }
+    var bno = hits[0];
+    if (chapterNumsSorted(bno).indexOf(Number(ch)) < 0) return { bno: bno, bad: "chapter", ch: ch };
+    if (vs) {
+      var vo = DATA[bno] && DATA[bno].chapters[String(ch)];
+      if (!vo || !(String(vs) in vo)) return { bno: bno, ch: ch, vs: null, badVerse: vs };
+    }
+    return { bno: bno, ch: ch, vs: vs };
+  }
+
+  function updateBookSearch() {
+    var input = els.readBookSearchInput;
+    if (!input) return;
+    var q = input.value.trim();
+    document.getElementById("readBookSearchClear").classList.toggle("hidden", !input.value);
+    var goBox = document.getElementById("readBookSearchGo");
+    var emptyEl = document.getElementById("readBookSearchEmpty");
+    goBox.classList.add("hidden"); goBox.innerHTML = "";
+    var ref = parseBibleReference(q);
+    var anyTile = false;
+    var tiles = els.readBookPickerList.querySelectorAll(".read-book-picker-tile");
+    var order = [];
+    ["OT", "NT"].forEach(function (t) { META.order.forEach(function (bno) { if (testamentOfBook(bno) === t) order.push(bno); }); });
+    tiles.forEach(function (tile, i) {
+      var bno = order[i];
+      var show = ref ? false : bookMatchesQuery(bno, q);
+      tile.classList.toggle("hidden", !show);
+      if (show) anyTile = true;
+    });
+    els.readBookPickerList.querySelectorAll(".read-picker-testament-title, .read-book-picker-grid").forEach(function (el) {
+      if (el.classList.contains("read-picker-testament-title")) {
+        var grid = el.nextElementSibling;
+        el.classList.toggle("hidden", !!q && !grid.querySelector(".read-book-picker-tile:not(.hidden)"));
+      }
+    });
+    if (ref && !ref.bad) {
+      var b = META.books[ref.bno];
+      var label = b.name + " " + ref.ch + "장" + (ref.vs ? " " + ref.vs + "절" : "");
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "read-book-search-go-btn";
+      btn.innerHTML = '<span>📖 ' + escapeHtml2(label) + '</span><b>바로 가기 →</b>';
+      btn.addEventListener("click", function () { closeReadBookPicker(); pickerGoTo(ref.bno, ref.ch, ref.vs || undefined); });
+      goBox.appendChild(btn);
+      if (ref.badVerse) { var note = document.createElement("p"); note.className = "read-book-search-note"; note.textContent = ref.badVerse + "절은 없어서 " + ref.ch + "장 처음부터 보여드려요."; goBox.appendChild(note); }
+      goBox.classList.remove("hidden");
+      anyTile = true;
+    } else if (ref && ref.bad) {
+      var b2 = META.books[ref.bno];
+      goBox.innerHTML = '<p class="read-book-search-note">' + escapeHtml2(b2.name) + '은(는) ' + chapterNumsSorted(ref.bno).length + '장까지 있어요.</p>';
+      goBox.classList.remove("hidden");
+      anyTile = true;
+    }
+    emptyEl.classList.toggle("hidden", anyTile || !q);
+  }
+  els.readBookSearchInput = document.getElementById("readBookSearchInput");
+  if (els.readBookSearchInput) {
+    els.readBookSearchInput.addEventListener("input", updateBookSearch);
+    els.readBookSearchInput.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      var go = document.querySelector("#readBookSearchGo .read-book-search-go-btn");
+      if (go) { go.click(); return; }
+      var visible = els.readBookPickerList.querySelectorAll(".read-book-picker-tile:not(.hidden)");
+      if (visible.length === 1) visible[0].click();
+    });
+    document.getElementById("readBookSearchClear").addEventListener("click", function () {
+      els.readBookSearchInput.value = ""; updateBookSearch(); els.readBookSearchInput.focus();
+    });
+  }
+
   function openReadBookPicker() {
     if (!els.readBookPickerScreen) return;
     closeReadToolsMenus();
@@ -3001,6 +3102,8 @@
     els.readChapterPickerArea.innerHTML = "";
     els.readBookPickerStatus.textContent = "";
     if (els.readBookPickerStatus) els.readBookPickerStatus.classList.add("hidden");
+    var sb = document.getElementById("readBookSearchBox"); if (sb) sb.classList.remove("hidden");
+    if (els.readBookSearchInput) els.readBookSearchInput.value = "";
     els.readBookPickerList.innerHTML = "";
     ["OT", "NT"].forEach(function(testament) {
       var books = META.order.filter(function(bno){ return testamentOfBook(bno) === testament; });
@@ -3021,9 +3124,11 @@
       });
       els.readBookPickerList.appendChild(grid);
     });
+    if (typeof updateBookSearch === "function") updateBookSearch();
   }
 
   function showReadChapterPicker(bno) {
+    var sb = document.getElementById("readBookSearchBox"); if (sb) sb.classList.add("hidden");
     var book = META.books[bno] || {};
     els.readBookPickerList.classList.add("hidden");
     els.readBookPickerStatus.textContent = (book.name || "성경") + " — 장을 선택하세요.";
@@ -5659,34 +5764,43 @@
   /* 글씨 크기는 예전엔 4단계(작게/보통/크게/아주 크게) 문자열이었지만,
      이제는 0~100 슬라이더 값입니다. 두 크기가 각각 다른 배율 범위를
      쓰기 때문에(성경 본문용/일반용) 체크포인트도 따로 둡니다. */
-  var BIBLE_FONT_CHECKPOINTS = [0, 50, 74, 100];   // 작게·보통·크게·아주 크게에 해당하던 지점
-  var GENERAL_FONT_CHECKPOINTS = [0, 50, 75, 100];
+  /* 0~100 구간은 예전과 똑같이 움직이므로(이미 저장된 크기 그대로 유지),
+     그 위로 "더 크게(120) · 아주 크게(140) · 시니어(160)"를 이어 붙였습니다. */
+  var FONT_SLIDER_MAX = 160;
+  var BIBLE_FONT_CHECKPOINTS = [0, 50, 74, 100, 120, 140, 160];
+  var GENERAL_FONT_CHECKPOINTS = [0, 50, 75, 100, 120, 140, 160];
 
-  function clampSlider(value, fallback) {
+  function clampSlider(value, fallback, max) {
     var n = Number(value);
     if (!isFinite(n)) n = (fallback == null ? 50 : fallback);
-    return Math.max(0, Math.min(100, n));
+    return Math.max(0, Math.min(max || 100, n));
   }
 
   function bibleScaleFromSlider(value) {
-    var v = clampSlider(value, 50);
-    return v <= 50 ? (0.90 + (v / 50) * 0.10) : (1.0 + ((v - 50) / 50) * 0.34);
+    var v = clampSlider(value, 50, FONT_SLIDER_MAX);
+    if (v <= 50) return 0.90 + (v / 50) * 0.10;
+    if (v <= 100) return 1.0 + ((v - 50) / 50) * 0.34;
+    if (v <= 120) return 1.34 + ((v - 100) / 20) * 0.26;   // 1.60
+    if (v <= 140) return 1.60 + ((v - 120) / 20) * 0.30;   // 1.90
+    return 1.90 + ((v - 140) / 20) * 0.30;                 // 2.20
   }
 
   function generalScaleFromSlider(value) {
-    var v = clampSlider(value, 50);
-    return v <= 50 ? (0.92 + (v / 50) * 0.08) : (1.0 + ((v - 50) / 50) * 0.28);
+    var v = clampSlider(value, 50, FONT_SLIDER_MAX);
+    if (v <= 50) return 0.92 + (v / 50) * 0.08;
+    if (v <= 100) return 1.0 + ((v - 50) / 50) * 0.28;
+    if (v <= 120) return 1.28 + ((v - 100) / 20) * 0.17;   // 1.45
+    if (v <= 140) return 1.45 + ((v - 120) / 20) * 0.15;   // 1.60
+    return 1.60 + ((v - 140) / 20) * 0.15;                 // 1.75
   }
 
+  /* 메인(표지) 화면은 큰 글씨의 영향을 받지 않게 하므로 항상 "normal"입니다. */
   function generalFontSizeBucket(scale) {
-    if (scale >= 1.20) return "xlarge";
-    if (scale >= 1.08) return "large";
-    if (scale <= 0.95) return "small";
     return "normal";
   }
 
   function nearestCheckpointIndex(value, checkpoints) {
-    var v = clampSlider(value, checkpoints[1]);
+    var v = clampSlider(value, checkpoints[1], FONT_SLIDER_MAX);
     var bestIdx = 0, bestDiff = Infinity;
     for (var i = 0; i < checkpoints.length; i++) {
       var d = Math.abs(checkpoints[i] - v);
@@ -5698,7 +5812,7 @@
   function migrateLegacyFontSize(value, checkpoints) {
     var legacy = { small: checkpoints[0], normal: checkpoints[1], large: checkpoints[2], xlarge: checkpoints[3] };
     if (typeof value === "string" && Object.prototype.hasOwnProperty.call(legacy, value)) return legacy[value];
-    return clampSlider(value, checkpoints[1]);
+    return clampSlider(value, checkpoints[1], FONT_SLIDER_MAX);
   }
 
   function loadDisplaySettings() {
@@ -5757,15 +5871,21 @@
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
     var el;
     while ((el = walker.nextNode())) {
-      if (isBibleTextElement(el) || el.closest('#settingsScreen .settings-slider-row, #fontFamilyOptions, #settingsScreen .settings-actions')) continue;
-      if (!hasDirectText(el)) continue;
+      if (isBibleTextElement(el) || el.closest('#cover, #settingsScreen .settings-slider-row, #fontFamilyOptions, #settingsScreen .settings-actions')) continue;
+      var isTextField = (el.tagName === 'TEXTAREA') || (el.tagName === 'INPUT' && /^(text|search|)$/.test(el.type || ''));
+      if (!hasDirectText(el) && !isTextField) continue;
       if (!generalFontBaseSizes.has(el)) {
         var computed = parseFloat(window.getComputedStyle(el).fontSize);
         if (!isFinite(computed) || computed <= 0) continue;
         generalFontBaseSizes.set(el, computed);
       }
       var base = generalFontBaseSizes.get(el);
-      el.style.fontSize = (base * scale) + 'px';
+      if (isTextField) {
+        /* 입력칸은 CSS가 16px을 !important로 고정하고 있어서(아이폰 확대 방지) 같은 방식으로 덮어씁니다. 16px 아래로는 줄이지 않습니다. */
+        el.style.setProperty('font-size', Math.max(16, base * scale) + 'px', 'important');
+      } else {
+        el.style.fontSize = (base * scale) + 'px';
+      }
       el.style.lineHeight = '';
     }
   }
@@ -5818,7 +5938,7 @@
   function syncSettingsSliderUI(inputEl, valueEl, value) {
     if (inputEl) {
       inputEl.value = value;
-      inputEl.style.setProperty("--pct", value + "%");
+      inputEl.style.setProperty("--pct", (value / (Number(inputEl.max) || 100) * 100) + "%");
     }
     if (valueEl) valueEl.textContent = String(Math.round(value));
   }
@@ -5918,8 +6038,8 @@
   });
 
   if (els.fontSizeSlider) els.fontSizeSlider.addEventListener("input", function() {
-    var v = clampSlider(els.fontSizeSlider.value, 50);
-    els.fontSizeSlider.style.setProperty("--pct", v + "%");
+    var v = clampSlider(els.fontSizeSlider.value, 50, FONT_SLIDER_MAX);
+    els.fontSizeSlider.style.setProperty("--pct", (v / FONT_SLIDER_MAX * 100) + "%");
     if (els.fontSizeSliderValue) els.fontSizeSliderValue.textContent = String(v);
     document.documentElement.style.setProperty("--bible-font-scale", bibleScaleFromSlider(v));
     updateReadFontSizeValue(v);
@@ -5930,8 +6050,8 @@
   });
 
   if (els.generalFontSizeSlider) els.generalFontSizeSlider.addEventListener("input", function() {
-    var v = clampSlider(els.generalFontSizeSlider.value, 50);
-    els.generalFontSizeSlider.style.setProperty("--pct", v + "%");
+    var v = clampSlider(els.generalFontSizeSlider.value, 50, FONT_SLIDER_MAX);
+    els.generalFontSizeSlider.style.setProperty("--pct", (v / FONT_SLIDER_MAX * 100) + "%");
     if (els.generalFontSizeSliderValue) els.generalFontSizeSliderValue.textContent = String(v);
     var scale = generalScaleFromSlider(v);
     document.documentElement.setAttribute("data-general-font-size", v);

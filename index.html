@@ -243,6 +243,15 @@
       <button id="closeReadBookPickerBtn" class="icon-btn" type="button">✕</button>
     </div>
     <p id="readBookPickerStatus" class="read-picker-sub hidden"></p>
+    <div id="readBookSearchBox" class="read-book-search">
+      <div class="read-book-search-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input id="readBookSearchInput" type="text" inputmode="text" autocomplete="off" enterkeyhint="go" placeholder="책 이름·장·절을 입력해 보세요 (예: 요한, 요 3:16, ㅇㅎ)" aria-label="성경 직접 찾기">
+        <button id="readBookSearchClear" type="button" class="read-book-search-clear hidden" aria-label="지우기">✕</button>
+      </div>
+      <div id="readBookSearchGo" class="read-book-search-go hidden"></div>
+      <p id="readBookSearchEmpty" class="read-book-search-empty hidden">찾는 성경이 없어요. 이름을 다시 확인해 주세요.</p>
+    </div>
     <div id="readBookPickerList" class="read-book-picker-list"></div>
     <div id="readChapterPickerArea" class="read-chapter-picker-area hidden"></div>
   </div>
@@ -877,16 +886,16 @@
         <h3>성경 말씀 글씨 크기 <span class="settings-help">성경 본문에만 적용</span></h3>
         <div class="settings-slider-row">
           <span class="settings-slider-icon settings-slider-icon-ga" aria-hidden="true">가</span>
-          <input type="range" id="fontSizeSlider" class="settings-range" min="0" max="100" step="1" value="50" aria-label="성경 말씀 글씨 크기">
+          <input type="range" id="fontSizeSlider" class="settings-range" min="0" max="160" step="1" value="50" aria-label="성경 말씀 글씨 크기">
           <span class="settings-slider-value" id="fontSizeSliderValue">50</span>
         </div>
       </div>
 
       <div class="settings-section">
-        <h3>일반 글씨 크기 <span class="settings-help">성경 본문을 제외한 화면에 적용</span></h3>
+        <h3>일반 글씨 크기 <span class="settings-help">성경 본문·메인 화면을 제외한 화면에 적용</span></h3>
         <div class="settings-slider-row">
           <span class="settings-slider-icon settings-slider-icon-ga" aria-hidden="true">가</span>
-          <input type="range" id="generalFontSizeSlider" class="settings-range" min="0" max="100" step="1" value="50" aria-label="일반 글씨 크기">
+          <input type="range" id="generalFontSizeSlider" class="settings-range" min="0" max="160" step="1" value="50" aria-label="일반 글씨 크기">
           <span class="settings-slider-value" id="generalFontSizeSliderValue">50</span>
         </div>
       </div>
