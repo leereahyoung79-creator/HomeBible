@@ -449,6 +449,8 @@
         <button id="closeCompareBtn" class="icon-btn" title="닫기">✕</button>
       </div>
       <p class="stats-sub" id="compareRef">현재 선택한 구절을 번역본별로 비교합니다.</p>
+      <div id="compareChips" class="compare-chips"></div>
+      <div class="compare-chips-ctl"><span id="compareChipsCount"></span><span><button id="compareChipsAll" type="button">전체 선택</button><button id="compareChipsDefault" type="button">기본값</button></span></div>
     </div>
     <div class="modal-body compare-body">
       <p class="compare-swipe-hint">← 옆으로 밀어서 이전·다음 절 →</p>
@@ -697,7 +699,7 @@
       <select id="bookSelect"></select>
       <select id="chapterSelect"></select>
       <select id="verseSelect"></select>
-      <select id="translationSelect"><option value="std">표준새번역</option><option value="easy">쉬운성경</option><option value="gae">개역개정</option></select>
+      <select id="translationSelect"><option value="gae">개역개정</option><option value="hg">개역한글</option><option value="br">바른성경</option><option value="std">표준새번역</option><option value="wr">우리말성경</option><option value="easy">쉬운성경</option><option value="jd">공동번역</option></select>
     </div>
 
     <div class="write-user-row">

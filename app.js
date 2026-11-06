@@ -3,11 +3,48 @@
 
   var META = window.BIBLE_META;
   var DATA = window.BIBLE_DATA;
+  /* 번역본 목록(화면에 보이는 순서). hg/br/jd/wr 은 용량이 커서 고를 때 처음 한 번만 불러옵니다. */
+  function lazyTranslation(label, src, suffix) {
+    return {
+      label: label, src: src,
+      get meta() { return window["BIBLE_META_" + suffix] || null; },
+      get data() { return window["BIBLE_DATA_" + suffix] || null; }
+    };
+  }
   var TRANSLATIONS = {
+    gae: { meta: window.BIBLE_META_GAE, data: window.BIBLE_DATA_GAE, label: "개역개정" },
+    hg: lazyTranslation("개역한글", "bible-data-hg.js", "HG"),
+    br: lazyTranslation("바른성경", "bible-data-br.js", "BR"),
     std: { meta: window.BIBLE_META, data: window.BIBLE_DATA, label: "표준새번역" },
+    wr: lazyTranslation("우리말성경", "bible-data-wr.js", "WR"),
     easy: { meta: window.BIBLE_META_EASY, data: window.BIBLE_DATA_EASY, label: "쉬운성경" },
-    gae: { meta: window.BIBLE_META_GAE, data: window.BIBLE_DATA_GAE, label: "개역개정" }
+    jd: lazyTranslation("공동번역", "bible-data-jd.js", "JD")
   };
+  var translationLoading = {};
+  function translationReady(key) {
+    var t = TRANSLATIONS[key];
+    return !!(t && t.meta && t.data);
+  }
+  function ensureTranslation(key, cb) {
+    var t = TRANSLATIONS[key];
+    if (!t) { cb(false); return; }
+    if (translationReady(key)) { cb(true); return; }
+    if (!t.src) { cb(false); return; }
+    if (translationLoading[key]) { translationLoading[key].push(cb); return; }
+    translationLoading[key] = [cb];
+    var sc = document.createElement("script");
+    sc.src = t.src;
+    sc.onload = function () {
+      var list = translationLoading[key] || []; translationLoading[key] = null;
+      var ok = translationReady(key);
+      list.forEach(function (f) { f(ok); });
+    };
+    sc.onerror = function () {
+      var list = translationLoading[key] || []; translationLoading[key] = null;
+      list.forEach(function (f) { f(false); });
+    };
+    document.head.appendChild(sc);
+  }
   var TRANSLATION_KEY = "bible_write_translation_v1";
   var currentTranslation = "std";
 
@@ -17,8 +54,18 @@
   function saveTranslationPref(key) {
     try { localStorage.setItem(TRANSLATION_KEY, key); } catch (e) {}
   }
-  function setTranslation(key) {
+  function setTranslation(key, done) {
     if (!TRANSLATIONS[key]) key = "std";
+    if (!translationReady(key)) {
+      ensureTranslation(key, function (ok) {
+        if (ok) { setTranslation(key, done); }
+        else {
+          if (typeof appAlert === "function") appAlert("번역본을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");
+          if (done) done(false);
+        }
+      });
+      return;
+    }
     currentTranslation = key;
     META = TRANSLATIONS[key].meta;
     DATA = TRANSLATIONS[key].data;
@@ -26,6 +73,7 @@
     if (els.translationSelect) els.translationSelect.value = key;
     if (els.readTranslationSelect) els.readTranslationSelect.value = key;
     if (els.readTranslationPickerLabel) els.readTranslationPickerLabel.textContent = TRANSLATIONS[key].label;
+    if (done) done(true);
   }
 
   var TOTAL_VERSES = 31102;
@@ -1868,6 +1916,11 @@
 
   function goTo(bno, chapter, verseIndex) {
     if (els.appScreen) els.appScreen.classList.remove("nav-hidden");
+    // 번역본마다 장 구성이 조금 다를 수 있어(예: 공동번역 말라기 3장), 없는 장이면 그 책의 가장 가까운 장으로 갑니다.
+    if (DATA[bno] && !DATA[bno].chapters[String(chapter)]) {
+      var chKeys = Object.keys(DATA[bno].chapters).map(Number).sort(function (a, b) { return a - b; });
+      if (chKeys.length) chapter = Math.min(Number(chapter), chKeys[chKeys.length - 1]) < 1 ? chKeys[0] : chKeys[chKeys.length - 1];
+    }
     state.bookNo = bno;
     state.chapter = String(chapter);
     var versesObj = DATA[bno].chapters[state.chapter];
@@ -2452,6 +2505,48 @@
     return book.chapters[String(ch)][String(vs)] || null;
   }
 
+  var COMPARE_PICK_KEY = "bible_compare_pick_v1";
+  var COMPARE_PICK_DEFAULT = ["std", "easy", "gae"];
+  function loadComparePick() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(COMPARE_PICK_KEY));
+      if (Array.isArray(arr)) {
+        arr = arr.filter(function(k){ return TRANSLATIONS[k]; });
+        if (arr.length) return arr;
+      }
+    } catch (e) {}
+    return COMPARE_PICK_DEFAULT.slice();
+  }
+  function saveComparePick(arr) {
+    try { localStorage.setItem(COMPARE_PICK_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+  function renderCompareChips(item) {
+    var wrap = document.getElementById("compareChips");
+    if (!wrap) return;
+    var picked = loadComparePick();
+    wrap.innerHTML = "";
+    Object.keys(TRANSLATIONS).forEach(function(key){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "compare-chip" + (picked.indexOf(key) >= 0 ? " on" : "");
+      b.textContent = TRANSLATIONS[key].label;
+      b.addEventListener("click", function(){
+        var cur = loadComparePick(), i = cur.indexOf(key);
+        if (i >= 0) {
+          if (cur.length === 1) { if (typeof appAlert === "function") appAlert("최소 1개는 선택해야 해요."); return; }
+          cur.splice(i, 1);
+        } else {
+          cur.push(key);
+        }
+        saveComparePick(cur);
+        var it = currentReadVerse(); if (it) renderCompareVerse(it);
+      });
+      wrap.appendChild(b);
+    });
+    var cnt = document.getElementById("compareChipsCount");
+    if (cnt) cnt.textContent = picked.length + "개 선택됨 / 전체 " + Object.keys(TRANSLATIONS).length + "개";
+  }
+
   function getTranslationList() {
     return Object.keys(TRANSLATIONS).map(function(key) {
       return { key:key, name:TRANSLATIONS[key].label, data:TRANSLATIONS[key].data, meta:TRANSLATIONS[key].meta };
@@ -2470,19 +2565,29 @@
   function renderCompareVerse(item) {
     if (!item) return;
     var ref = commentaryLabel(item);
-    els.compareRef.textContent = ref + " — 현재 앱에 등록된 모든 번역본 비교";
+    els.compareRef.textContent = ref + " — 선택한 번역본 비교";
     els.compareCards.innerHTML = "";
 
-    var translations = getTranslationList();
+    renderCompareChips(item);
+    var picked = loadComparePick();
+    var translations = getTranslationList().filter(function(t){ return picked.indexOf(t.key) >= 0; });
     translations.forEach(function(t) {
-      var verse = findVerseInTranslation(t.data, item.bno, item.ch, item.vs);
       var card = document.createElement("div");
       card.className = "compare-translation-card";
-      card.innerHTML =
-        '<div class="compare-translation-name">' + escapeHtml2(t.name) + '</div>' +
-        '<div class="compare-translation-text">' +
-          (verse && verse.t ? escapeHtml2(verse.t) : "이 번역본에는 해당 구절이 없습니다.") +
-        '</div>';
+      var body;
+      if (!translationReady(t.key)) {
+        body = '<div class="compare-loading">불러오는 중…</div>';
+        ensureTranslation(t.key, function(ok){
+          if (els.compareScreen.classList.contains("hidden")) return;
+          if (ok) { var cur = currentReadVerse(); if (cur) renderCompareVerse(cur); }
+          else body = null;
+        });
+      } else {
+        var verse = findVerseInTranslation(TRANSLATIONS[t.key].data, item.bno, item.ch, item.vs);
+        body = '<div class="compare-translation-text">' +
+          (verse && verse.t ? escapeHtml2(verse.t) : "이 번역본에는 해당 구절이 없습니다.") + '</div>';
+      }
+      card.innerHTML = '<div class="compare-translation-name">' + escapeHtml2(t.name) + '</div>' + (body || '<div class="compare-translation-text">번역본을 불러오지 못했어요.</div>');
       els.compareCards.appendChild(card);
     });
 
@@ -3208,14 +3313,21 @@
       btn.innerHTML = '<b>' + escapeHtml2(t.name) + '</b><span>' + escapeHtml2(t.key.toUpperCase()) + '</span>';
       btn.addEventListener("click", function(){
         var bno = pickerCurrentBookNo(), ch = pickerCurrentChapter();
-        setTranslation(t.key);
-        if (bno && TRANSLATIONS[t.key].meta.books[bno] && TRANSLATIONS[t.key].meta.books[bno].chapters[String(ch)]) {
-          pickerGoTo(bno, ch);
-        } else {
-          var fallbackBook = TRANSLATIONS[t.key].meta.order[0];
-          pickerGoTo(fallbackBook, "1");
-        }
-        closeReadTranslationPicker();
+        var needLoad = !translationReady(t.key);
+        if (needLoad) { btn.disabled = true; btn.innerHTML = '<b>' + escapeHtml2(t.name) + '</b><span>불러오는 중…</span>'; }
+        setTranslation(t.key, function(ok){
+          btn.disabled = false;
+          if (!ok) { openReadTranslationPicker(); return; }
+          var M = TRANSLATIONS[t.key].meta;
+          if (bno && M.books[bno] && M.books[bno].chapters[String(ch)]) {
+            pickerGoTo(bno, ch);
+          } else if (bno && M.books[bno]) {
+            pickerGoTo(bno, "1");
+          } else {
+            pickerGoTo(M.order[0], "1");
+          }
+          closeReadTranslationPicker();
+        });
       });
       els.readTranslationPickerList.appendChild(btn);
     });
@@ -5513,6 +5625,9 @@
   els.commentaryBottomCloseBtn.addEventListener("click", closeCommentary);
   if (els.compareBtn) els.compareBtn.addEventListener("click", openCompare);
   els.closeCompareBtn.addEventListener("click", closeCompare);
+  var cmpAll = document.getElementById("compareChipsAll"), cmpDef = document.getElementById("compareChipsDefault");
+  if (cmpAll) cmpAll.addEventListener("click", function(){ saveComparePick(Object.keys(TRANSLATIONS)); var it = currentReadVerse(); if (it) renderCompareVerse(it); });
+  if (cmpDef) cmpDef.addEventListener("click", function(){ saveComparePick(COMPARE_PICK_DEFAULT.slice()); var it = currentReadVerse(); if (it) renderCompareVerse(it); });
   els.compareBottomCloseBtn.addEventListener("click", closeCompare);
 
   /* ---------------- 구절비교: 손동작(스와이프)으로 이전/다음 절 넘기기 ----------------
@@ -6104,7 +6219,21 @@
   function init() {
     applyDisplaySettings(loadDisplaySettings());
     startGeneralFontObserver();
-    setTranslation(loadTranslationPref());
+    (function () {
+      var pref = loadTranslationPref();
+      if (TRANSLATIONS[pref] && !translationReady(pref)) {
+        setTranslation("std");
+        setTranslation(pref, function (ok) {
+          // 늦게 불러온 번역본으로 바뀌면, 열려 있는 성경 읽기 화면을 다시 그립니다.
+          var rs = document.getElementById("readScreen");
+          if (ok && rs && !rs.classList.contains("hidden") && readState.bookNo && META.books[readState.bookNo]) {
+            try { readGoTo(readState.bookNo, META.books[readState.bookNo].chapters[readState.chapter] ? readState.chapter : "1"); } catch (e) {}
+          }
+        });
+      } else {
+        setTranslation(pref);
+      }
+    })();
     if (els.writeTestamentSelect) {
       els.writeTestamentSelect.value = "OT";
       populateWriteBooks("OT");
