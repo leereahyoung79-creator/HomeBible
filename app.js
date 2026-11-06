@@ -16,7 +16,9 @@
     hg: lazyTranslation("개역한글", "bible-data-hg.js", "HG"),
     br: lazyTranslation("바른성경", "bible-data-br.js", "BR"),
     std: { meta: window.BIBLE_META, data: window.BIBLE_DATA, label: "표준새번역" },
-    easy: { meta: window.BIBLE_META_EASY, data: window.BIBLE_DATA_EASY, label: "쉬운성경" }
+    wr: lazyTranslation("우리말성경", "bible-data-wr.js", "WR"),
+    easy: { meta: window.BIBLE_META_EASY, data: window.BIBLE_DATA_EASY, label: "쉬운성경" },
+    jd: lazyTranslation("공동번역", "bible-data-jd.js", "JD")
   };
   var translationLoading = {};
   function translationReady(key) {
