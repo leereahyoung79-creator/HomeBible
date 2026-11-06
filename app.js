@@ -13,7 +13,6 @@
   }
   var TRANSLATIONS = {
     gae: { meta: window.BIBLE_META_GAE, data: window.BIBLE_DATA_GAE, label: "개역개정" },
-    hg: lazyTranslation("개역한글", "bible-data-hg.js", "HG"),
     br: lazyTranslation("바른성경", "bible-data-br.js", "BR"),
     std: { meta: window.BIBLE_META, data: window.BIBLE_DATA, label: "표준새번역" },
     wr: lazyTranslation("우리말성경", "bible-data-wr.js", "WR"),
