@@ -1154,8 +1154,8 @@
         '<div class="gratitude-history-record-head">' +
         '<div class="gratitude-history-record-date">' + formatGratitudeDateLong(date) + '</div>' +
         '<div class="gratitude-history-record-buttons">' +
-        '<button type="button" class="gratitude-history-edit-btn" data-edit-date="' + escapeHtml2(date) + '" aria-label="기록 수정">✏️ 수정</button>' +
-        '<button type="button" class="gratitude-history-delete-btn" data-delete-date="' + escapeHtml2(date) + '" aria-label="기록 삭제">🗑 삭제</button>' +
+        '<button type="button" class="gratitude-history-edit-btn" data-edit-date="' + escapeHtml2(date) + '" aria-label="기록 수정">수정</button>' +
+        '<button type="button" class="gratitude-history-delete-btn" data-delete-date="' + escapeHtml2(date) + '" aria-label="기록 삭제">삭제</button>' +
         '</div>' +
         '</div>' +
         '<div class="gratitude-history-section"><div class="gratitude-history-title">🌿 감사</div>' +
@@ -2349,7 +2349,7 @@
       }).join('');
     }
     setSermonPassageExpanded(true);
-    if (els.sermonTitleInput) els.sermonTitleInput.value = e.title || "";
+    setSermonTitle(e.title || "");
     if (els.sermonNoteInput) els.sermonNoteInput.value = e.note || "";
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = false;
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "저장된 예배노트";
@@ -3755,7 +3755,7 @@
   function updateSermonSelectionToolbar() {
     var count = Object.keys(selectedSermonVerses).length;
     if (els.sermonNoteBtn) {
-      if (!sermonSelectionMode) els.sermonNoteBtn.textContent = "📝 예배노트";
+      if (!sermonSelectionMode) els.sermonNoteBtn.textContent = "📝 노트";
       else if (count) els.sermonNoteBtn.textContent = "📝 선택한 말씀으로 노트 작성 (" + count + "절)";
       else els.sermonNoteBtn.textContent = "✕ 말씀 선택 취소";
       els.sermonNoteBtn.classList.toggle("active", sermonSelectionMode);
@@ -3805,6 +3805,29 @@
     }).join(", ");
   }
 
+  /* 예배노트 제목: 길면 줄바꿈되어 전부 보이는 자동 높이 입력칸 (엔터는 막음) */
+  function fitSermonTitle() {
+    var t = els.sermonTitleInput;
+    if (!t) return;
+    t.style.height = "auto";
+    if (t.scrollHeight) t.style.height = t.scrollHeight + "px";
+  }
+  function setSermonTitle(v) {
+    if (!els.sermonTitleInput) return;
+    els.sermonTitleInput.value = v;
+    fitSermonTitle();
+    setTimeout(fitSermonTitle, 120);
+  }
+  if (els.sermonTitleInput) {
+    els.sermonTitleInput.addEventListener("input", function () {
+      var v = els.sermonTitleInput.value;
+      if (/[\r\n]/.test(v)) els.sermonTitleInput.value = v.replace(/[\r\n]+/g, " ");
+      fitSermonTitle();
+    });
+    els.sermonTitleInput.addEventListener("keydown", function (ev) { if (ev.key === "Enter") ev.preventDefault(); });
+    window.addEventListener("resize", fitSermonTitle);
+  }
+
   function openSermonEditor() {
     var items = selectedSermonArray();
     if (!items.length) return;
@@ -3831,7 +3854,7 @@
     });
     updateSermonEditorHeader(today, existing);
     updateSermonSaveButtonLabel(!!existing);
-    if (els.sermonTitleInput) els.sermonTitleInput.value = existing ? existing.title : "";
+    setSermonTitle(existing ? existing.title : "");
     if (els.sermonNoteInput) els.sermonNoteInput.value = existing ? existing.note : "";
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = !existing;
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "";
@@ -3839,7 +3862,7 @@
     if (els.sermonHistory) els.sermonHistory.classList.add("hidden");
     if (els.sermonNoteScreen) els.sermonNoteScreen.classList.remove("hidden");
     clearSermonSelection();
-    setTimeout(function(){ if (els.sermonTitleInput) els.sermonTitleInput.focus(); }, 80);
+    setTimeout(function(){ if (els.sermonTitleInput) { els.sermonTitleInput.focus(); fitSermonTitle(); } }, 80);
   }
 
   function saveSermonEditor() {
@@ -3857,7 +3880,7 @@
       ch: items[0].ch,
       vs: verseLabel,
       label: buildSermonSelectionLabel(items),
-      title: els.sermonTitleInput ? els.sermonTitleInput.value.trim() : "",
+      title: els.sermonTitleInput ? els.sermonTitleInput.value.replace(/\s*\n+\s*/g, " ").trim() : "",
       note: els.sermonNoteInput ? els.sermonNoteInput.value.trim() : "",
       updatedAt: nowStamp()
     };
@@ -3944,7 +3967,7 @@
     sermonEditorEntryDate = null;
     sermonEditorEntryIndex = -1;
     if (els.sermonEditorDeleteBtn) els.sermonEditorDeleteBtn.disabled = true;
-    if (els.sermonTitleInput) els.sermonTitleInput.value = "";
+    setSermonTitle("");
     if (els.sermonNoteInput) els.sermonNoteInput.value = "";
     if (els.sermonEditorSaved) els.sermonEditorSaved.textContent = "삭제되었습니다.";
     setTimeout(function(){ closeSermonNote(); }, 500);
@@ -4359,11 +4382,12 @@
     }
     els.recordsHubContentBody.innerHTML = html || '<p class="records-hub-content-empty">내용이 없어요.</p>';
     els.recordsHubContentBody.querySelectorAll(".record-detail-card").forEach(function (card) {
-      var hint = document.createElement("div");
-      hint.className = "record-detail-edit-hint";
-      hint.textContent = "✏️ 눌러서 수정 · 삭제";
-      card.appendChild(hint);
-      card.addEventListener("click", function () {
+      var actions = document.createElement("div");
+      actions.className = "record-detail-actions";
+      actions.innerHTML = '<button type="button" class="record-pill record-pill-edit">수정</button>' +
+        '<button type="button" class="record-pill record-pill-del">삭제</button>';
+      card.appendChild(actions);
+      actions.querySelector(".record-pill-edit").addEventListener("click", function () {
         if (cat === "reflection") {
           recordsHubEdit = { cat: "reflection", key: card.getAttribute("data-vkey") };
           renderRecordsHubContent();
@@ -4374,6 +4398,40 @@
           var idx = Number(card.getAttribute("data-idx"));
           var raw = ((getProfile(state.currentBirth).sermonNotes || {})[dateKey] || [])[idx];
           if (raw) openSavedSermonEntry(raw, dateKey, idx);
+        }
+      });
+      actions.querySelector(".record-pill-del").addEventListener("click", function () {
+        if (cat === "reflection") {
+          var vk = card.getAttribute("data-vkey");
+          var pp = vk.split("-");
+          appConfirm(verseKeyToRefLabel(vk) + " 묵상 노트를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.", function () {
+            updateProfile(state.currentBirth, function (pr) { delete pr.notes[vk]; });
+            syncPost("deleteNote", { birth: state.currentBirth, name: getProfile(state.currentBirth).name || "", bookNo: pp[0], chapter: pp[1], verse: pp[2] });
+            recordsHubEdit = null; recordsHubDrillDate = null;
+            renderRecordsHubNavCounts(); renderRecordsHubContent();
+          });
+        } else if (cat === "gratitude") {
+          appConfirm(formatGratitudeDateLong(dateKey) + " 기록을 삭제할까요?", function () {
+            deleteGratitudeRecord(dateKey);
+            recordsHubEdit = null; recordsHubDrillDate = null;
+            renderRecordsHubNavCounts(); renderRecordsHubContent();
+          });
+        } else if (cat === "sermon") {
+          var si = Number(card.getAttribute("data-idx"));
+          appConfirm("이 예배노트를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.", function () {
+            var notes = loadSermonNotes();
+            var list = notes[dateKey] || [];
+            var removed = list[si];
+            if (!removed) return;
+            var re = parseSermonEntry(removed);
+            list.splice(si, 1);
+            if (list.length) notes[dateKey] = list; else delete notes[dateKey];
+            saveSermonNotes(notes);
+            deleteSermonRemote({ bno: re.bno, ch: re.ch, vs: re.vs, date: dateKey });
+            if (els.readVerseList && readState.bookNo && readState.chapter) renderReadChapter();
+            recordsHubDrillDate = list.length ? dateKey : null;
+            renderRecordsHubNavCounts(); renderRecordsHubContent();
+          });
         }
       });
     });
@@ -5617,7 +5675,7 @@
   els.sermonNoteScreen.addEventListener("click", function (e) {
     if (e.target === els.sermonNoteScreen) closeSermonNote();
   });
-  els.sermonHistoryBtn.addEventListener("click", openSermonHistory);
+  if (els.sermonHistoryBtn) els.sermonHistoryBtn.addEventListener("click", openSermonHistory);
   if (els.copyVerseBtn) els.copyVerseBtn.addEventListener("click", function () {
     copyMode = !copyMode;
     if (!copyMode) clearCopyVerseSelection();
