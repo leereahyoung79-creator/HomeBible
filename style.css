@@ -4610,10 +4610,10 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
 #readScreen:not(.nav-hidden) ~ .read-location-pill, body:has(#readScreen:not(.hidden):not(.nav-hidden)) .read-location-pill{top:86px;}
 
 /* 장 넘김 효과: 본문 슬라이드 + 이동한 장 알약 */
-@keyframes turnNext{0%{opacity:0;transform:translateX(46px);}60%{opacity:.7;}100%{opacity:1;transform:translateX(0);}}
-@keyframes turnPrev{0%{opacity:0;transform:translateX(-46px);}60%{opacity:.7;}100%{opacity:1;transform:translateX(0);}}
-.read-verse-list.turn-next{animation:turnNext .38s ease-out;}
-.read-verse-list.turn-prev{animation:turnPrev .38s ease-out;}
+@keyframes turnNext{0%{opacity:.4;transform:translateX(100%);}100%{opacity:1;transform:translateX(0);}}
+@keyframes turnPrev{0%{opacity:.4;transform:translateX(-100%);}100%{opacity:1;transform:translateX(0);}}
+.read-verse-list.turn-next,.verse-card.turn-next{animation:turnNext .26s ease-out;}
+.read-verse-list.turn-prev,.verse-card.turn-prev{animation:turnPrev .26s ease-out;}
 .read-chapter-toast{
   position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
   z-index:260;display:flex;flex-direction:row;align-items:center;gap:8px;
@@ -4753,3 +4753,11 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
 .read-bottom-bookmark-panel .bookmark-slot.editing{padding-right:38px;border-color:#C0392B;background:#FFF3F1;}
 .bookmark-x{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#C0392B;color:#fff;font-size:22px;font-weight:900;line-height:26px;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
 .read-bottom-bookmark-panel.bookmark-editing .bookmark-slot:disabled{opacity:.6;}
+
+
+/* ===== 컴퓨터 화면 전용 동그라미 ‹ › 버튼 ===== */
+.side-arrow{display:none;}
+@media (hover:hover) and (pointer:fine) and (min-width:1024px){
+  .side-arrow{display:flex;position:fixed;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;background:#fff;border:2px solid var(--accent);color:var(--accent);font-size:32px;font-weight:700;line-height:1;align-items:center;justify-content:center;padding:0 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;z-index:50;font-family:inherit;}
+  .side-arrow:hover{background:var(--accent);color:#fff;}
+}

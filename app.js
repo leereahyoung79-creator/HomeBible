@@ -389,8 +389,7 @@
     writeInput: document.getElementById("writeInput"),
     writeOverlay: document.getElementById("writeOverlay"),
     verseAccuracy: document.getElementById("verseAccuracy"),
-    prevVerseBtn: document.getElementById("prevVerseBtn"),
-    nextVerseBtn: document.getElementById("nextVerseBtn"),
+    verseCard: document.getElementById("verseCard"),
     chapterDots: document.getElementById("chapterDots"),
 
     reflectionToggle: document.getElementById("reflectionToggle"),
@@ -1973,6 +1972,28 @@
     });
   }
 
+  /* ---------------- 필사: 쓰던 글 보관 (구절별, 이 기기에만 저장) ---------------- */
+  var WRITE_DRAFT_KEY = "bible_write_drafts_v1";
+  function loadWriteDrafts() {
+    try { return JSON.parse(localStorage.getItem(WRITE_DRAFT_KEY) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function writeDraftSlot() { return state.currentBirth ? String(state.currentBirth) : "_"; }
+  function getWriteDraft() {
+    var all = loadWriteDrafts();
+    var mine = all[writeDraftSlot()] || {};
+    return mine[verseKey()] || "";
+  }
+  function setWriteDraft(text) {
+    try {
+      var all = loadWriteDrafts();
+      var slot = writeDraftSlot();
+      var mine = all[slot] || {};
+      if (text) mine[verseKey()] = text; else delete mine[verseKey()];
+      all[slot] = mine;
+      localStorage.setItem(WRITE_DRAFT_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
   function renderVerse() {
     var v = DATA[state.bookNo].chapters[state.chapter][state.verse];
     els.verseNum.textContent = state.verse;
@@ -1983,11 +2004,11 @@
     els.writeOverlay.innerHTML = "";
     els.verseAccuracy.textContent = "";
     els.verseAccuracy.classList.remove("done");
+    var savedDraft = getWriteDraft();
+    if (savedDraft) { els.writeInput.value = savedDraft; renderOverlay(); }
 
     var idx = currentVerseIndex();
     els.progressText.textContent = (idx + 1) + " / " + state.verseKeys.length;
-    els.prevVerseBtn.disabled = (idx === 0 && isFirstChapterOfFirstBook());
-    els.nextVerseBtn.textContent = "다음 구절 →";
 
     renderChapterDots();
     renderReflection();
@@ -5637,26 +5658,54 @@
       if (swipe.axis === "horizontal") {
         /* 가로 스와이프로 확정되면, 세로 스크롤/절 탭(클릭)으로 이어지지 않도록 기본 동작을 막습니다. */
         e.preventDefault();
+        /* 손가락을 따라 본문이 같이 움직입니다. (첫/마지막 장 쪽으로는 살짝만) */
+        var list = els.readVerseList;
+        if (list) {
+          var dlt = dx < 0 ? 1 : -1;
+          var follow = canReadMove(dlt) ? dx : dx * 0.25;
+          list.style.transition = "none";
+          list.style.transform = "translateX(" + follow + "px)";
+          list.style.opacity = String(Math.max(0.55, 1 - Math.abs(follow) / 520));
+        }
       }
     }
 
+    function canReadMove(delta) {
+      if (!readState.bookNo) return false;
+      var chNums = chapterNumsSorted(readState.bookNo);
+      var pos = chNums.indexOf(Number(readState.chapter)) + delta;
+      if (pos >= 0 && pos < chNums.length) return true;
+      var bPos = META.order.indexOf(readState.bookNo);
+      return delta < 0 ? bPos > 0 : bPos < META.order.length - 1;
+    }
+    function dragReset(list, animate) {
+      if (!list) return;
+      list.style.transition = animate ? "transform .2s ease-out, opacity .2s ease-out" : "";
+      list.style.transform = "";
+      list.style.opacity = "";
+      if (animate) setTimeout(function () { list.style.transition = ""; }, 230);
+    }
     function onTouchEnd(e) {
       if (!swipe.active) return;
       swipe.active = false;
+      var list = els.readVerseList;
       var axis = swipe.axis;
       var touch = (e.changedTouches && e.changedTouches[0]) || null;
-      if (axis !== "horizontal" || !touch) return;
+      if (axis !== "horizontal" || !touch) { dragReset(list, false); return; }
       var dx = touch.clientX - swipe.startX;
       var elapsed = Date.now() - swipe.startTime;
-      if (elapsed > MAX_DURATION || Math.abs(dx) < currentMinDistance()) return;
-      if (dx < 0) {
-        readAdjacentChapter(1);  // 왼쪽으로 스와이프 → 다음 장
+      var delta = dx < 0 ? 1 : -1;
+      var far = Math.abs(dx) >= Math.max(currentMinDistance(), (list ? list.offsetWidth : 360) * 0.3);
+      var flick = elapsed <= MAX_DURATION && Math.abs(dx) >= currentMinDistance();
+      if ((far || flick) && canReadMove(delta)) {
+        dragReset(list, false);
+        readAdjacentChapter(delta);   // 새 장이 옆에서 밀려 들어오며 이어집니다
       } else {
-        readAdjacentChapter(-1); // 오른쪽으로 스와이프 → 이전 장
+        dragReset(list, true);        // 덜 넘겼으면 제자리로 돌아갑니다
       }
     }
 
-    function onTouchCancel() { swipe.active = false; }
+    function onTouchCancel() { swipe.active = false; dragReset(els.readVerseList, true); }
 
     if (els.readVerseList) {
       els.readVerseList.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -5943,6 +5992,7 @@
 
   els.writeInput.addEventListener("input", function () {
     renderOverlay(); saveWritePosition(false);
+    setWriteDraft(els.writeInput.value === target() ? "" : els.writeInput.value);
     if (els.appScreen) els.appScreen.classList.add("nav-hidden");
   });
   els.writeInput.addEventListener("blur", function () {
@@ -5958,8 +6008,92 @@
   els.reflectionSaveBtn.addEventListener("click", saveReflection);
   els.reflectionInput.addEventListener("blur", saveReflection);
 
-  els.prevVerseBtn.addEventListener("click", function () { goAdjacentVerse(-1); });
-  els.nextVerseBtn.addEventListener("click", function () { goAdjacentVerse(1); });
+
+  /* ---------------- 성경필사: 스와이프로 이전/다음 구절 ---------------- */
+  (function () {
+    var page = document.getElementById("bookPage");
+    if (!page) return;
+    var sw = { active: false, x: 0, y: 0, t: 0, axis: null };
+    function minDist() {
+      var s = loadDisplaySettings();
+      return SWIPE_MIN_DISTANCE_MAP[s.swipeSensitivity] || SWIPE_MIN_DISTANCE_MAP.normal;
+    }
+    page.addEventListener("touchstart", function (e) {
+      if (!loadDisplaySettings().swipeEnabled || !e.touches || e.touches.length !== 1) { sw.active = false; return; }
+      if (e.target.closest && e.target.closest(".write-line, textarea, input, select, button, a, .reflection-block")) { sw.active = false; return; }
+      sw.active = true; sw.x = e.touches[0].clientX; sw.y = e.touches[0].clientY; sw.t = Date.now(); sw.axis = null;
+    }, { passive: true });
+    page.addEventListener("touchmove", function (e) {
+      if (!sw.active || !e.touches || e.touches.length !== 1) return;
+      var dx = e.touches[0].clientX - sw.x, dy = e.touches[0].clientY - sw.y;
+      if (!sw.axis && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) sw.axis = (Math.abs(dx) > Math.abs(dy) * 1.6) ? "h" : "v";
+      if (sw.axis === "h") {
+        e.preventDefault();
+        var card = els.verseCard || page;
+        card.style.transition = "none";
+        card.style.transform = "translateX(" + dx + "px)";
+        card.style.opacity = String(Math.max(0.55, 1 - Math.abs(dx) / 520));
+      }
+    }, { passive: false });
+    function reset(animate) {
+      var card = els.verseCard || page;
+      card.style.transition = animate ? "transform .2s ease-out, opacity .2s ease-out" : "";
+      card.style.transform = ""; card.style.opacity = "";
+      if (animate) setTimeout(function () { card.style.transition = ""; }, 230);
+    }
+    function end(e) {
+      if (!sw.active) return;
+      sw.active = false;
+      var t = (e.changedTouches && e.changedTouches[0]) || null;
+      if (sw.axis !== "h" || !t) { reset(false); return; }
+      var dx = t.clientX - sw.x;
+      var card = els.verseCard || page;
+      var far = Math.abs(dx) >= Math.max(minDist(), card.offsetWidth * 0.3);
+      var flick = (Date.now() - sw.t) <= 700 && Math.abs(dx) >= minDist();
+      if (far || flick) {
+        reset(false);
+        goAdjacentVerse(dx < 0 ? 1 : -1);
+        card.classList.remove("turn-next", "turn-prev"); void card.offsetWidth;
+        card.classList.add(dx < 0 ? "turn-next" : "turn-prev");
+        setTimeout(function () { card.classList.remove("turn-next", "turn-prev"); }, 300);
+      } else reset(true);
+    }
+    page.addEventListener("touchend", end);
+    page.addEventListener("touchcancel", function () { sw.active = false; reset(true); });
+  })();
+
+  /* ---------------- 컴퓨터 화면 전용: 양옆 동그라미 ‹ › 버튼 ---------------- */
+  (function () {
+    function setup(screenId, cardSel, onLeft, onRight) {
+      var screen = document.getElementById(screenId);
+      if (!screen) return;
+      var l = document.createElement("button"), r = document.createElement("button");
+      l.type = r.type = "button";
+      l.className = "side-arrow side-arrow-l"; r.className = "side-arrow side-arrow-r";
+      l.textContent = "\u2039"; r.textContent = "\u203A";
+      l.setAttribute("aria-label", "이전"); r.setAttribute("aria-label", "다음");
+      screen.appendChild(l); screen.appendChild(r);
+      l.addEventListener("click", onLeft); r.addEventListener("click", onRight);
+      function place() {
+        var card = screen.querySelector(cardSel);
+        if (!card || screen.classList.contains("hidden")) return;
+        var rc = card.getBoundingClientRect();
+        var ok = rc.left >= 68 && window.innerWidth - rc.right >= 68;
+        l.style.display = r.style.display = ok ? "" : "none";
+        if (!ok) return;
+        var cy = Math.min(window.innerHeight - 60, Math.max(160, rc.top + Math.min(rc.height, window.innerHeight) / 2));
+        l.style.top = r.style.top = cy + "px";
+        l.style.left = (rc.left - 72) + "px";
+        r.style.left = (rc.right + 16) + "px";
+      }
+      window.addEventListener("resize", place);
+      if ("ResizeObserver" in window) { var ro = new ResizeObserver(place); ro.observe(screen); }
+      setInterval(place, 700);
+      place();
+    }
+    setup("appScreen", "#bookPage", function () { goAdjacentVerse(-1); }, function () { goAdjacentVerse(1); });
+    setup("readScreen", ".book-page", function () { readAdjacentChapter(-1); }, function () { readAdjacentChapter(1); });
+  })();
 
   els.writeInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
