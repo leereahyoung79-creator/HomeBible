@@ -2285,7 +2285,10 @@
       els.readVerseSelect.value = String(focusVerse);
       scrollToReadVerse(focusVerse);
     } else {
+      // 이 앱은 window가 아니라 body 안에서 스크롤되므로, 장을 바꿀 때는 모두 맨 위(1절)로 되돌립니다.
       window.scrollTo(0, 0);
+      if (document.body) document.body.scrollTop = 0;
+      if (document.documentElement) document.documentElement.scrollTop = 0;
     }
   }
 
@@ -2505,7 +2508,7 @@
   }
 
   var COMPARE_PICK_KEY = "bible_compare_pick_v1";
-  var COMPARE_PICK_DEFAULT = ["std", "easy", "gae"];
+  var COMPARE_PICK_DEFAULT = ["gae", "std", "easy"];
   function loadComparePick() {
     try {
       var arr = JSON.parse(localStorage.getItem(COMPARE_PICK_KEY));
@@ -2519,31 +2522,46 @@
   function saveComparePick(arr) {
     try { localStorage.setItem(COMPARE_PICK_KEY, JSON.stringify(arr)); } catch (e) {}
   }
-  function renderCompareChips(item) {
-    var wrap = document.getElementById("compareChips");
-    if (!wrap) return;
-    var picked = loadComparePick();
-    wrap.innerHTML = "";
-    Object.keys(TRANSLATIONS).forEach(function(key){
+  var comparePickDraft = [];
+  function renderComparePickList() {
+    var box = document.getElementById("comparePickList");
+    if (!box) return;
+    var keys = Object.keys(TRANSLATIONS);
+    box.innerHTML = "";
+    keys.forEach(function (key) {
+      var on = comparePickDraft.indexOf(key) >= 0;
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "compare-chip" + (picked.indexOf(key) >= 0 ? " on" : "");
-      b.textContent = TRANSLATIONS[key].label;
-      b.addEventListener("click", function(){
-        var cur = loadComparePick(), i = cur.indexOf(key);
-        if (i >= 0) {
-          if (cur.length === 1) { if (typeof appAlert === "function") appAlert("최소 1개는 선택해야 해요."); return; }
-          cur.splice(i, 1);
-        } else {
-          cur.push(key);
-        }
-        saveComparePick(cur);
-        var it = currentReadVerse(); if (it) renderCompareVerse(it);
+      b.className = "compare-opt" + (on ? " on" : "");
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.innerHTML = '<span class="compare-opt-box">' + (on ? "✓" : "") + '</span><span class="compare-opt-name">' + escapeHtml2(TRANSLATIONS[key].label) + '</span>';
+      b.addEventListener("click", function () {
+        var i = comparePickDraft.indexOf(key);
+        if (i >= 0) comparePickDraft.splice(i, 1); else comparePickDraft.push(key);
+        renderComparePickList();
       });
-      wrap.appendChild(b);
+      box.appendChild(b);
     });
-    var cnt = document.getElementById("compareChipsCount");
-    if (cnt) cnt.textContent = picked.length + "개 선택됨 / 전체 " + Object.keys(TRANSLATIONS).length + "개";
+    var cnt = document.getElementById("comparePickCount");
+    if (cnt) cnt.textContent = comparePickDraft.length + "개 선택됨 / 전체 " + keys.length + "개";
+  }
+  function compareShowPick() {
+    var item = currentReadVerse();
+    var ref = document.getElementById("comparePickRef");
+    if (ref) ref.textContent = (item ? commentaryLabel(item) + " · " : "") + "보고 싶은 번역을 골라 주세요";
+    comparePickDraft = loadComparePick();
+    renderComparePickList();
+    document.getElementById("comparePickPane").classList.remove("hidden");
+    document.getElementById("compareResultPane").classList.add("hidden");
+  }
+  function compareShowResult() {
+    var item = currentReadVerse();
+    if (!item) return;
+    document.getElementById("comparePickPane").classList.add("hidden");
+    document.getElementById("compareResultPane").classList.remove("hidden");
+    renderCompareVerse(item);
+    var body = document.querySelector("#compareResultPane .compare-body");
+    if (body) body.scrollTop = 0;
   }
 
   function getTranslationList() {
@@ -2564,10 +2582,9 @@
   function renderCompareVerse(item) {
     if (!item) return;
     var ref = commentaryLabel(item);
-    els.compareRef.textContent = ref + " — 선택한 번역본 비교";
+    els.compareRef.textContent = ref + " · " + loadComparePick().length + "개 번역";
     els.compareCards.innerHTML = "";
 
-    renderCompareChips(item);
     var picked = loadComparePick();
     var translations = getTranslationList().filter(function(t){ return picked.indexOf(t.key) >= 0; });
     translations.forEach(function(t) {
@@ -2699,7 +2716,7 @@
       appAlert("먼저 비교할 구절을 선택해주세요.");
       return;
     }
-    renderCompareVerse(item);
+    compareShowPick();
     els.compareScreen.classList.remove("hidden");
   }
 
@@ -2803,11 +2820,11 @@
 
   /* ---------------- 형광펜 ---------------- */
   var HL_COLORS = [
-    { key: "yellow", hex: "#fdf0b8" },
-    { key: "pink", hex: "#fbdfe6" },
-    { key: "green", hex: "#dcefd8" },
-    { key: "blue", hex: "#d9e8f5" },
-    { key: "purple", hex: "#e6d9f5" }
+    { key: "yellow", hex: "#F2B705" },
+    { key: "pink", hex: "#E8588A" },
+    { key: "green", hex: "#3FA66B" },
+    { key: "blue", hex: "#3F8FE0" },
+    { key: "purple", hex: "#9566D6" }
   ];
   var highlightColor = null;
 
@@ -4188,7 +4205,7 @@
   }
 
   /* ---------------- 기록보기 허브 ---------------- */
-  var HIGHLIGHT_COLOR_HEX = { yellow: "#fdf0b8", pink: "#fbdfe6", green: "#dcefd8", blue: "#d9e8f5", purple: "#e6d9f5" };
+  var HIGHLIGHT_COLOR_HEX = { yellow: "#F2B705", pink: "#E8588A", green: "#3FA66B", blue: "#3F8FE0", purple: "#9566D6" };
   var HIGHLIGHT_COLOR_LABEL = { yellow: "노랑", pink: "분홍", green: "초록", blue: "파랑", purple: "보라" };
   var RECORDS_CAT_LABEL = { highlight: "칠모아", reflection: "묵상모아", sermon: "노트모아", gratitude: "감·기모아", write: "필사모아" };
 
@@ -4438,8 +4455,9 @@
       var active = recordsHubHighlightFilter === key;
       var hex = HIGHLIGHT_COLOR_HEX[key];
       var label = key === "all" ? "전체" : HIGHLIGHT_COLOR_LABEL[key];
-      return '<button type="button" class="records-color-chip' + (active ? ' active' : '') + '" data-color="' + key + '">' +
-        (hex ? '<span class="records-color-chip-dot" style="background:' + hex + '"></span>' : '') + escapeHtml2(label) + '</button>';
+      var chipStyle = hex ? ' style="background:' + hex + ';border-color:' + hex + ';color:' + (key === "yellow" ? '#3A2F26' : '#fff') + '"' : '';
+      return '<button type="button" class="records-color-chip' + (hex ? ' filled' : '') + (active ? ' active' : '') + '" data-color="' + key + '"' + chipStyle + '>' +
+        (hex ? '<span class="records-color-chip-dot"></span>' : '') + escapeHtml2(label) + '</button>';
     }).join('') + '</div>';
 
     var filtered = keys.filter(function (k) { return recordsHubHighlightFilter === "all" || map[k] === recordsHubHighlightFilter; });
@@ -4451,7 +4469,7 @@
     } else {
       listHtml = '<div class="records-list">' + filtered.map(function (vKey) {
         var color = map[vKey];
-        return '<button type="button" class="record-item-row" data-vkey="' + escapeHtml2(vKey) + '">' +
+        return '<button type="button" class="record-item-row" data-vkey="' + escapeHtml2(vKey) + '" style="border-left:7px solid ' + (HIGHLIGHT_COLOR_HEX[color] || "#eee") + '">' +
           '<span class="record-item-dot" style="background:' + (HIGHLIGHT_COLOR_HEX[color] || "#eee") + '"></span>' +
           '<span class="record-item-body">' +
             '<span class="record-item-ref">' + escapeHtml2(verseKeyToRefLabel(vKey)) + '</span>' +
@@ -5624,9 +5642,21 @@
   els.commentaryBottomCloseBtn.addEventListener("click", closeCommentary);
   if (els.compareBtn) els.compareBtn.addEventListener("click", openCompare);
   els.closeCompareBtn.addEventListener("click", closeCompare);
-  var cmpAll = document.getElementById("compareChipsAll"), cmpDef = document.getElementById("compareChipsDefault");
-  if (cmpAll) cmpAll.addEventListener("click", function(){ saveComparePick(Object.keys(TRANSLATIONS)); var it = currentReadVerse(); if (it) renderCompareVerse(it); });
-  if (cmpDef) cmpDef.addEventListener("click", function(){ saveComparePick(COMPARE_PICK_DEFAULT.slice()); var it = currentReadVerse(); if (it) renderCompareVerse(it); });
+  (function () {
+    var q = function (id) { return document.getElementById(id); };
+    if (q("closeComparePickBtn")) q("closeComparePickBtn").addEventListener("click", closeCompare);
+    if (q("comparePickCloseBtn")) q("comparePickCloseBtn").addEventListener("click", closeCompare);
+    if (q("comparePickAll")) q("comparePickAll").addEventListener("click", function () { comparePickDraft = Object.keys(TRANSLATIONS); renderComparePickList(); });
+    if (q("comparePickDefault")) q("comparePickDefault").addEventListener("click", function () { comparePickDraft = COMPARE_PICK_DEFAULT.slice(); renderComparePickList(); });
+    if (q("comparePickGo")) q("comparePickGo").addEventListener("click", function () {
+      if (!comparePickDraft.length) { appAlert("최소 1개는 선택해야 해요."); return; }
+      var order = Object.keys(TRANSLATIONS);
+      comparePickDraft.sort(function (x, y) { return order.indexOf(x) - order.indexOf(y); });
+      saveComparePick(comparePickDraft.slice());
+      compareShowResult();
+    });
+    if (q("compareChangeBtn")) q("compareChangeBtn").addEventListener("click", compareShowPick);
+  })();
   els.compareBottomCloseBtn.addEventListener("click", closeCompare);
 
   /* ---------------- 구절비교: 손동작(스와이프)으로 이전/다음 절 넘기기 ----------------

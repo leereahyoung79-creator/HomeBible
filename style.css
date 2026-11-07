@@ -4667,10 +4667,37 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
 .read-book-search-empty{margin:12px 2px 0;font-size:14px;color:var(--ink-soft);}
 .read-book-picker-tile.hidden,.read-picker-testament-title.hidden{display:none!important;}
 
-/* ===== 번역 비교: 보고 싶은 번역만 고르기 ===== */
-.compare-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 2px 0}
-.compare-chip{padding:7px 11px;border-radius:999px;border:1.5px solid var(--border);background:var(--paper);color:var(--ink-soft);font:inherit;font-size:13px;cursor:pointer}
-.compare-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800}
-.compare-chips-ctl{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 4px;font-size:12px;color:var(--ink-soft)}
-.compare-chips-ctl button{border:0;background:transparent;color:var(--accent);font:inherit;font-size:12px;font-weight:800;padding:4px 6px;cursor:pointer}
-.compare-loading{padding:14px;text-align:center;color:var(--ink-soft);font-size:13px}
+/* ===== 번역 비교: 먼저 번역을 고르고, 그다음 보기 ===== */
+.compare-pane{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;}
+.compare-pane.hidden{display:none;}
+.compare-pick-ctl{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);padding:0 2px 8px;}
+.compare-pick-ctl button{border:0;background:transparent;color:var(--accent);font:inherit;font-size:13px;font-weight:800;padding:4px 6px;cursor:pointer;}
+.compare-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--border);background:var(--paper);border-radius:14px;padding:14px;margin-bottom:9px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;}
+.compare-opt-box{width:24px;height:24px;border-radius:7px;border:2px solid var(--border);background:#fff;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:900;}
+.compare-opt.on{border-color:var(--accent);background:var(--accent-soft);}
+.compare-opt.on .compare-opt-box{background:var(--accent);border-color:var(--accent);}
+.compare-pick-foot{display:grid;gap:8px;margin-top:14px;}
+.compare-go-btn{width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-size:17px;font-weight:900;padding:15px;cursor:pointer;}
+.compare-result-sub{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.compare-result-sub .stats-sub{margin:0;flex:1 1 auto;min-width:0;}
+.compare-change-btn{flex:none;border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+.compare-loading{padding:14px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
+/* ===== 기록보기: 글씨를 크게 해도 잘리지 않게 줄바꿈 ===== */
+.record-date-preview{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.5;}
+.record-item-text{display:block;-webkit-line-clamp:unset;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;}
+.record-date-top{flex-wrap:wrap;}
+
+/* ===== 형광펜: 진한 색 (읽기 화면 + 칠모아 공통) ===== */
+.read-verse.hl-yellow{background:#F2B705;color:#3A2F26;}
+.read-verse.hl-pink{background:#E8588A;color:#fff;}
+.read-verse.hl-green{background:#3FA66B;color:#fff;}
+.read-verse.hl-blue{background:#3F8FE0;color:#fff;}
+.read-verse.hl-purple{background:#9566D6;color:#fff;}
+#readScreen .read-verse[class*="hl-"] .read-verse-num{color:#111 !important;font-weight:900 !important;}
+
+/* ===== 칠모아: 칩과 목록에도 같은 진한 색 ===== */
+.records-color-chips{flex-wrap:wrap;overflow-x:visible;}
+.records-color-chip.filled .records-color-chip-dot{background:transparent !important;width:10px;height:10px;border:2px solid currentColor;box-sizing:border-box;}
+.records-color-chip.filled.active{box-shadow:0 0 0 3px rgba(58,47,38,.45);font-weight:900;}
+.record-item-row .record-item-dot{width:20px;height:20px;margin-top:1px;}
