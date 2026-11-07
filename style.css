@@ -4734,3 +4734,22 @@ html[data-general-font-size-bucket="xlarge"] .cover-grid .wide-cta {
 .record-pill-del{color:var(--incorrect,#C0392B);}
 .record-pill-edit:hover{background:var(--accent-soft);border-color:var(--accent);}
 .record-pill-del:hover{background:#FDEAE6;border-color:var(--incorrect,#C0392B);}
+
+
+/* ===== 삭제·저장 버튼 통일 (같은 크기 알약) ===== */
+.sermon-editor-actions,.rh-edit-actions{display:flex !important;flex-wrap:wrap;align-items:center;justify-content:stretch !important;gap:10px !important;}
+.sermon-editor-actions .sermon-editor-saved{flex:1 1 100%;margin:0 !important;order:-1;}
+.sermon-editor-actions button,.rh-edit-actions button{height:48px !important;padding:0 !important;border-radius:999px !important;font-size:15px !important;font-weight:800 !important;line-height:1 !important;cursor:pointer;}
+.sermon-delete-button,.rh-edit-delete{flex:1 1 0 !important;border:1px solid var(--incorrect,#C0392B) !important;background:#fff !important;color:var(--incorrect,#C0392B) !important;}
+#sermonEditorSaveBtn,.rh-edit-save{flex:1 1 0 !important;border:0 !important;}
+.sermon-delete-button:disabled{opacity:.4;}
+
+/* ===== 책갈피 비우기 편집모드 ===== */
+.read-bottom-bookmark-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.read-bottom-bookmark-head .read-bottom-bookmark-title{margin:0;}
+.bookmark-edit-btn{border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--accent);font-family:inherit;font-size:12px;font-weight:800;padding:5px 14px;cursor:pointer;}
+.bookmark-edit-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+.read-bottom-bookmark-panel .bookmark-slot{position:relative;}
+.read-bottom-bookmark-panel .bookmark-slot.editing{padding-right:38px;border-color:#C0392B;background:#FFF3F1;}
+.bookmark-x{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#C0392B;color:#fff;font-size:22px;font-weight:900;line-height:26px;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
+.read-bottom-bookmark-panel.bookmark-editing .bookmark-slot:disabled{opacity:.6;}

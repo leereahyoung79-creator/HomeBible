@@ -3034,6 +3034,16 @@
 
   /* ---------------- 책갈피 5개 (성경 보기, 로그인한 사람별) ---------------- */
   var pendingBookmarkVerse = null;
+  var bookmarkEditMode = false;
+  function setBookmarkEditMode(on) {
+    bookmarkEditMode = !!on;
+    var btn = document.getElementById("bookmarkEditBtn");
+    var hint = document.getElementById("readBottomBookmarkHint");
+    if (btn) { btn.textContent = bookmarkEditMode ? "완료" : "비우기"; btn.classList.toggle("on", bookmarkEditMode); }
+    if (hint) hint.textContent = bookmarkEditMode ? "비우고 싶은 자리의 ×를 누르세요." : "말씀을 먼저 선택한 뒤 자리를 누르면 저장됩니다.";
+    if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.toggle("bookmark-editing", bookmarkEditMode);
+    renderBookmarkSlots();
+  }
 
   function loadReadBookmarks() {
     var p = getProfile(state.currentBirth);
@@ -3047,6 +3057,7 @@
     var slots = loadReadBookmarks();
     function renderInto(container) {
       if (!container) return;
+      var editing = bookmarkEditMode && container === els.readBottomBookmarkSlots;
       container.innerHTML = "";
       slots.forEach(function (slot, i) {
         var btn = document.createElement("button");
@@ -3056,6 +3067,20 @@
         btn.title = pendingBookmarkVerse
           ? "눌러서 " + pendingBookmarkVerse.label + " 저장"
           : (slot ? "눌러서 이동" : "절을 먼저 선택해주세요");
+        if (editing && slot) {
+          btn.classList.add("editing");
+          var x = document.createElement("span");
+          x.className = "bookmark-x"; x.textContent = "×"; x.setAttribute("aria-label", "책갈피 비우기");
+          btn.appendChild(x);
+          btn.addEventListener("click", function () {
+            slots[i] = null;
+            saveReadBookmarks(slots);
+            renderBookmarkSlots();
+          });
+          container.appendChild(btn);
+          return;
+        }
+        if (editing) { btn.disabled = true; container.appendChild(btn); return; }
         btn.addEventListener("click", function () {
           if (pendingBookmarkVerse) {
             slots[i] = { bno: pendingBookmarkVerse.bno, ch: pendingBookmarkVerse.ch, vs: pendingBookmarkVerse.vs, label: pendingBookmarkVerse.label };
@@ -3356,6 +3381,7 @@
 
   function closeReadBookmarkPanel() {
     if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.classList.add("hidden");
+    if (bookmarkEditMode) setBookmarkEditMode(false);
   }
 
   /* ---------------- 성경책 검색 ---------------- */
@@ -3651,7 +3677,7 @@
   /* 저장 버튼 문구: 새 노트는 "저장하기", 이미 있는 노트를 고치는 중이면 "수정 저장" */
   function updateSermonSaveButtonLabel(isExisting) {
     if (!els.sermonEditorSaveBtn) return;
-    els.sermonEditorSaveBtn.textContent = isExisting ? "수정 저장" : "저장하기";
+    els.sermonEditorSaveBtn.textContent = "저장";
   }
 
   function loadSermonNotes() {
@@ -4452,8 +4478,9 @@
         '<label class="rh-edit-field"><span>💭 내 묵상</span><textarea id="rhEditText" rows="9"></textarea></label>' +
         '<button type="button" id="rhEditGoto" class="rh-edit-link">📖 본문으로 이동</button>' +
         '<div class="rh-edit-actions"><button type="button" id="rhEditDelete" class="rh-edit-delete">삭제</button>' +
-        '<button type="button" id="rhEditSave" class="rh-edit-save">수정 저장</button></div></div>';
+        '<button type="button" id="rhEditSave" class="rh-edit-save">저장</button></div></div>';
       document.getElementById("rhEditText").value = note ? note.text : "";
+      setTimeout(function () { var t = document.getElementById("rhEditText"); if (t) { t.focus(); try { t.setSelectionRange(t.value.length, t.value.length); } catch (e) {} } }, 60);
       document.getElementById("rhEditGoto").addEventListener("click", function () { recordsHubEdit = null; goToVerseFromRecords(ed.key); });
       document.getElementById("rhEditSave").addEventListener("click", function () {
         var text = document.getElementById("rhEditText").value;
@@ -4479,11 +4506,12 @@
         ['1','2','3'].map(function (n) { return '<label class="rh-edit-field"><span>🌿 감사 ' + n + '</span><input id="rhG' + n + '" type="text"></label>'; }).join('') +
         '<label class="rh-edit-field"><span>🙏 기도제목</span><textarea id="rhPrayer" rows="6"></textarea></label>' +
         '<div class="rh-edit-actions"><button type="button" id="rhEditDelete" class="rh-edit-delete">삭제</button>' +
-        '<button type="button" id="rhEditSave" class="rh-edit-save">수정 저장</button></div></div>';
+        '<button type="button" id="rhEditSave" class="rh-edit-save">저장</button></div></div>';
       document.getElementById("rhG1").value = rec.gratitude1 || "";
       document.getElementById("rhG2").value = rec.gratitude2 || "";
       document.getElementById("rhG3").value = rec.gratitude3 || "";
       document.getElementById("rhPrayer").value = rec.prayer || "";
+      setTimeout(function () { var g = document.getElementById("rhG1"); if (g) { g.focus(); try { g.setSelectionRange(g.value.length, g.value.length); } catch (e) {} } }, 60);
       document.getElementById("rhEditSave").addEventListener("click", function () {
         var obj = { date: ed.key, gratitude1: document.getElementById("rhG1").value.trim(), gratitude2: document.getElementById("rhG2").value.trim(), gratitude3: document.getElementById("rhG3").value.trim(), prayer: document.getElementById("rhPrayer").value.trim(), updatedAt: nowStamp() };
         var pr0 = getProfile(state.currentBirth);
@@ -5565,6 +5593,7 @@
   els.readPrevChBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   els.readNextChBtn.addEventListener("click", function () { readAdjacentChapter(1); });
   if (els.readBottomBookmarkPanel) els.readBottomBookmarkPanel.addEventListener("click", function(e){ e.stopPropagation(); });
+  (function(){ var eb = document.getElementById("bookmarkEditBtn"); if (eb) eb.addEventListener("click", function(){ setBookmarkEditMode(!bookmarkEditMode); }); })();
   if (els.readPrevChTopBtn) els.readPrevChTopBtn.addEventListener("click", function () { readAdjacentChapter(-1); });
   if (els.readNextChTopBtn) els.readNextChTopBtn.addEventListener("click", function () { readAdjacentChapter(1); });
 
